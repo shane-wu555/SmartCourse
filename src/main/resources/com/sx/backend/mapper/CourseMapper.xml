@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sx.backend.mapper.CourseMapper">
+
+    <resultMap id="courseResultMap" type="com.sx.backend.entity.Course">
+        <id property="courseId" column="course_id"/>
+        <result property="courseCode" column="course_code"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="credit" column="credit"/>
+        <result property="hours" column="hours"/>
+        <result property="semester" column="semester"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+
+        <association property="teacher" javaType="com.sx.backend.entity.Teacher">
+            <id property="teacherId" column="teacher_id"/>
+            <result property="username" column="teacher_name"/>
+        </association>
+    </resultMap>
+
+    <!-- 获取教师课程列表 -->
+    <select id="findByTeacherId" resultMap="courseResultMap">
+        SELECT c.*, t.username AS teacher_name
+        FROM course c
+                 JOIN teacher t ON c.teacher_id = t.teacher_id
+        WHERE c.teacher_id = #{teacherId}
+    </select>
+
+    <!-- 分页查询课程 -->
+    <select id="findByTeacherIdWithPaging" resultMap="courseResultMap">
+        SELECT c.*, t.username AS teacher_name
+        FROM course c
+        JOIN teacher t ON c.teacher_id = t.teacher_id
+        WHERE c.teacher_id = #{teacherId}
+        <if test="semester != null and semester != ''">
+            AND c.semester = #{semester}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (c.name LIKE CONCAT('%', #{keyword}, '%')
+            OR c.course_code LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY c.create_time DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countByTeacherIdWithPaging" resultType="int">
+        SELECT COUNT(*)
+        FROM course c
+        WHERE c.teacher_id = #{teacherId}
+        <if test="semester != null and semester != ''">
+            AND c.semester = #{semester}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (c.name LIKE CONCAT('%', #{keyword}, '%')
+            OR c.course_code LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+    </select>
+
+    <!-- 创建课程 -->
+    <insert id="insert" parameterType="com.sx.backend.entity.Course">
+        INSERT INTO course (
+            course_id, course_code, name, description,
+            credit, hours, semester, teacher_id,
+            create_time, update_time
+        ) VALUES (
+                     #{courseId}, #{courseCode}, #{name}, #{description},
+                     #{credit}, #{hours}, #{semester}, #{teacher.teacherId},
+                     NOW(), NOW()
+                 )
+    </insert>
+
+    <!-- 获取课程详情 -->
+    <select id="findById" resultMap="courseResultMap">
+        SELECT c.*, t.username AS teacher_name,
+               (SELECT COUNT(*) FROM course_enrollment WHERE course_id = #{courseId}) AS student_count,
+               (SELECT COUNT(*) FROM task WHERE course_id = #{courseId}) AS task_count
+        FROM course c
+                 JOIN teacher t ON c.teacher_id = t.teacher_id
+        WHERE c.course_id = #{courseId}
+    </select>
+
+    <!-- 更新课程 -->
+    <update id="update" parameterType="com.sx.backend.entity.Course">
+        UPDATE course
+        SET
+            course_code = #{courseCode},
+            name = #{name},
+            description = #{description},
+            credit = #{credit},
+            hours = #{hours},
+            semester = #{semester},
+            update_time = NOW()
+        WHERE course_id = #{courseId}
+    </update>
+
+    <!-- 删除课程 -->
+    <delete id="delete">
+        DELETE FROM course
+        WHERE course_id = #{courseId}
+    </delete>
+
+    <!-- 检查课程编号唯一性 -->
+    <select id="countByCourseCode" resultType="int">
+        SELECT COUNT(*)
+        FROM course
+        WHERE course_code = #{courseCode}
+        <if test="courseId != null">
+            AND course_id != #{courseId}
+        </if>
+    </select>
+
+    <!-- 检查关联数据 -->
+    <select id="countEnrollmentsByCourseId" resultType="int">
+        SELECT COUNT(*) FROM course_enrollment WHERE course_id = #{courseId}
+    </select>
+
+    <select id="countTasksByCourseId" resultType="int">
+        SELECT COUNT(*) FROM task WHERE course_id = #{courseId}
+    </select>
+</mapper>

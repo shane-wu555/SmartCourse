@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Teacher extends User{
+    private String teacherId;
     private String title;         // 职称
     private String department;    // 所属院系
     private String bio;           // 简介
@@ -14,6 +15,14 @@ public class Teacher extends User{
     }
 
     public Teacher() {
+    }
+
+    public String getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(String teacherId) {
+        this.teacherId = teacherId;
     }
 
     public String getTitle() {
@@ -47,4 +56,5 @@ public class Teacher extends User{
     public void setTaughtCourses(List<String> taughtCourses) {
         this.taughtCourses = taughtCourses;
     }
+
 }

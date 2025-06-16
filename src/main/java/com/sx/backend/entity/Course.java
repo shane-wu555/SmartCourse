@@ -1,5 +1,6 @@
 package com.sx.backend.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class Course {
@@ -13,6 +14,24 @@ public class Course {
     private Teacher teacher;
     private List<Student> students; // 选修的学生
     private List<Task> tasks; // 课程资源
+    private LocalDateTime createTime;
+    private LocalDateTime updateTime;
+
+    public LocalDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public void setCreateTime(LocalDateTime createTime) {
+        this.createTime = createTime;
+    }
+
+    public LocalDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public void setUpdateTime(LocalDateTime updateTime) {
+        this.updateTime = updateTime;
+    }
 
     public Course(String courseId, String courseCode, String name, String description, Float credit, Integer hours, String semester, Teacher teacher) {
         this.courseId = courseId;
