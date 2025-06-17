@@ -4,7 +4,7 @@
 
 <mapper namespace="com.sx.backend.mapper.CourseMapper">
 
-    <resultMap id="courseResultMap" type="com.sx.backend.entity.Course">
+    <resultMap id="courseDTOMap" type="com.sx.backend.dto.CourseDTO">
         <id property="courseId" column="course_id"/>
         <result property="courseCode" column="course_code"/>
         <result property="name" column="name"/>
@@ -12,28 +12,52 @@
         <result property="credit" column="credit"/>
         <result property="hours" column="hours"/>
         <result property="semester" column="semester"/>
-        <result property="createTime" column="create_time"/>
-        <result property="updateTime" column="update_time"/>
-
-        <association property="teacher" javaType="com.sx.backend.entity.Teacher">
-            <id property="teacherId" column="teacher_id"/>
-            <result property="username" column="teacher_name"/>
-        </association>
+        <result property="teacherId" column="teacher_id"/>
+        <result property="teacherName" column="real_name"/>
+        <result property="createTime" column="created_at"/>
+        <result property="updateTime" column="updated_at"/>
+        <result property="studentCount" column="student_count"/>
+        <result property="taskCount" column="task_count"/>
     </resultMap>
 
-    <!-- 获取教师课程列表 -->
-    <select id="findByTeacherId" resultMap="courseResultMap">
-        SELECT c.*, t.username AS teacher_name
+    <select id="findByTeacherId" resultMap="courseDTOMap">
+        SELECT
+            c.course_id,
+            c.course_code,
+            c.name,
+            c.description,
+            c.credit,
+            c.hours,
+            c.semester,
+            c.teacher_id,
+            u.real_name,
+            c.created_at,
+            c.updated_at,
+            (SELECT COUNT(*) FROM course_enrollment WHERE course_id = c.course_id) AS student_count,
+            (SELECT COUNT(*) FROM task WHERE course_id = c.course_id) AS task_count
         FROM course c
-                 JOIN teacher t ON c.teacher_id = t.teacher_id
+                 JOIN user u ON c.teacher_id = u.user_id
         WHERE c.teacher_id = #{teacherId}
+        ORDER BY c.created_at DESC
     </select>
 
-    <!-- 分页查询课程 -->
-    <select id="findByTeacherIdWithPaging" resultMap="courseResultMap">
-        SELECT c.*, t.username AS teacher_name
+    <select id="findByTeacherIdWithPaging" resultMap="courseDTOMap">
+        SELECT
+        c.course_id,
+        c.course_code,
+        c.name,
+        c.description,
+        c.credit,
+        c.hours,
+        c.semester,
+        c.teacher_id,
+        u.real_name,
+        c.created_at,
+        c.updated_at,
+        (SELECT COUNT(*) FROM course_enrollment WHERE course_id = c.course_id) AS student_count,
+        (SELECT COUNT(*) FROM task WHERE course_id = c.course_id) AS task_count
         FROM course c
-        JOIN teacher t ON c.teacher_id = t.teacher_id
+        JOIN user u ON c.teacher_id = u.user_id
         WHERE c.teacher_id = #{teacherId}
         <if test="semester != null and semester != ''">
             AND c.semester = #{semester}
@@ -42,7 +66,7 @@
             AND (c.name LIKE CONCAT('%', #{keyword}, '%')
             OR c.course_code LIKE CONCAT('%', #{keyword}, '%'))
         </if>
-        ORDER BY c.create_time DESC
+        ORDER BY c.created_at DESC
         LIMIT #{offset}, #{size}
     </select>
 
@@ -59,30 +83,38 @@
         </if>
     </select>
 
-    <!-- 创建课程 -->
     <insert id="insert" parameterType="com.sx.backend.entity.Course">
         INSERT INTO course (
             course_id, course_code, name, description,
             credit, hours, semester, teacher_id,
-            create_time, update_time
+            created_at, updated_at
         ) VALUES (
                      #{courseId}, #{courseCode}, #{name}, #{description},
-                     #{credit}, #{hours}, #{semester}, #{teacher.teacherId},
+                     #{credit}, #{hours}, #{semester}, #{teacherId},
                      NOW(), NOW()
                  )
     </insert>
 
-    <!-- 获取课程详情 -->
-    <select id="findById" resultMap="courseResultMap">
-        SELECT c.*, t.username AS teacher_name,
-               (SELECT COUNT(*) FROM course_enrollment WHERE course_id = #{courseId}) AS student_count,
-               (SELECT COUNT(*) FROM task WHERE course_id = #{courseId}) AS task_count
+    <select id="findById" resultMap="courseDTOMap">
+        SELECT
+            c.course_id,
+            c.course_code,
+            c.name,
+            c.description,
+            c.credit,
+            c.hours,
+            c.semester,
+            c.teacher_id,
+            u.real_name,
+            c.created_at,
+            c.updated_at,
+            (SELECT COUNT(*) FROM course_enrollment WHERE course_id = c.course_id) AS student_count,
+            (SELECT COUNT(*) FROM task WHERE course_id = c.course_id) AS task_count
         FROM course c
-                 JOIN teacher t ON c.teacher_id = t.teacher_id
+                 JOIN user u ON c.teacher_id = u.user_id
         WHERE c.course_id = #{courseId}
     </select>
 
-    <!-- 更新课程 -->
     <update id="update" parameterType="com.sx.backend.entity.Course">
         UPDATE course
         SET
@@ -92,32 +124,33 @@
             credit = #{credit},
             hours = #{hours},
             semester = #{semester},
-            update_time = NOW()
+            updated_at = NOW()
         WHERE course_id = #{courseId}
     </update>
 
-    <!-- 删除课程 -->
     <delete id="delete">
         DELETE FROM course
         WHERE course_id = #{courseId}
     </delete>
 
-    <!-- 检查课程编号唯一性 -->
     <select id="countByCourseCode" resultType="int">
         SELECT COUNT(*)
         FROM course
         WHERE course_code = #{courseCode}
-        <if test="courseId != null">
-            AND course_id != #{courseId}
+        <if test="excludeCourseId != null and excludeCourseId != ''">
+            AND course_id != #{excludeCourseId}
         </if>
     </select>
 
-    <!-- 检查关联数据 -->
     <select id="countEnrollmentsByCourseId" resultType="int">
         SELECT COUNT(*) FROM course_enrollment WHERE course_id = #{courseId}
     </select>
 
     <select id="countTasksByCourseId" resultType="int">
         SELECT COUNT(*) FROM task WHERE course_id = #{courseId}
+    </select>
+
+    <select id="countResourcesByCourseId" resultType="int">
+        SELECT COUNT(*) FROM resource WHERE course_id = #{courseId}
     </select>
 </mapper>

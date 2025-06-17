@@ -11,7 +11,7 @@ public class Course {
     private Float credit; // 学分
     private Integer hours; // 学时
     private String semester; // 学期
-    private Teacher teacher;
+    private String teacherId;
     private List<Student> students; // 选修的学生
     private List<Task> tasks; // 课程资源
     private LocalDateTime createTime;
@@ -33,7 +33,7 @@ public class Course {
         this.updateTime = updateTime;
     }
 
-    public Course(String courseId, String courseCode, String name, String description, Float credit, Integer hours, String semester, Teacher teacher) {
+    public Course(String courseId, String courseCode, String name, String description, Float credit, Integer hours, String semester, String teacherId) {
         this.courseId = courseId;
         this.courseCode = courseCode;
         this.name = name;
@@ -41,7 +41,7 @@ public class Course {
         this.credit = credit;
         this.hours = hours;
         this.semester = semester;
-        this.teacher = teacher;
+        this.teacherId = teacherId;
     }
 
     public Course() {
@@ -103,12 +103,12 @@ public class Course {
         this.semester = semester;
     }
 
-    public Teacher getTeacher() {
-        return teacher;
+    public String getTeacherId() {
+        return teacherId;
     }
 
-    public void setTeacher(Teacher teacher) {
-        this.teacher = teacher;
+    public void setTeacherId(String teacherId) {
+        this.teacherId = teacherId;
     }
 
     public List<Student> getStudents() {

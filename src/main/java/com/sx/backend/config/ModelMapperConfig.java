@@ -43,12 +43,12 @@ public class ModelMapperConfig {
 
                     // 使用简单表达式映射教师信息
                     mapper.<String>map(
-                            src -> src.getTeacher() != null ? src.getTeacher().getTeacherId() : null,
+                            src -> src.getTeacherId() != null ? src.getTeacherId() : null,
                             CourseDTO::setTeacherId
                     );
 
                     mapper.<String>map(
-                            src -> src.getTeacher() != null ? src.getTeacher().getRealName() : null,
+                            src -> src.getTeacherId() != null ,
                             CourseDTO::setTeacherName
                     );
 
