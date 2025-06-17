@@ -60,6 +60,7 @@ public class TeacherCourseController {
     }*/
 
     // 3. 获取课程详情
+    // TODO：涉及的数据库表现在不存在，无法测试接口
     @GetMapping("/{courseId}")
     public ApiResponse<CourseDTO> getCourseDetail(@PathVariable String courseId) {
         String teacherId = getCurrentTeacherId();
