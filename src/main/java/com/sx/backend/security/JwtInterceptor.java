@@ -1,5 +1,6 @@
 package com.sx.backend.security;
 
+import com.sx.backend.service.TokenBlacklistService;
 import com.sx.backend.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,6 +13,8 @@ public class JwtInterceptor implements HandlerInterceptor {
 
     @Autowired
     private JwtUtil jwtUtil;
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
@@ -24,13 +27,21 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
 
+        // 验证Authorization头
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "未提供有效的认证信息");
             return false;
         }
 
-        String token = authHeader.substring(7); // 去掉"Bearer "前缀
+        // 提取Token并检查黑名单
+        String token = authHeader.substring(7);
+        if (tokenBlacklistService.isBlacklisted(token)) {  // 新增黑名单检查
+            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "认证信息已失效");
+            return false;
+        }
+
+        // 验证Token有效性
         if (!jwtUtil.validateToken(token)) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "认证信息无效或已过期");
             return false;

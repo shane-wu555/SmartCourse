@@ -15,6 +15,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // 禁用CSRF
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // 允许所有认证相关接口
                         .anyRequest().permitAll() // 允许所有请求
                 );
         return http.build();

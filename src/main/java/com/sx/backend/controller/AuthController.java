@@ -4,8 +4,10 @@ package com.sx.backend.controller;
 import com.sx.backend.dto.request.LoginRequest;
 import com.sx.backend.dto.request.RegisterRequest;
 import com.sx.backend.entity.User;
+import com.sx.backend.service.TokenBlacklistService;
 import com.sx.backend.service.UserService;
 import com.sx.backend.util.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,11 +26,14 @@ public class AuthController {
 
     private final UserService userService;
     private final JwtUtil jwtUtil;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Autowired
-    public AuthController(UserService userService, JwtUtil jwtUtil) {
+    public AuthController(UserService userService, JwtUtil jwtUtil
+    , TokenBlacklistService tokenBlacklistService) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;
+        this.tokenBlacklistService = tokenBlacklistService;
     }
 
     @PostMapping("/login")
@@ -86,5 +91,17 @@ public class AuthController {
             errorResponse.put("error", "注册失败");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
+    }
+
+    // AuthController.java 新增方法
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            tokenBlacklistService.addToBlacklist(token);
+            return ResponseEntity.ok("登出成功");
+        }
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", "无效的令牌"));
     }
 }
