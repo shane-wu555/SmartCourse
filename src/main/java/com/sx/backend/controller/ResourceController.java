@@ -4,14 +4,16 @@ import com.sx.backend.entity.Resource;
 import com.sx.backend.entity.ResourceType;
 import com.sx.backend.mapper.ResourceMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -23,10 +25,33 @@ public class ResourceController {
     @Value("${file.storage.location}")
     private String storageLocation;
 
+    @Value("${python.executable:python}")
+    private String pythonExecutable;
+
     private final ResourceMapper resourceMapper;
+    private Path pythonScriptPath;
 
     public ResourceController(ResourceMapper resourceMapper) {
         this.resourceMapper = resourceMapper;
+        this.pythonScriptPath = extractPythonScript();
+    }
+
+    // 从classpath提取Python脚本到临时文件
+    private Path extractPythonScript() {
+        try {
+            // 使用全限定名避免冲突
+            org.springframework.core.io.Resource resource =
+                    new ClassPathResource("scripts/video_duration.py");
+
+            Path tempFile = Files.createTempFile("video_duration_", ".py");
+            try (InputStream in = resource.getInputStream()) {
+                Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            tempFile.toFile().deleteOnExit();
+            return tempFile;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to extract Python script", e);
+        }
     }
 
     @PostMapping(consumes = "multipart/form-data")
@@ -64,7 +89,7 @@ public class ResourceController {
             String uniqueFilename = UUID.randomUUID() + "_" + safeFilename;
 
             // 4. 创建存储目录
-            Path courseDir = Paths.get(storageLocation,  courseId, resourceType.toString().toLowerCase());
+            Path courseDir = Paths.get(storageLocation, courseId, resourceType.toString().toLowerCase());
             if (!Files.exists(courseDir)) {
                 Files.createDirectories(courseDir);
             }
@@ -86,6 +111,23 @@ public class ResourceController {
             resource.setUploadTime(LocalDateTime.now());
             resource.setViewCount(0);
 
+            // ======== 新增：视频时长解析 ========
+            if (resourceType == ResourceType.VIDEO) {
+                try {
+                    // Windows 路径处理
+                    String winPath = filePath.toString().replace("\\", "\\\\");
+                    Float duration = parseVideoDuration(Paths.get(winPath));
+                    resource.setDuration(duration);
+                    System.out.println("视频时长解析成功: " + duration + "秒");
+                } catch (Exception e) {
+                    System.err.println("视频时长解析失败: " + e.getMessage());
+                    e.printStackTrace();
+                    resource.setDuration(null);
+                }
+            } else {
+                resource.setDuration(null); // 非视频资源设为null
+            }
+
             // 7. 保存到数据库
             resourceMapper.insertResource(resource);
 
@@ -106,17 +148,85 @@ public class ResourceController {
         }
     }
 
-    private void logRequestDetails(MultipartFile file, String name, String type, String description, String uploaderId) {
-        System.out.println("=== 请求参数详情 ===");
-        System.out.println("文件: " + (file != null ?
-                file.getOriginalFilename() + " (" + file.getSize() + " bytes)" : "null"));
-        System.out.println("名称: " + name);
-        System.out.println("类型: " + type);
-        System.out.println("描述: " + description);
-        System.out.println("上传者ID: " + uploaderId);
-        System.out.println("==================");
+    // 调用Python脚本解析视频时长
+    private Float parseVideoDuration(Path videoFile) throws IOException, InterruptedException {
+        ProcessBuilder processBuilder = new ProcessBuilder(
+                pythonExecutable,
+                pythonScriptPath.toString(),
+                videoFile.toString()
+        );
+
+        // 重定向错误流以便调试
+        processBuilder.redirectErrorStream(true);
+
+        Process process = processBuilder.start();
+        int exitCode = process.waitFor();
+
+        if (exitCode == 0) {
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+
+                String output = reader.readLine();
+                if (output != null && !output.trim().isEmpty()) {
+                    return Float.parseFloat(output.trim());
+                }
+            }
+        } else {
+            // 读取错误输出
+            StringBuilder error = new StringBuilder();
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream()))) {
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    error.append(line).append("\n");
+                }
+            }
+            throw new IOException("Python脚本错误 (exit code " + exitCode + "): " + error);
+        }
+
+        throw new IOException("未获取到有效时长数据");
     }
 
+    // === 以下是缺失的方法实现 ===
+
+    // 错误响应方法
+    private Map<String, Object> errorResponse(int code, String message) {
+        Map<String, Object> error = new HashMap<>();
+        error.put("code", code);
+        error.put("error", message);
+        return error;
+    }
+
+    // 验证文件大小
+    private void validateFileSize(MultipartFile file) {
+        long maxSize = 100 * 1024 * 1024; // 100MB
+        if (file.getSize() > maxSize) {
+            throw new IllegalArgumentException("文件大小超过100MB限制");
+        }
+    }
+
+    // 生成安全文件名
+    private String generateSafeFilename(String filename) {
+        // 移除路径信息
+        String safeName = filename.replaceAll(".*[/\\\\]", "");
+        // 替换特殊字符
+        safeName = safeName.replaceAll("[^a-zA-Z0-9\\.\\-_]", "_");
+        // 防止路径遍历
+        safeName = safeName.replaceAll("\\.\\.", "_");
+        return safeName;
+    }
+
+    // 获取文件扩展名
+    private String getFileExtension(String filename) {
+        int dotIndex = filename.lastIndexOf('.');
+        if (dotIndex > 0 && dotIndex < filename.length() - 1) {
+            return filename.substring(dotIndex + 1);
+        }
+        return "";
+    }
+
+    // 验证文件类型
     private ResourceType validateFileType(MultipartFile file, String type) {
         ResourceType resourceType;
         try {
@@ -140,13 +250,7 @@ public class ResourceController {
         return resourceType;
     }
 
-    private void validateFileSize(MultipartFile file) {
-        long maxSize = 100 * 1024 * 1024; // 100MB
-        if (file.getSize() > maxSize) {
-            throw new IllegalArgumentException("文件大小超过100MB限制");
-        }
-    }
-
+    // 获取允许的文件扩展名
     private Set<String> getAllowedExtensions(ResourceType type) {
         switch (type) {
             case PPT: return Set.of("ppt", "pptx");
@@ -160,24 +264,7 @@ public class ResourceController {
         }
     }
 
-    private String getFileExtension(String filename) {
-        int dotIndex = filename.lastIndexOf('.');
-        if (dotIndex > 0 && dotIndex < filename.length() - 1) {
-            return filename.substring(dotIndex + 1);
-        }
-        return "";
-    }
-
-    private String generateSafeFilename(String filename) {
-        // 移除路径信息
-        String safeName = filename.replaceAll(".*[/\\\\]", "");
-        // 替换特殊字符
-        safeName = safeName.replaceAll("[^a-zA-Z0-9\\.\\-_]", "_");
-        // 防止路径遍历
-        safeName = safeName.replaceAll("\\.\\.", "_");
-        return safeName;
-    }
-
+    // 创建资源响应
     private Map<String, Object> createResourceResponse(Resource resource) {
         Map<String, Object> data = new HashMap<>();
         data.put("resourceId", resource.getResourceId());
@@ -189,13 +276,7 @@ public class ResourceController {
         data.put("uploaderId", resource.getUploaderId());
         data.put("uploadTime", resource.getUploadTime());
         data.put("viewCount", resource.getViewCount());
+        data.put("duration", resource.getDuration()); // 新增时长字段
         return data;
-    }
-
-    private Map<String, Object> errorResponse(int code, String message) {
-        Map<String, Object> error = new HashMap<>();
-        error.put("code", code);
-        error.put("error", message);
-        return error;
     }
 }

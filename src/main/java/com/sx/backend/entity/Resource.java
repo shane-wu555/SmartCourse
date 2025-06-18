@@ -13,7 +13,7 @@ public class Resource {
     private Long size;
     private String description;
     private Integer viewCount;
-    // private Float duration;
+    private Float duration;
 
     public Resource(String resourceId, String name, String courseId, String url, ResourceType type, String uploaderId, String description) {
         this.resourceId = resourceId;
@@ -109,11 +109,7 @@ public class Resource {
         this.viewCount = viewCount;
     }
 
-    /*public Float getDuration() {
-        return duration;
-    }
+    public Float getDuration() { return duration; }
 
-    public void setDuration(Float duration) {
-        this.duration = duration;
-    }*/
+    public void setDuration(Float duration) { this.duration = duration; }
 }
