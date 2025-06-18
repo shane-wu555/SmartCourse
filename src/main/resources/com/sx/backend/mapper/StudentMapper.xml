@@ -3,6 +3,103 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sx.backend.mapper.StudentMapper">
 
+    <!-- 查询学生所有课程 -->
+    <select id="selectAllCourses" resultType="com.sx.backend.entity.Course">
+        SELECT c.*
+        FROM course c
+                 JOIN course_enrollment ce ON c.course_id = ce.course_id
+        WHERE ce.student_id = #{studentId}
+          AND ce.status = 'ENROLLED'
+    </select>
+
+    <!-- 分页查询学生课程 -->
+    <select id="selectCoursesByPage" resultType="com.sx.backend.entity.Course">
+        SELECT c.*
+        FROM course c
+                 JOIN course_enrollment ce ON c.course_id = ce.course_id
+        WHERE ce.student_id = #{studentId}
+          AND ce.status = 'ENROLLED'
+            LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 选修课程 -->
+    <insert id="enrollCourse">
+        INSERT INTO course_enrollment (enrollment_id, student_id, course_id, status)
+        VALUES (
+                   UUID(),
+                   #{studentId},
+                   #{courseId},
+                   'ENROLLED'
+               )
+    </insert>
+
+    <!-- 退课 -->
+    <update id="dropCourse">
+        UPDATE course_enrollment
+        SET status = 'WITHDRAWN'
+        WHERE student_id = #{studentId}
+          AND course_id = #{courseId}
+    </update>
+
+    <!-- 搜索课程 -->
+    <select id="searchCourses" resultType="com.sx.backend.entity.Course">
+        SELECT c.*
+        FROM course c
+        WHERE (c.name LIKE CONCAT('%', #{keyword}, '%')
+            OR c.course_code LIKE CONCAT('%', #{keyword}, '%'))
+          AND NOT EXISTS (
+            SELECT 1
+            FROM course_enrollment ce
+            WHERE ce.course_id = c.course_id
+              AND ce.student_id = #{studentId}
+              AND ce.status = 'ENROLLED'
+        )
+            LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 获取搜索课程总数 -->
+    <select id="countSearchCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course c
+        WHERE (c.name LIKE CONCAT('%', #{keyword}, '%')
+            OR c.course_code LIKE CONCAT('%', #{keyword}, '%'))
+          AND NOT EXISTS (
+            SELECT 1
+            FROM course_enrollment ce
+            WHERE ce.course_id = c.course_id
+              AND ce.student_id = #{studentId}
+              AND ce.status = 'ENROLLED'
+        )
+    </select>
+
+    <!-- 获取课程详情（验证学生权限） -->
+    <select id="selectCourseDetail" resultType="com.sx.backend.entity.Course">
+        SELECT c.*
+        FROM course c
+                 JOIN course_enrollment ce ON c.course_id = ce.course_id
+        WHERE ce.student_id = #{studentId}
+          AND ce.status = 'ENROLLED'
+          AND c.course_id = #{courseId}
+    </select>
+
+    <!-- 查询学生课程总数 -->
+    <select id="countCourses" resultType="long">
+        SELECT COUNT(*)
+        FROM course_enrollment
+        WHERE student_id = #{studentId}
+          AND status = 'ENROLLED'
+    </select>
+
+    <!-- 检查学生是否已选修某课程 -->
+    <select id="isEnrolled" resultType="int">
+        SELECT COUNT(*)
+        FROM course_enrollment
+        WHERE student_id = #{studentId}
+          AND course_id = #{courseId}
+          AND status = 'ENROLLED'
+    </select>
+
+    <!-- 添加学生 -->
     <insert id="insertStudent" parameterType="com.sx.backend.entity.Student">
         INSERT INTO student (
             student_id, student_number, grade, major
@@ -11,10 +108,12 @@
                  )
     </insert>
 
+    <!-- 通过id找到学生信息 -->
     <select id="findByUserId" resultType="com.sx.backend.entity.Student">
         SELECT * FROM student WHERE student_id = #{userId}
     </select>
 
+    <!--    增加学生-->
     <update id="updateStudent" parameterType="com.sx.backend.entity.Student">
         UPDATE student SET
                            student_number = #{studentNumber},
@@ -22,4 +121,12 @@
                            major = #{major}
         WHERE student_id = #{userId}
     </update>
+
+    <!--    和findByUserId只有名字不一样-->
+    <select id="selectById" resultType="com.sx.backend.entity.Student">
+        SELECT * FROM student
+        WHERE student_id = #{studentId}
+    </select>
+
+
 </mapper>
