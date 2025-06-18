@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.TeacherMapper">
+
+    <insert id="insertTeacher" parameterType="com.sx.backend.entity.Teacher">
+        INSERT INTO teacher (
+            teacher_id, title, department, bio
+        ) VALUES (
+                     #{userId}, #{title}, #{department}, #{bio}
+                 )
+    </insert>
+
+    <select id="findByUserId" resultType="com.sx.backend.entity.Teacher">
+        SELECT * FROM teacher WHERE teacher_id = #{userId}
+    </select>
+
+    <update id="updateTeacher" parameterType="com.sx.backend.entity.Teacher">
+        UPDATE teacher SET
+                           title = #{title},
+                           department = #{department},
+                           bio = #{bio}
+        WHERE teacher_id = #{userId}
+    </update>
+</mapper>

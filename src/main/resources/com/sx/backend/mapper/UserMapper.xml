@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.UserMapper">
+
+    <resultMap id="userMap" type="com.sx.backend.entity.User">
+        <id property="userId" column="user_id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="email" column="email"/>
+        <result property="phone" column="phone"/>
+        <result property="avatar" column="avatar"/>
+        <result property="realName" column="real_name"/>
+        <result property="role" column="role" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="registerTime" column="register_time"/>
+        <result property="lastLoginTime" column="last_login_time"/>
+    </resultMap>
+
+    <select id="findByUsername" resultMap="userMap">
+        SELECT * FROM user
+        WHERE username = #{username}
+    </select>
+
+    <select id="existsByUsername" resultType="boolean">
+        SELECT COUNT(1) FROM user
+        WHERE username = #{username}
+    </select>
+
+    <insert id="insertUser" parameterType="com.sx.backend.entity.User">
+        INSERT INTO user (
+            user_id, username, password, email, phone,
+            avatar, real_name, role, register_time
+        ) VALUES (
+                     #{userId}, #{username}, #{password}, #{email}, #{phone},
+                     #{avatar}, #{realName}, #{role}, #{registerTime}
+                 )
+    </insert>
+
+    <update id="updateLastLoginTime">
+        UPDATE user
+        SET last_login_time = #{lastLoginTime}
+        WHERE user_id = #{userId}
+    </update>
+</mapper>

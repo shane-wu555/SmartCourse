@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.StudentMapper">
+
+    <insert id="insertStudent" parameterType="com.sx.backend.entity.Student">
+        INSERT INTO student (
+            student_id, student_number, grade, major
+        ) VALUES (
+                     #{userId}, #{studentNumber}, #{grade}, #{major}
+                 )
+    </insert>
+
+    <select id="findByUserId" resultType="com.sx.backend.entity.Student">
+        SELECT * FROM student WHERE student_id = #{userId}
+    </select>
+
+    <update id="updateStudent" parameterType="com.sx.backend.entity.Student">
+        UPDATE student SET
+                           student_number = #{studentNumber},
+                           grade = #{grade},
+                           major = #{major}
+        WHERE student_id = #{userId}
+    </update>
+</mapper>
