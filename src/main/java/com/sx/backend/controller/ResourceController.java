@@ -3,8 +3,10 @@ package com.sx.backend.controller;
 import com.sx.backend.entity.Resource;
 import com.sx.backend.entity.ResourceType;
 import com.sx.backend.mapper.ResourceMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -43,14 +45,20 @@ public class ResourceController {
     // === 资源上传接口 ===
     @PostMapping("/courses/{courseId}/resources")
     public ResponseEntity<Map<String, Object>> uploadResource(
+            HttpServletRequest request, // 新增参数
             @PathVariable String courseId,
             @RequestParam(value = "file", required = false) MultipartFile file,
             @RequestParam("name") String name,
             @RequestParam("type") String type,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam("uploaderId") String uploaderId) {
+            @RequestParam(value = "description", required = false) String description) { // 移除 uploaderId 参数
 
         try {
+            // 从请求属性获取当前用户ID
+            String uploaderId = (String) request.getAttribute("userId");
+            if (uploaderId == null || uploaderId.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(errorResponse(401, "用户未认证"));
+            }
             if (file == null || file.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorResponse(400, "文件不能为空"));
             }

@@ -5,6 +5,7 @@ import com.sx.backend.dto.request.CourseCreateRequest;
 import com.sx.backend.dto.request.CourseUpdateRequest;
 import com.sx.backend.service.CourseService;
 import com.sx.backend.service.impl.PageResult;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,11 @@ import java.util.List;
 public class TeacherCourseController {
 
     private final CourseService courseService;
+    private final HttpServletRequest request; // 注入HttpServletRequest
 
     private String getCurrentTeacherId() {
-        // TODO
-        return "t001";
+        // 从请求属性中获取拦截器设置的userId
+        return (String) request.getAttribute("userId");
     }
 
     @GetMapping
