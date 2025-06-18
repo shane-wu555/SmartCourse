@@ -4,23 +4,24 @@ import java.time.LocalDateTime;
 
 public class Resource {
     private String resourceId;
-    private Course course;
+    private String courseId;
     private String name;
     private ResourceType type;
     private String url;
     private LocalDateTime uploadTime;
-    private User uploader;
+    private String uploaderId;
     private Long size;
     private String description;
     private Integer viewCount;
+    private Float duration;
 
-    public Resource(String resourceId, String name, Course course, String url, ResourceType type, User uploader, String description) {
+    public Resource(String resourceId, String name, String courseId, String url, ResourceType type, String uploaderId, String description) {
         this.resourceId = resourceId;
         this.name = name;
-        this.course = course;
+        this.courseId = courseId;
         this.url = url;
         this.type = type;
-        this.uploader = uploader;
+        this.uploaderId = uploaderId;
         this.description = description;
         this.uploadTime = LocalDateTime.now();
     }
@@ -36,12 +37,20 @@ public class Resource {
         this.resourceId = resourceId;
     }
 
-    public Course getCourse() {
-        return course;
+    public String getUploaderId() {
+        return uploaderId;
     }
 
-    public void setCourse(Course course) {
-        this.course = course;
+    public void setUploaderId(String uploaderId) {
+        this.uploaderId = uploaderId;
+    }
+
+    public String getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(String courseId) {
+        this.courseId = courseId;
     }
 
     public String getName() {
@@ -76,14 +85,6 @@ public class Resource {
         this.uploadTime = uploadTime;
     }
 
-    public User getUploader() {
-        return uploader;
-    }
-
-    public void setUploader(User uploader) {
-        this.uploader = uploader;
-    }
-
     public Long getSize() {
         return size;
     }
@@ -107,4 +108,8 @@ public class Resource {
     public void setViewCount(Integer viewCount) {
         this.viewCount = viewCount;
     }
+
+    public Float getDuration() { return duration; }
+
+    public void setDuration(Float duration) { this.duration = duration; }
 }

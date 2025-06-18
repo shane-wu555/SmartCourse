@@ -87,6 +87,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         } catch (Exception e) {
             // 处理其他异常
+            e.printStackTrace(); // 打印详细异常信息
             Map<String, String> errorResponse = new HashMap<>();
             errorResponse.put("error", "注册失败");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
