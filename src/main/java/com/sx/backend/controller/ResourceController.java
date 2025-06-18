@@ -16,10 +16,9 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.regex.Pattern;
 
 @RestController
-@RequestMapping("/api/teacher/courses/{courseId}/resources")
+@RequestMapping("/api/teacher")
 public class ResourceController {
 
     @Value("${file.storage.location}")
@@ -36,25 +35,8 @@ public class ResourceController {
         this.pythonScriptPath = extractPythonScript();
     }
 
-    // 从classpath提取Python脚本到临时文件
-    private Path extractPythonScript() {
-        try {
-            // 使用全限定名避免冲突
-            org.springframework.core.io.Resource resource =
-                    new ClassPathResource("scripts/video_duration.py");
-
-            Path tempFile = Files.createTempFile("video_duration_", ".py");
-            try (InputStream in = resource.getInputStream()) {
-                Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
-            }
-            tempFile.toFile().deleteOnExit();
-            return tempFile;
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to extract Python script", e);
-        }
-    }
-
-    @PostMapping(consumes = "multipart/form-data")
+    // === 资源上传接口 ===
+    @PostMapping("/courses/{courseId}/resources")
     public ResponseEntity<Map<String, Object>> uploadResource(
             @PathVariable String courseId,
             @RequestParam(value = "file", required = false) MultipartFile file,
@@ -63,42 +45,26 @@ public class ResourceController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam("uploaderId") String uploaderId) {
 
-        // 添加调试日志
-        System.out.println("Received upload request for course: " + courseId);
-        System.out.println("File present: " + (file != null));
-        System.out.println("File name: " + (file != null ? file.getOriginalFilename() : "null"));
-        System.out.println("Name: " + name);
-        System.out.println("Type: " + type);
-        System.out.println("Description: " + description);
-        System.out.println("Uploader ID: " + uploaderId);
-
         try {
-            // 1. 检查文件是否为空
             if (file == null || file.isEmpty()) {
                 return ResponseEntity.badRequest().body(errorResponse(400, "文件不能为空"));
             }
 
-            // 2. 验证文件类型与大小
             ResourceType resourceType = validateFileType(file, type);
             validateFileSize(file);
 
-            // 3. 生成安全文件名和存储路径
             String originalFilename = file.getOriginalFilename();
             String safeFilename = generateSafeFilename(originalFilename);
-            String fileExtension = getFileExtension(originalFilename);
             String uniqueFilename = UUID.randomUUID() + "_" + safeFilename;
 
-            // 4. 创建存储目录
             Path courseDir = Paths.get(storageLocation, courseId, resourceType.toString().toLowerCase());
             if (!Files.exists(courseDir)) {
                 Files.createDirectories(courseDir);
             }
 
-            // 5. 保存文件
             Path filePath = courseDir.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), filePath);
 
-            // 6. 创建资源实体
             Resource resource = new Resource();
             resource.setResourceId(UUID.randomUUID().toString());
             resource.setCourseId(courseId);
@@ -111,27 +77,20 @@ public class ResourceController {
             resource.setUploadTime(LocalDateTime.now());
             resource.setViewCount(0);
 
-            // ======== 新增：视频时长解析 ========
             if (resourceType == ResourceType.VIDEO) {
                 try {
-                    // Windows 路径处理
                     String winPath = filePath.toString().replace("\\", "\\\\");
                     Float duration = parseVideoDuration(Paths.get(winPath));
                     resource.setDuration(duration);
-                    System.out.println("视频时长解析成功: " + duration + "秒");
                 } catch (Exception e) {
-                    System.err.println("视频时长解析失败: " + e.getMessage());
-                    e.printStackTrace();
                     resource.setDuration(null);
                 }
             } else {
-                resource.setDuration(null); // 非视频资源设为null
+                resource.setDuration(null);
             }
 
-            // 7. 保存到数据库
             resourceMapper.insertResource(resource);
 
-            // 8. 返回响应
             Map<String, Object> response = new HashMap<>();
             response.put("code", 201);
             response.put("message", "资源上传成功");
@@ -148,7 +107,184 @@ public class ResourceController {
         }
     }
 
-    // 调用Python脚本解析视频时长
+    // === 获取资源列表接口 ===
+    @GetMapping("/courses/{courseId}/resources")
+    public ResponseEntity<Map<String, Object>> getResourceList(
+            @PathVariable String courseId,
+            @RequestParam(value = "type", required = false) String type,
+            @RequestParam(value = "page", defaultValue = "1") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size) {
+
+        if (page < 1) page = 1;
+        if (size < 1 || size > 50) size = 10;
+        int offset = (page - 1) * size;
+
+        try {
+            List<Resource> resources = resourceMapper.getResourcesByCourseId(
+                    courseId, type, offset, size);
+
+            int total = resourceMapper.countResourcesByCourseId(courseId, type);
+            int totalPages = (int) Math.ceil((double) total / size);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
+            response.put("message", "成功获取资源列表");
+
+            Map<String, Object> data = new HashMap<>();
+            data.put("page", page);
+            data.put("size", size);
+            data.put("totalElements", total);
+            data.put("totalPages", totalPages);
+
+            List<Map<String, Object>> content = new ArrayList<>();
+            for (Resource resource : resources) {
+                content.add(createResourceResponse(resource));
+            }
+            data.put("content", content);
+
+            response.put("data", data);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(errorResponse(500, "获取资源列表失败: " + e.getMessage()));
+        }
+    }
+
+    // === 获取资源详情接口 ===
+    @GetMapping("/resources/{resourceId}")
+    public ResponseEntity<Map<String, Object>> getResourceDetail(
+            @PathVariable String resourceId) {
+
+        try {
+            Resource resource = resourceMapper.getResourceById(resourceId);
+            if (resource == null) {
+                return ResponseEntity.status(404)
+                        .body(errorResponse(404, "资源不存在"));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
+            response.put("message", "成功获取资源详情");
+            response.put("data", createResourceResponse(resource));
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(errorResponse(500, "获取资源详情失败: " + e.getMessage()));
+        }
+    }
+
+    // === 更新资源接口 ===
+    @PutMapping("/resources/{resourceId}")
+    public ResponseEntity<Map<String, Object>> updateResource(
+            @PathVariable String resourceId,
+            @RequestBody Map<String, String> updateData) {
+
+        try {
+            Resource resource = resourceMapper.getResourceById(resourceId);
+            if (resource == null) {
+                return ResponseEntity.status(404)
+                        .body(errorResponse(404, "资源不存在"));
+            }
+
+            if (updateData.containsKey("name")) {
+                resource.setName(updateData.get("name"));
+            }
+            if (updateData.containsKey("description")) {
+                resource.setDescription(updateData.get("description"));
+            }
+
+            int result = resourceMapper.updateResource(resource);
+            if (result == 0) {
+                return ResponseEntity.internalServerError()
+                        .body(errorResponse(500, "资源更新失败"));
+            }
+
+            Resource updatedResource = resourceMapper.getResourceById(resourceId);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", 200);
+            response.put("message", "资源更新成功");
+            response.put("data", createResourceResponse(updatedResource));
+
+            return ResponseEntity.ok(response);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest()
+                    .body(errorResponse(400, "无效的资源类型"));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(errorResponse(500, "更新资源失败: " + e.getMessage()));
+        }
+    }
+
+    // === 删除资源接口 ===
+    @DeleteMapping("/resources/{resourceId}")
+    public ResponseEntity<Map<String, Object>> deleteResource(
+            @PathVariable String resourceId) {
+
+        try {
+            Resource resource = resourceMapper.getResourceById(resourceId);
+            if (resource == null) {
+                return ResponseEntity.status(404)
+                        .body(errorResponse(404, "资源不存在"));
+            }
+
+            int taskCount = resourceMapper.countTaskReferences(resourceId);
+            if (taskCount > 0) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("code", 409);
+                response.put("message", "资源被任务引用，无法删除");
+
+                Map<String, Object> details = new HashMap<>();
+                details.put("taskCount", taskCount);
+                response.put("details", details);
+
+                return ResponseEntity.status(409).body(response);
+            }
+
+            Path filePath = Paths.get(resource.getUrl());
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+            }
+
+            int result = resourceMapper.deleteResource(resourceId);
+            if (result == 0) {
+                return ResponseEntity.internalServerError()
+                        .body(errorResponse(500, "资源删除失败"));
+            }
+
+            return ResponseEntity.noContent().build();
+
+        } catch (IOException e) {
+            return ResponseEntity.internalServerError()
+                    .body(errorResponse(500, "文件删除失败: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                    .body(errorResponse(500, "删除资源失败: " + e.getMessage()));
+        }
+    }
+
+    // === 辅助方法 ===
+    private Path extractPythonScript() {
+        try {
+            org.springframework.core.io.Resource resource =
+                    new ClassPathResource("scripts/video_duration.py");
+
+            Path tempFile = Files.createTempFile("video_duration_", ".py");
+            try (InputStream in = resource.getInputStream()) {
+                Files.copy(in, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+            tempFile.toFile().deleteOnExit();
+            return tempFile;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to extract Python script", e);
+        }
+    }
+
     private Float parseVideoDuration(Path videoFile) throws IOException, InterruptedException {
         ProcessBuilder processBuilder = new ProcessBuilder(
                 pythonExecutable,
@@ -156,9 +292,7 @@ public class ResourceController {
                 videoFile.toString()
         );
 
-        // 重定向错误流以便调试
         processBuilder.redirectErrorStream(true);
-
         Process process = processBuilder.start();
         int exitCode = process.waitFor();
 
@@ -172,7 +306,6 @@ public class ResourceController {
                 }
             }
         } else {
-            // 读取错误输出
             StringBuilder error = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream()))) {
@@ -188,9 +321,6 @@ public class ResourceController {
         throw new IOException("未获取到有效时长数据");
     }
 
-    // === 以下是缺失的方法实现 ===
-
-    // 错误响应方法
     private Map<String, Object> errorResponse(int code, String message) {
         Map<String, Object> error = new HashMap<>();
         error.put("code", code);
@@ -198,26 +328,20 @@ public class ResourceController {
         return error;
     }
 
-    // 验证文件大小
     private void validateFileSize(MultipartFile file) {
-        long maxSize = 100 * 1024 * 1024; // 100MB
+        long maxSize = 100 * 1024 * 1024;
         if (file.getSize() > maxSize) {
             throw new IllegalArgumentException("文件大小超过100MB限制");
         }
     }
 
-    // 生成安全文件名
     private String generateSafeFilename(String filename) {
-        // 移除路径信息
         String safeName = filename.replaceAll(".*[/\\\\]", "");
-        // 替换特殊字符
         safeName = safeName.replaceAll("[^a-zA-Z0-9\\.\\-_]", "_");
-        // 防止路径遍历
         safeName = safeName.replaceAll("\\.\\.", "_");
         return safeName;
     }
 
-    // 获取文件扩展名
     private String getFileExtension(String filename) {
         int dotIndex = filename.lastIndexOf('.');
         if (dotIndex > 0 && dotIndex < filename.length() - 1) {
@@ -226,7 +350,6 @@ public class ResourceController {
         return "";
     }
 
-    // 验证文件类型
     private ResourceType validateFileType(MultipartFile file, String type) {
         ResourceType resourceType;
         try {
@@ -250,7 +373,6 @@ public class ResourceController {
         return resourceType;
     }
 
-    // 获取允许的文件扩展名
     private Set<String> getAllowedExtensions(ResourceType type) {
         switch (type) {
             case PPT: return Set.of("ppt", "pptx");
@@ -264,10 +386,10 @@ public class ResourceController {
         }
     }
 
-    // 创建资源响应
     private Map<String, Object> createResourceResponse(Resource resource) {
         Map<String, Object> data = new HashMap<>();
         data.put("resourceId", resource.getResourceId());
+        data.put("courseId", resource.getCourseId());
         data.put("name", resource.getName());
         data.put("type", resource.getType().name());
         data.put("url", resource.getUrl());
@@ -276,7 +398,7 @@ public class ResourceController {
         data.put("uploaderId", resource.getUploaderId());
         data.put("uploadTime", resource.getUploadTime());
         data.put("viewCount", resource.getViewCount());
-        data.put("duration", resource.getDuration()); // 新增时长字段
+        data.put("duration", resource.getDuration());
         return data;
     }
 }
