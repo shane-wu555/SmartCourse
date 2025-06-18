@@ -8,8 +8,13 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 
 import java.io.*;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -70,7 +75,9 @@ public class ResourceController {
             resource.setCourseId(courseId);
             resource.setName(name);
             resource.setType(resourceType);
-            resource.setUrl(filePath.toString());
+            // 存储相对路径而不是绝对路径
+            String relativePath = "/" + courseId + "/" + resourceType.toString().toLowerCase() + "/" + uniqueFilename;
+            resource.setUrl(relativePath);
             resource.setSize(file.getSize());
             resource.setDescription(description);
             resource.setUploaderId(uploaderId);
@@ -265,6 +272,71 @@ public class ResourceController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError()
                     .body(errorResponse(500, "删除资源失败: " + e.getMessage()));
+        }
+    }
+
+    // === 下载资源接口 ===
+    @GetMapping("/resources/{resourceId}/download")
+    public ResponseEntity<org.springframework.core.io.Resource> downloadResource(
+            @PathVariable String resourceId) {
+
+        try {
+            Resource dbResource = resourceMapper.getResourceById(resourceId);
+            if (dbResource == null) {
+                return ResponseEntity.status(404).build();
+            }
+
+            // 修复：使用配置的存储位置而不是绝对路径
+            Path storageRoot = Paths.get(storageLocation);
+            Path filePath = storageRoot.resolve(dbResource.getUrl().replaceFirst("^/", ""));
+
+            if (!Files.exists(filePath)) {
+                return ResponseEntity.status(410).build();
+            }
+
+            // 设置下载响应头 - 使用RFC 5987编码解决中文问题
+            HttpHeaders headers = new HttpHeaders();
+            String filename = getDownloadFilename(dbResource);
+
+            // 对文件名进行URL编码（UTF-8），并替换+为%20
+            String encodedFilename = URLEncoder.encode(filename, StandardCharsets.UTF_8.toString())
+                    .replaceAll("\\+", "%20");
+
+            // 构建符合RFC 5987规范的Content-Disposition头
+            String contentDisposition = "attachment; filename=\"" + encodedFilename + "\"; " +
+                    "filename*=UTF-8''" + encodedFilename;
+
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, contentDisposition);
+
+            // 根据文件类型设置Content-Type
+            String contentType = getContentType(dbResource.getType());
+            headers.setContentType(MediaType.parseMediaType(contentType));
+
+            // 返回文件流
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(Files.size(filePath))
+                    .body(new FileSystemResource(filePath));
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    // 辅助方法：生成下载文件名
+    private String getDownloadFilename(Resource resource) {
+        String extension = getFileExtension(resource.getUrl());
+        return resource.getName() + (extension.isEmpty() ? "" : "." + extension);
+    }
+
+    // 辅助方法：根据资源类型获取Content-Type
+    private String getContentType(ResourceType type) {
+        switch (type) {
+            case PDF: return "application/pdf";
+            case PPT: return "application/vnd.ms-powerpoint";
+            case VIDEO: return "video/mp4";
+            case DOCUMENT: return "application/msword";
+            default: return "application/octet-stream";
         }
     }
 

@@ -11,7 +11,8 @@ public interface ResourceMapper {
             "VALUES (#{resourceId}, #{courseId}, #{name}, #{type}, #{url}, #{size}, #{description}, #{uploaderId}, #{uploadTime}, #{viewCount}, #{duration})")
     int insertResource(Resource resource);
 
-    @Select("SELECT * FROM resource WHERE resource_id = #{resourceId}")
+    @Select("SELECT resource_id, course_id, name, type, url, size, description, uploader_id, upload_time, view_count, duration " +
+            "FROM resource WHERE resource_id = #{resourceId}")
     Resource getResourceById(String resourceId);
 
     @Select("SELECT * FROM resource WHERE course_id = #{courseId} " +
