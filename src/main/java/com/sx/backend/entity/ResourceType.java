@@ -45,8 +45,8 @@ public enum ResourceType {
         return false;
     }
 
-    @Override
+    /*@Override
     public String toString() {
         return "\"" + value + "\""; // 用于 JSON 输出时保持字符串格式
-    }
+    }*/
 }
