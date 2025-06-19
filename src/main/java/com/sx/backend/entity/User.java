@@ -51,9 +51,7 @@ public class User {
         this.username = username;
     }
 
-    public String getUserId() {
-        return userId;
-    }
+    public String getUserId() { return userId;  }
 
     public void setUserId(String userId) {
         this.userId = userId;

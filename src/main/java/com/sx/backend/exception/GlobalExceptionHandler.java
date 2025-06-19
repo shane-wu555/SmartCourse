@@ -45,4 +45,5 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(500, "服务器内部错误", null));
     }
+
 }
