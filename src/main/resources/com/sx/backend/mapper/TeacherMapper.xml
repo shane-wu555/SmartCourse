@@ -5,21 +5,23 @@
 
     <insert id="insertTeacher" parameterType="com.sx.backend.entity.Teacher">
         INSERT INTO teacher (
-            teacher_id, title, department, bio
+        teacher_id, employee_number, title, department, bio  <!-- 添加 employee_number -->
         ) VALUES (
-                     #{userId}, #{title}, #{department}, #{bio}
-                 )
+        #{userId}, #{employeeNumber}, #{title}, #{department}, #{bio}
+        )
     </insert>
 
-    <select id="findByUserId" resultType="com.sx.backend.entity.Teacher">
-        SELECT * FROM teacher WHERE teacher_id = #{userId}
+    <select id="findById" resultType="com.sx.backend.entity.Teacher">
+        SELECT * FROM teacher WHERE teacher_id = #{teacherId}
     </select>
 
     <update id="updateTeacher" parameterType="com.sx.backend.entity.Teacher">
         UPDATE teacher SET
-                           title = #{title},
-                           department = #{department},
-                           bio = #{bio}
+        employee_number = #{employeeNumber},  <!-- 添加更新工号 -->
+        title = #{title},
+        department = #{department},
+        bio = #{bio}
         WHERE teacher_id = #{userId}
     </update>
+
 </mapper>
