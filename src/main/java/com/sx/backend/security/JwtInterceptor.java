@@ -20,6 +20,11 @@ public class JwtInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws Exception {
 
+        // 放行预检请求（OPTIONS）
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            return true;
+        }
+
         // 放行登录和注册接口
         String requestURI = request.getRequestURI();
         if (requestURI.contains("/api/auth/login") ||
