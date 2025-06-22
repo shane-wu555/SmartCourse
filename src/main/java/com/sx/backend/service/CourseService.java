@@ -34,4 +34,6 @@ public interface CourseService {
 
     // 删除课程
     void deleteCourse(String courseId, String teacherId);
+
+    String getCurrentTeacherId();
 }

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sx.backend.mapper.KnowledgePointMapper">
+
+    <resultMap id="knowledgePointMap" type="com.sx.backend.entity.KnowledgePoint">
+        <id property="pointId" column="point_id" />
+        <result property="courseId" column="course_id" />
+        <result property="name" column="name" />
+        <result property="description" column="description" />
+        <result property="parentId" column="parent_id" />
+        <result property="difficulty" column="difficulty"
+                typeHandler="com.sx.backend.typehandler.DifficultyLevelTypeHandler"/>
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="resourceCount" column="resource_count" />
+    </resultMap>
+
+    <insert id="insertKnowledgePoint" parameterType="com.sx.backend.entity.KnowledgePoint">
+        INSERT INTO knowledge_point (
+            point_id,
+            course_id,
+            name,
+            description,
+            parent_id,
+            difficulty,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{pointId},
+                     #{courseId},
+                     #{name},
+                     #{description},
+                     #{parentId},
+                     #{difficulty, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                     NOW(),
+                     NOW()
+                 )
+    </insert>
+
+    <update id="updateKnowledgePoint" parameterType="com.sx.backend.entity.KnowledgePoint">
+        UPDATE knowledge_point
+        SET
+            name = #{name},
+            description = #{description},
+            difficulty = #{difficulty, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            updated_at = NOW()
+        WHERE point_id = #{pointId}
+    </update>
+
+    <update id="updatePointParent">
+        UPDATE knowledge_point
+        SET parent_id = #{parentId}
+        WHERE point_id = #{pointId}
+    </update>
+
+    <delete id="deleteKnowledgePoint">
+        DELETE FROM knowledge_point
+        WHERE point_id = #{pointId}
+    </delete>
+
+    <select id="selectKnowledgePointById" resultMap="knowledgePointMap">
+        SELECT
+            kp.*,
+            (SELECT COUNT(*) FROM resource_knowledge_point rkp WHERE rkp.point_id = kp.point_id) AS resource_count
+        FROM knowledge_point kp
+        WHERE point_id = #{pointId}
+    </select>
+
+    <select id="selectKnowledgePointsByCourseId" resultMap="knowledgePointMap">
+        SELECT
+            kp.*,
+            (SELECT COUNT(*) FROM resource_knowledge_point rkp WHERE rkp.point_id = kp.point_id) AS resource_count
+        FROM knowledge_point kp
+        WHERE course_id = #{courseId}
+        ORDER BY created_at ASC
+    </select>
+
+    <select id="selectChildrenPoints" resultMap="knowledgePointMap">
+        SELECT *
+        FROM knowledge_point
+        WHERE parent_id = #{parentId}
+    </select>
+
+    <select id="checkNameExists" resultType="int">
+        SELECT COUNT(*)
+        FROM knowledge_point
+        WHERE course_id = #{courseId} AND name = #{name}
+        <if test="pointId != null and pointId != ''">
+            AND point_id != #{pointId}
+        </if>
+    </select>
+
+    <select id="checkHasChildren" resultType="int">
+        SELECT COUNT(*)
+        FROM knowledge_point
+        WHERE parent_id = #{pointId}
+    </select>
+
+    <select id="checkHasResources" resultType="int">
+        SELECT COUNT(*)
+        FROM resource_knowledge_point
+        WHERE point_id = #{pointId}
+    </select>
+
+    <select id="checkHasTasks" resultType="int">
+        SELECT COUNT(*)
+        FROM task_knowledge_point
+        WHERE point_id = #{pointId}
+    </select>
+</mapper>

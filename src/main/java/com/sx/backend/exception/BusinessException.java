@@ -1,4 +1,4 @@
-package com.sx.backend.service.impl;
+package com.sx.backend.exception;
 
 // 自定义业务异常
 public class BusinessException extends RuntimeException {
