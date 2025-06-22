@@ -1,6 +1,7 @@
 package com.sx.backend.service.impl;
 
 import com.sx.backend.entity.Course;
+import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.StudentMapper;
 import com.sx.backend.service.StudentService;
 import org.springframework.stereotype.Service;

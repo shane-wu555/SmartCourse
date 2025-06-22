@@ -4,21 +4,27 @@ import com.sx.backend.dto.CourseDTO;
 import com.sx.backend.dto.request.CourseCreateRequest;
 import com.sx.backend.dto.request.CourseUpdateRequest;
 import com.sx.backend.entity.Course;
-import com.sx.backend.entity.Teacher;
+import com.sx.backend.exception.AccessDeniedException;
+import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.service.CourseService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class CourseServiceImpl implements CourseService {
 
     private final CourseMapper courseMapper;
+    private static final Logger log = LoggerFactory.getLogger(KnowledgePointServiceImpl.class);
 
     @Override
     public List<CourseDTO> getCoursesByTeacherId(String teacherId) {
@@ -125,5 +131,62 @@ public class CourseServiceImpl implements CourseService {
         }
 
         courseMapper.delete(courseId);
+    }
+
+    public String getCurrentTeacherId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        // 记录详细的认证信息
+        if (authentication != null) {
+            log.info("安全上下文认证信息: [认证状态: {}, 类型: {}, 名称: {}]",
+                    authentication.isAuthenticated(),
+                    authentication.getClass().getSimpleName(),
+                    authentication.getName());
+
+            log.info("认证主体: {}", authentication.getPrincipal().toString());
+            log.info("授权信息: {}", authentication.getAuthorities().toString());
+        } else {
+            log.warn("安全上下文无认证信息！");
+        }
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            log.error("未认证用户: 无法获取教师ID");
+            throw new AccessDeniedException("未认证用户");
+        }
+
+        // 尝试从不同来源获取教师ID
+        Object principal = authentication.getPrincipal();
+
+        // 情况1：Principal是字符串（直接是教师ID）
+        if (principal instanceof String) {
+            String teacherId = (String) principal;
+            log.info("从String类型Principal获取教师ID: {}", teacherId);
+            return teacherId;
+        }
+
+        // 情况2：Principal是UserDetails实现
+        if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+            String username = ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            log.info("从UserDetails获取教师ID: {}", username);
+            return username;
+        }
+
+        // 情况3：Principal是自定义用户对象（例如实现了UserDetails）
+        if (principal instanceof com.sx.backend.entity.User) {
+            String userId = ((com.sx.backend.entity.User) principal).getUserId();
+            log.info("从自定义User对象获取教师ID: {}", userId);
+            return userId;
+        }
+
+        // 情况4：JWT声明信息
+        if (principal instanceof io.jsonwebtoken.Claims) {
+            String subject = ((io.jsonwebtoken.Claims) principal).getSubject();
+            log.info("从JWT Claims获取教师ID: {}", subject);
+            return subject;
+        }
+
+        // 无法识别的Principal类型
+        log.error("无法识别的Principal类型: {}", principal.getClass().getName());
+        throw new AccessDeniedException("无法获取教师ID - 不支持的Principal类型");
     }
 }
