@@ -17,4 +17,12 @@ public interface UserMapper {
             @Param("userId") String userId,
             @Param("lastLoginTime") LocalDateTime lastLoginTime
     );
+
+    User findUserById(String userId);
+
+    int updateUser(User user);
+
+    int deleteUser(String userId);
+
+    boolean existsByEmail(String email);
 }

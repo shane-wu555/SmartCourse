@@ -17,23 +17,22 @@
     </resultMap>
 
     <select id="findByUsername" resultMap="userMap">
-        SELECT * FROM user
+        SELECT *
+        FROM user
         WHERE username = #{username}
     </select>
 
     <select id="existsByUsername" resultType="boolean">
-        SELECT COUNT(1) FROM user
+        SELECT COUNT(1)
+        FROM user
         WHERE username = #{username}
     </select>
 
     <insert id="insertUser" parameterType="com.sx.backend.entity.User">
-        INSERT INTO user (
-            user_id, username, password, email, phone,
-            avatar, real_name, role, register_time
-        ) VALUES (
-                     #{userId}, #{username}, #{password}, #{email}, #{phone},
-                     #{avatar}, #{realName}, #{role}, #{registerTime}
-                 )
+        INSERT INTO user (user_id, username, password, email, phone,
+                          avatar, real_name, role, register_time)
+        VALUES (#{userId}, #{username}, #{password}, #{email}, #{phone},
+                #{avatar}, #{realName}, #{role}, #{registerTime})
     </insert>
 
     <update id="updateLastLoginTime">
@@ -41,4 +40,32 @@
         SET last_login_time = #{lastLoginTime}
         WHERE user_id = #{userId}
     </update>
+
+    <select id="findUserById" resultMap="userMap">
+        SELECT *
+        FROM user
+        WHERE user_id = #{userId}
+    </select>
+
+    <update id="updateUser" parameterType="com.sx.backend.entity.User">
+        UPDATE user
+        SET username  = #{username},
+            email     = #{email},
+            phone     = #{phone},
+            avatar    = #{avatar},
+            real_name = #{realName}
+        WHERE user_id = #{userId}
+    </update>
+
+    <delete id="deleteUser">
+        DELETE
+        FROM user
+        WHERE user_id = #{userId}
+    </delete>
+
+    <select id="existsByEmail" resultType="boolean">
+        SELECT COUNT(1)
+        FROM user
+        WHERE email = #{email}
+    </select>
 </mapper>
