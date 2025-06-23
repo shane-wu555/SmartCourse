@@ -25,10 +25,10 @@ public class Task {
         this.courseId = courseId;
     }
   
-    public Task(String taskId, Course course, String title, TaskType type, LocalDateTime deadline, Float maxScore,
+    public Task(String taskId, String courseId, String title, TaskType type, LocalDateTime deadline, Float maxScore,
                 List<Resource> resources, List<Submission> submissions) {
         this.taskId = taskId;
-        this.course = course;
+        this.courseId = courseId;
         this.title = title;
         this.description = description;
         this.type = type;
@@ -57,10 +57,6 @@ public class Task {
 
     public void setTestPaper(TestPaper testPaper) {
         this.testPaper = testPaper;
-    }
-
-    public void setType(TaskType type) {
-        this.type = type;
     }
 
     public TaskType getType() { return type; }

@@ -6,6 +6,7 @@ import com.sx.backend.dto.response.AdminTeacherResponse;
 import com.sx.backend.entity.Teacher;
 import com.sx.backend.entity.User;
 import com.sx.backend.entity.Role;
+import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.TeacherMapper;
 import com.sx.backend.mapper.UserMapper;
 import com.sx.backend.service.AdminTeacherService;

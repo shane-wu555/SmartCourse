@@ -4,8 +4,9 @@ import com.sx.backend.dto.request.admin.*;
 import com.sx.backend.dto.response.AdminStudentResponse;
 import java.util.Map;
 
+import com.sx.backend.exception.BusinessException;
 import com.sx.backend.service.AdminStudentService;
-import com.sx.backend.service.impl.BusinessException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,19 +61,19 @@ public class AdminStudentController {
         return ResponseEntity.ok(result);
     }
 
-    // 更新学生信息
-    @PutMapping("/{studentId}")
+    // 更新学生信息 - 改为按学号操作
+    @PutMapping("/{studentNumber}")
     public ResponseEntity<AdminStudentResponse> updateStudent(
-            @PathVariable String studentId,
+            @PathVariable String studentNumber, // 改为学号参数
             @RequestBody AdminStudentUpdateRequest request) {
-        AdminStudentResponse response = adminStudentService.updateStudent(studentId, request);
+        AdminStudentResponse response = adminStudentService.updateStudent(studentNumber, request);
         return ResponseEntity.ok(response);
     }
 
-    // 删除学生
-    @DeleteMapping("/{studentId}")
-    public ResponseEntity<Void> deleteStudent(@PathVariable String studentId) {
-        adminStudentService.deleteStudent(studentId);
+    // 删除学生 - 改为按学号操作
+    @DeleteMapping("/{studentNumber}")
+    public ResponseEntity<Void> deleteStudent(@PathVariable String studentNumber) { // 改为学号参数
+        adminStudentService.deleteStudent(studentNumber);
         return ResponseEntity.noContent().build();
     }
 }

@@ -40,19 +40,19 @@ public class GradeServiceImpl implements GradeService {
         updateFinalGrade(taskGrade);
 
         // 更新成绩趋势
-        analysisService.updateGradeTrend(taskGrade.getTask().getCourse().getCourseId(),
+        analysisService.updateGradeTrend(taskGrade.getTask().getCourseId(),
                                          taskGrade.getStudent().getStudentNumber());
     }
 
     public void updateFinalGrade(TaskGrade taskGrade) {
-        Grade grade = gradeMapper.findByStudentAndCourse(taskGrade.getTask().getCourse().getCourseId(),
+        Grade grade = gradeMapper.findByStudentAndCourse(taskGrade.getTask().getCourseId(),
                                                          taskGrade.getStudent().getStudentNumber());
 
         if (grade == null) {
             grade = new Grade();
             grade.setGradeId(UUID.randomUUID().toString());
             grade.setStudent(taskGrade.getStudent());
-            grade.setCourse(taskGrade.getTask().getCourse());
+            //TODO grade.setCourse(taskGrade.getTask().getCourse());
             grade.setFinalGrade(0.0f);
             gradeMapper.insert(grade);
         }
