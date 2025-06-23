@@ -3,6 +3,7 @@ package com.sx.backend.entity;
 // 提交状态枚举
 public enum SubmissionStatus {
     SUBMITTED("已提交"),
+    AUTO_GRADED("自动批改"),
     GRADED("已批改"),
     RETURNED("已退回");
 
