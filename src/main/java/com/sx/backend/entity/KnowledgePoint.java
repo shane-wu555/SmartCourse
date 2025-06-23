@@ -1,6 +1,5 @@
 package com.sx.backend.entity;
 
-import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,4 +21,5 @@ public class KnowledgePoint {
     private Date updatedAt;
     private Integer resourceCount;
     private List<KnowledgePoint> children;
+
 }

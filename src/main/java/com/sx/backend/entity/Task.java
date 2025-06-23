@@ -9,6 +9,7 @@ public class Task {
     private String title;
     private String description;
     private TaskType type;
+    private TestPaper testPaper;
     private LocalDateTime deadline;
     private Float maxScore;
     private List<Resource> resources;
@@ -20,14 +21,21 @@ public class Task {
     // 构造函数
     public Task() {}
 
-    public Task(String courseId, String title, String description, TaskType type,
-                LocalDateTime deadline, Float maxScore) {
+    public Task(String courseId, String title, String description, TaskType type, LocalDateTime deadline, Float maxScore) {
         this.courseId = courseId;
+    }
+  
+    public Task(String taskId, Course course, String title, TaskType type, LocalDateTime deadline, Float maxScore,
+                List<Resource> resources, List<Submission> submissions) {
+        this.taskId = taskId;
+        this.course = course;
         this.title = title;
         this.description = description;
         this.type = type;
         this.deadline = deadline;
         this.maxScore = maxScore;
+        this.resources = resources;
+        this.submissions = submissions;
     }
 
     // Getters and Setters
@@ -42,6 +50,18 @@ public class Task {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+  
+    public TestPaper getTestPaper() {
+        return testPaper;
+    }
+
+    public void setTestPaper(TestPaper testPaper) {
+        this.testPaper = testPaper;
+    }
+
+    public void setType(TaskType type) {
+        this.type = type;
+    }
 
     public TaskType getType() { return type; }
     public void setType(TaskType type) { this.type = type; }
