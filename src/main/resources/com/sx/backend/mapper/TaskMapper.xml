@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.TaskMapper">
+
+    <resultMap id="taskResultMap" type="com.sx.backend.entity.Task">
+        <id property="taskId" column="task_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="title" column="title"/>
+        <result property="description" column="description"/>
+        <result property="type" column="type" typeHandler="com.sx.backend.typehandler.TaskTypeTypeHandler"/>        <result property="deadline" column="deadline"/>
+        <result property="maxScore" column="max_score"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+
+        <!-- 关联资源 -->
+        <collection property="resources" ofType="com.sx.backend.entity.Resource"
+                    select="selectResourcesByTaskId" column="task_id"/>
+
+        <!-- 关联知识点 -->
+        <collection property="knowledgePoints" ofType="com.sx.backend.entity.KnowledgePoint"
+                    select="selectPointsByTaskId" column="task_id"/>
+    </resultMap>
+
+    <select id="selectResourcesByTaskId" resultType="com.sx.backend.entity.Resource">
+        SELECT r.resource_id, r.course_id, r.name, r.type, r.url,
+               r.upload_time, r.uploader_id, r.size, r.duration,
+               r.description, r.view_count
+        FROM resource r
+                 JOIN task_resource tr ON r.resource_id = tr.resource_id
+        WHERE tr.task_id = #{taskId}
+    </select>
+
+    <select id="selectPointsByTaskId" resultType="com.sx.backend.entity.KnowledgePoint">
+        SELECT kp.point_id, kp.course_id, kp.name, kp.description,
+               kp.parent_id, kp.sort_order, kp.created_at, kp.updated_at,
+               kp.difficulty
+        FROM knowledge_point kp
+                 JOIN task_knowledge_point tkp ON kp.point_id = tkp.point_id
+        WHERE tkp.task_id = #{taskId}
+    </select>
+
+    <select id="getById" resultMap="taskResultMap">
+        SELECT * FROM task WHERE task_id = #{taskId}
+    </select>
+
+    <select id="getByCourseId" resultMap="taskResultMap">
+        SELECT * FROM task
+        WHERE course_id = #{courseId}
+        ORDER BY created_at DESC
+            LIMIT #{size} OFFSET #{offset}
+    </select>
+
+    <insert id="insert" parameterType="com.sx.backend.entity.Task">
+        INSERT INTO task (task_id, course_id, title, description, type, deadline, max_score, created_at)
+        VALUES (#{taskId}, #{courseId}, #{title}, #{description}, #{type}, #{deadline}, #{maxScore}, NOW())
+    </insert>
+
+    <update id="update" parameterType="com.sx.backend.entity.Task">
+        UPDATE task
+        <set>
+            <if test="title != null">title = #{title},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="type != null">type = #{type, typeHandler=com.sx.backend.typehandler.TaskTypeTypeHandler},</if>
+            <if test="deadline != null">deadline = #{deadline},</if>
+            <if test="maxScore != null">max_score = #{maxScore},</if>
+            updated_at = NOW()
+        </set>
+        WHERE task_id = #{taskId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM task WHERE task_id = #{taskId}
+    </delete>
+
+    <insert id="insertTaskResources">
+        INSERT INTO task_resource (task_id, resource_id, created_at)
+        VALUES
+        <foreach collection="resourceIds" item="resourceId" separator=",">
+            (#{taskId}, #{resourceId}, NOW())
+        </foreach>
+    </insert>
+
+    <insert id="insertTaskPoints">
+        INSERT INTO task_knowledge_point (task_id, point_id, created_at)
+        VALUES
+        <foreach collection="pointIds" item="pointId" separator=",">
+            (#{taskId}, #{pointId}, NOW())
+        </foreach>
+    </insert>
+
+    <delete id="deleteTaskResources">
+        DELETE FROM task_resource WHERE task_id = #{taskId}
+    </delete>
+
+    <delete id="deleteTaskPoints">
+        DELETE FROM task_knowledge_point WHERE task_id = #{taskId}
+    </delete>
+
+    <select id="countSubmissions" resultType="int">
+        SELECT COUNT(*) FROM submission WHERE task_id = #{taskId}
+    </select>
+</mapper>

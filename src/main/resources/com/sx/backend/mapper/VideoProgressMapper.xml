@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sx.backend.mapper.VideoProgressMapper">
+
+    <resultMap id="videoProgressMap" type="com.sx.backend.entity.VideoProgress">
+        <id property="progressId" column="progress_id"/>
+        <result property="lastPosition" column="last_position"/>
+        <result property="totalWatched" column="total_watched"/>
+        <result property="completionRate" column="completion_rate"/>
+        <result property="heatmapData" column="heatmap_data"/>
+        <result property="lastWatchTime" column="last_watch_time"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <association property="video" javaType="com.sx.backend.entity.Resource">
+            <id property="resourceId" column="resource_id"/>
+            <result property="name" column="resource_name"/>
+            <result property="duration" column="duration"/>
+        </association>
+        <association property="student" javaType="com.sx.backend.entity.Student">
+            <id property="studentId" column="student_id"/>
+            <result property="name" column="student_name"/>
+        </association>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.sx.backend.entity.VideoProgress">
+        INSERT INTO video_progress (
+            progress_id,
+            resource_id,
+            student_id,
+            last_position,
+            total_watched,
+            completion_rate,
+            heatmap_data,
+            last_watch_time,
+            created_at,
+            updated_at
+        ) VALUES (
+                     #{progressId},
+                     #{video.resourceId},
+                     #{student.studentId},
+                     #{lastPosition},
+                     #{totalWatched},
+                     #{completionRate},
+                     #{heatmapData},
+                     #{lastWatchTime},
+                     #{createdAt},
+                     #{updatedAt}
+                 )
+    </insert>
+
+    <update id="update" parameterType="com.sx.backend.entity.VideoProgress">
+        UPDATE video_progress
+        SET
+            last_position = #{lastPosition},
+            total_watched = #{totalWatched},
+            completion_rate = #{completionRate},
+            heatmap_data = #{heatmapData},
+            last_watch_time = #{lastWatchTime},
+            updated_at = #{updatedAt}
+        WHERE progress_id = #{progressId}
+    </update>
+
+    <select id="selectByResourceAndStudent" resultMap="videoProgressMap">
+        SELECT
+            vp.*,
+            r.resource_id,
+            r.name as resource_name,
+            r.duration,
+            s.student_id,
+            s.name as student_name
+        FROM video_progress vp
+                 JOIN resource r ON vp.resource_id = r.resource_id
+                 JOIN student s ON vp.student_id = s.student_id
+        WHERE vp.resource_id = #{resourceId}
+          AND vp.student_id = #{studentId}
+    </select>
+
+    <select id="selectByCourseAndStudent" resultMap="videoProgressMap">
+        SELECT
+            vp.*,
+            r.resource_id,
+            r.name as resource_name,
+            r.duration,
+            s.student_id,
+            s.name as student_name
+        FROM video_progress vp
+                 JOIN resource r ON vp.resource_id = r.resource_id
+                 JOIN student s ON vp.student_id = s.student_id
+        WHERE r.course_id = #{courseId}
+          AND vp.student_id = #{studentId}
+    </select>
+
+    <select id="exists" resultType="boolean">
+        SELECT COUNT(1) > 0
+        FROM video_progress
+        WHERE resource_id = #{resourceId}
+          AND student_id = #{studentId}
+    </select>
+</mapper>
