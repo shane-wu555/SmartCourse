@@ -3,16 +3,26 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.sx.backend.mapper.TeacherMapper">
 
-    <insert id="insertTeacher" parameterType="com.sx.backend.entity.Teacher">
-        INSERT INTO teacher (
-        teacher_id, employee_number, title, department, bio  <!-- 添加 employee_number -->
-        ) VALUES (
-        #{userId}, #{employeeNumber}, #{title}, #{department}, #{bio}
-        )
-    </insert>
-
     <select id="findById" resultType="com.sx.backend.entity.Teacher">
-        SELECT * FROM teacher WHERE teacher_id = #{teacherId}
+        SELECT
+            t.teacher_id,
+            t.employee_number,
+            t.title,
+            t.department,
+            t.bio,
+            u.user_id,
+            u.username,
+            u.password,
+            u.email,
+            u.phone,
+            u.avatar,
+            u.real_name AS realName,
+            u.role,
+            u.register_time,
+            u.last_login_time
+        FROM teacher t
+                 JOIN user u ON t.teacher_id = u.user_id
+        WHERE t.teacher_id = #{teacherId}
     </select>
 
     <update id="updateTeacher" parameterType="com.sx.backend.entity.Teacher">
@@ -23,5 +33,76 @@
         bio = #{bio}
         WHERE teacher_id = #{userId}
     </update>
+
+    <select id="existsByEmployeeNumber" resultType="boolean">
+        SELECT COUNT(1) FROM teacher WHERE employee_number = #{employeeNumber}
+    </select>
+
+    <insert id="insertTeacher" parameterType="com.sx.backend.entity.Teacher">
+        INSERT INTO teacher (teacher_id, employee_number, title, department, bio)
+        VALUES (#{userId}, #{employeeNumber}, #{title}, #{department}, #{bio})
+    </insert>
+
+    <delete id="deleteTeacher">
+        DELETE FROM teacher WHERE teacher_id = #{teacherId}
+    </delete>
+
+    <select id="findTeachersByCondition" resultType="com.sx.backend.entity.Teacher">
+        SELECT
+        t.teacher_id,
+        t.employee_number,
+        t.title,
+        t.department,
+        t.bio,
+        u.user_id,
+        u.username,
+        u.password,
+        u.email,
+        u.phone,
+        u.avatar,
+        u.real_name AS realName,
+        u.role,
+        u.register_time,
+        u.last_login_time
+        FROM teacher t
+        JOIN user u ON t.teacher_id = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR t.employee_number LIKE CONCAT('%', #{keyword}, '%')
+                OR t.department LIKE CONCAT('%', #{keyword}, '%')
+                OR t.title LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="department != null and department != ''">
+                AND t.department = #{department}
+            </if>
+        </where>
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countTeachersByCondition" resultType="long">
+        SELECT COUNT(1)
+        FROM teacher t
+        JOIN user u ON t.teacher_id = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR t.employee_number LIKE CONCAT('%', #{keyword}, '%')
+                OR t.department LIKE CONCAT('%', #{keyword}, '%')
+                OR t.title LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="department != null and department != ''">
+                AND t.department = #{department}
+            </if>
+        </where>
+    </select>
+
+    <!-- 新增按工号查询 -->
+    <select id="findByEmployeeNumber" resultType="com.sx.backend.entity.Teacher">
+        SELECT t.*, u.*
+        FROM teacher t
+                 JOIN user u ON t.teacher_id = u.user_id
+        WHERE t.employee_number = #{employeeNumber}
+    </select>
 
 </mapper>

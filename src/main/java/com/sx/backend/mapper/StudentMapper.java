@@ -53,4 +53,26 @@ public interface StudentMapper {
     int insertStudent(Student student);
 
     int updateStudent(Student student);
+
+    boolean existsByStudentNumber(String studentNumber);
+
+    List<Student> findStudentsByCondition(
+            @Param("keyword") String keyword,
+            @Param("grade") String grade,
+            @Param("offset") int offset,
+            @Param("size") int size
+    );
+
+    long countStudentsByCondition(
+            @Param("keyword") String keyword,
+            @Param("grade") String grade
+    );
+
+    int deleteStudent(String studentId);
+
+    // 添加新方法
+    Student selectByStudentNumber(String studentNumber);
+
+    int isWithdrawn(@Param("studentId") String studentId,
+                    @Param("courseId") String courseId);
 }
