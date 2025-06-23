@@ -5,6 +5,7 @@ import java.util.List;
 
 public class Teacher extends User{
     private String teacherId;
+    private String employeeNumber; // 新增工号字段
     private String title;         // 职称
     private String department;    // 所属院系
     private String bio;           // 简介
@@ -55,6 +56,14 @@ public class Teacher extends User{
 
     public void setTaughtCourses(List<String> taughtCourses) {
         this.taughtCourses = taughtCourses;
+    }
+
+    public String getEmployeeNumber() {
+        return employeeNumber;
+    }
+
+    public void setEmployeeNumber(String employeeNumber) {
+        this.employeeNumber = employeeNumber;
     }
 
 }

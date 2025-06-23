@@ -153,4 +153,24 @@
     <select id="countResourcesByCourseId" resultType="int">
         SELECT COUNT(*) FROM resource WHERE course_id = #{courseId}
     </select>
+
+    <select id="findCourseWithTeacher" resultType="com.sx.backend.dto.CourseDTO">
+        SELECT
+            c.course_id AS courseId,
+            c.course_code AS courseCode,
+            c.name,
+            c.description,
+            c.credit,
+            c.hours,
+            c.semester,
+            c.teacher_id AS teacherId,
+            u.real_name AS teacherName,
+            c.created_at AS createTime,
+            c.updated_at AS updateTime,
+            (SELECT COUNT(*) FROM course_enrollment WHERE course_id = c.course_id) AS studentCount,
+            (SELECT COUNT(*) FROM task WHERE course_id = c.course_id) AS taskCount
+        FROM course c
+                 JOIN user u ON c.teacher_id = u.user_id
+        WHERE c.course_id = #{courseId}
+    </select>
 </mapper>

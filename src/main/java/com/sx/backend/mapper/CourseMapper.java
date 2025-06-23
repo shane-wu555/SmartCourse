@@ -39,4 +39,5 @@ public interface CourseMapper {
     int countEnrollmentsByCourseId(String courseId);
     int countTasksByCourseId(String courseId);
     int countResourcesByCourseId(String courseId);
+    CourseDTO findCourseWithTeacher(@Param("courseId") String courseId);
 }

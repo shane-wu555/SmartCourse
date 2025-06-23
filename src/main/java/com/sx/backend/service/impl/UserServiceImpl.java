@@ -94,6 +94,7 @@ public class UserServiceImpl implements UserService {
         }  else if ("TEACHER".equals(registerRequest.getRole())) {
             Teacher teacher = new Teacher();
             teacher.setUserId(user.getUserId());
+            teacher.setEmployeeNumber(registerRequest.getEmployeeNumber()); // 设置工号
             teacher.setTitle(registerRequest.getTitle());
             teacher.setDepartment(registerRequest.getDepartment());
             teacher.setBio(registerRequest.getBio());

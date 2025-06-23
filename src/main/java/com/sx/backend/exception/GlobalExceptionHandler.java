@@ -1,7 +1,6 @@
 package com.sx.backend.exception;
 
 import com.sx.backend.controller.ApiResponse;
-import com.sx.backend.service.impl.BusinessException;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
