@@ -60,7 +60,6 @@ public class GradeServiceImpl implements GradeService {
         // 重新计算最终成绩（加权平均）
         List<TaskGrade> taskGrades = taskGradeMapper.findByGradeId(grade.getGradeId());
         float totalScore = 0;
-        float totalWeight = 0;
 
         for (TaskGrade tg : taskGrades) {
             totalScore += tg.getScore();

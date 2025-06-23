@@ -8,6 +8,7 @@ public class Task {
     private Course course;
     private String title;
     private TaskType type;
+    private TestPaper testPaper;
     private LocalDateTime deadline;
     private Float maxScore;
     private List<Resource> resources;
@@ -15,14 +16,16 @@ public class Task {
     //private List<knowledgePoint> knowledgePoints;
 
 
-    public Task(Course course, String taskId, String title, TaskType type, LocalDateTime deadline, Float maxScore, List<Resource> resources) {
-        this.course = course;
+    public Task(String taskId, Course course, String title, TaskType type, LocalDateTime deadline, Float maxScore,
+                List<Resource> resources, List<Submission> submissions) {
         this.taskId = taskId;
+        this.course = course;
         this.title = title;
         this.type = type;
         this.deadline = deadline;
         this.maxScore = maxScore;
         this.resources = resources;
+        this.submissions = submissions;
     }
 
     public Task() {
@@ -54,6 +57,14 @@ public class Task {
 
     public TaskType getType() {
         return type;
+    }
+
+    public TestPaper getTestPaper() {
+        return testPaper;
+    }
+
+    public void setTestPaper(TestPaper testPaper) {
+        this.testPaper = testPaper;
     }
 
     public void setType(TaskType type) {

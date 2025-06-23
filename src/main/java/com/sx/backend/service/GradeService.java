@@ -1,6 +1,5 @@
 package com.sx.backend.service;
 
-import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.TaskGrade;
 
 public interface GradeService {
