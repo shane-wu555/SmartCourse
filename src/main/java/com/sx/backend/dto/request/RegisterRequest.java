@@ -17,6 +17,7 @@ public class RegisterRequest {
     private String major;
 
     // 教师特有字段
+    private String employeeNumber; // 新增工号字段
     private String title;
     private String department;
     private String bio;
