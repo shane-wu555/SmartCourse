@@ -4,23 +4,25 @@ import java.util.List;
 import java.util.Set;
 
 public class Question {
-    private String questionId;
-    private String content;
-    private QuestionType type;
+    private String questionId; // 主键
+    private String bankId; // 课程ID
+    private String content; // 题干内容
+    private QuestionType type; // 题型
     private Set<String> options; // 仅选择题和判断题有选项
     private Set<String> answer; // 选择题答案或判断题答案
     private Float score;
-    private DifficultyLevel difficulty;
+    private DifficultyLevel difficultylevel;
     private List<KnowledgePoint> knowledgePoints;
 
-    public Question(String questionId, String content, QuestionType type, Set<String> options, Set<String> answer, Float score, DifficultyLevel difficulty, List<KnowledgePoint> knowledgePoints) {
+    public Question(String questionId, String bankId,String content, QuestionType type, Set<String> options, Set<String> answer, Float score, DifficultyLevel difficultylevel, List<KnowledgePoint> knowledgePoints) {
         this.questionId = questionId;
+        this.bankId = bankId;
         this.content = content;
         this.type = type;
         this.options = options;
         this.answer = answer;
         this.score = score;
-        this.difficulty = difficulty;
+        this.difficultylevel = difficultylevel;
         this.knowledgePoints = knowledgePoints;
     }
 
@@ -29,6 +31,14 @@ public class Question {
 
     public String getQuestionId() {
         return questionId;
+    }
+
+    public void setBankId(String BankId) {
+        this.bankId = bankId;
+    }
+  
+    public String BankId() {
+        return bankId;
     }
 
     public void setQuestionId(String questionId) {
