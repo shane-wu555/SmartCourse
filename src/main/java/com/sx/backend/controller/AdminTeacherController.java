@@ -3,8 +3,9 @@ package com.sx.backend.controller;
 
 import com.sx.backend.dto.request.admin.*;
 import com.sx.backend.dto.response.AdminTeacherResponse;
+import com.sx.backend.exception.BusinessException;
 import com.sx.backend.service.AdminTeacherService;
-import com.sx.backend.service.impl.BusinessException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
