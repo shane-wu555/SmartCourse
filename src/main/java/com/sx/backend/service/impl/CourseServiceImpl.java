@@ -9,7 +9,6 @@ import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.service.CourseService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;

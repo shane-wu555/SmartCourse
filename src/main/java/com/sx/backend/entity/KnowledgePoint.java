@@ -16,7 +16,7 @@ public class KnowledgePoint {
     private String name;
     private String description;
     private String parentId;
-    private DifficultyLevel difficulty; // 使用枚举类型
+    private DifficultyLevel difficultylevel; // 使用枚举类型
     private Date createdAt;
     private Date updatedAt;
     private Integer resourceCount;

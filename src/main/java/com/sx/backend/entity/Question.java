@@ -44,4 +44,32 @@ public class Question {
 
         return 0f; // 默认返回0分
     }
+
+    // 获取所有知识点ID（递归）
+    public static boolean containsKnowledgePoint(List<KnowledgePoint> knowledgePoints, List<String> targetIds) {
+        if (knowledgePoints == null || targetIds == null) return false;
+        for (KnowledgePoint kp : knowledgePoints) {
+            if (targetIds.contains(kp.getPointId())) return true;
+            if (kp.getChildren() != null && containsKnowledgePoint(kp.getChildren(), targetIds)) return true;
+        }
+        return false;
+    }
+
+    // 获取题目主知识点ID（第一个知识点ID，若有）
+    public String getMainKnowledgePointId() {
+        if (knowledgePoints != null && !knowledgePoints.isEmpty()) {
+            return knowledgePoints.get(0).getPointId();
+        }
+        return null;
+    }
+
+    // 获取题目难度等级（字符串）
+    public String getDifficultyLevel() {
+        return difficultylevel != null ? difficultylevel.name().toLowerCase() : null;
+    }
+
+    // 获取题目类型（字符串）
+    public String getTypeString() {
+        return type != null ? type.name() : null;
+    }
 }

@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 import static com.sx.backend.entity.DifficultyLevel.MEDIUM;
+import com.sx.backend.dto.KnowledgeGraphDTO;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -46,8 +48,8 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
         knowledgePoint.setUpdatedAt(new Date());
 
         // 设置默认难度
-        if (knowledgePoint.getDifficulty() == null) {
-            knowledgePoint.setDifficulty(MEDIUM);
+        if (knowledgePoint.getDifficultylevel() == null) {
+            knowledgePoint.setDifficultylevel(MEDIUM);
         }
 
         // 验证父知识点
@@ -113,7 +115,7 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
         // 更新字段
         existingPoint.setName(knowledgePoint.getName());
         existingPoint.setDescription(knowledgePoint.getDescription());
-        existingPoint.setDifficulty(knowledgePoint.getDifficulty());
+        existingPoint.setDifficultylevel(knowledgePoint.getDifficultylevel());
         existingPoint.setUpdatedAt(new Date());
 
         // 更新数据库
@@ -242,6 +244,33 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
     @Override
     public boolean checkCircularDependency(String sourceId, String targetId) {
         return knowledgeRelationMapper.checkCircularDependency(sourceId, targetId) > 0;
+    }
+
+    @Override
+    public KnowledgeGraphDTO getKnowledgeGraphByCourse(String courseId) {
+        List<KnowledgePoint> points = getKnowledgePointsByCourse(courseId, false);
+        List<KnowledgeGraphDTO.Node> nodes = points.stream().map(point -> {
+            KnowledgeGraphDTO.Node node = new KnowledgeGraphDTO.Node();
+            node.setId(point.getPointId());
+            node.setName(point.getName());
+            node.setDescription(point.getDescription());
+            node.setDifficultyLevel(point.getDifficultylevel() != null ? point.getDifficultylevel().name() : null);
+            return node;
+        }).collect(Collectors.toList());
+
+        List<KnowledgeRelation> relations = knowledgeRelationMapper.selectRelationsByCourseId(courseId);
+        List<KnowledgeGraphDTO.Edge> edges = relations.stream().map(rel -> {
+            KnowledgeGraphDTO.Edge edge = new KnowledgeGraphDTO.Edge();
+            edge.setSource(rel.getSourcePointId());
+            edge.setTarget(rel.getTargetPointId());
+            edge.setType(rel.getRelationType().name());
+            return edge;
+        }).collect(Collectors.toList());
+
+        KnowledgeGraphDTO dto = new KnowledgeGraphDTO();
+        dto.setNodes(nodes);
+        dto.setEdges(edges);
+        return dto;
     }
 
     // 构建知识点树形结构
