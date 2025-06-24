@@ -1,10 +1,13 @@
 package com.sx.backend.service.impl;
 
+import com.sx.backend.entity.Course;
 import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.TaskGrade;
+import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.GradeMapper;
 import com.sx.backend.mapper.TaskGradeMapper;
 import com.sx.backend.service.AnalysisService;
+import com.sx.backend.service.CourseService;
 import com.sx.backend.service.GradeService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,6 +27,9 @@ public class GradeServiceImpl implements GradeService {
 
     @Autowired
     private AnalysisService analysisService;
+
+    @Autowired
+    private CourseService courseService; // 注入CourseService
 
     @Override
     @Transactional
@@ -52,7 +58,11 @@ public class GradeServiceImpl implements GradeService {
             grade = new Grade();
             grade.setGradeId(UUID.randomUUID().toString());
             grade.setStudent(taskGrade.getStudent());
-            //TODO grade.setCourse(taskGrade.getTask().getCourse());
+            // 使用注入的courseService实例获取课程实体
+            Course course = courseService.getCourseEntityById(
+                    taskGrade.getTask().getCourseId()
+            );
+            grade.setCourse(course);
             grade.setFinalGrade(0.0f);
             gradeMapper.insert(grade);
         }

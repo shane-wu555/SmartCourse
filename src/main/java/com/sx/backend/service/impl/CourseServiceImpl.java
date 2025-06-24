@@ -189,4 +189,28 @@ public class CourseServiceImpl implements CourseService {
         log.error("无法识别的Principal类型: {}", principal.getClass().getName());
         throw new AccessDeniedException("无法获取教师ID - 不支持的Principal类型");
     }
+
+    @Override
+    public Course getCourseEntityById(String courseId) {
+        // 1. 查询课程DTO
+        CourseDTO courseDTO = courseMapper.findById(courseId);
+
+        if (courseDTO == null) {
+            throw new BusinessException(404, "课程不存在");
+        }
+
+        // 2. 将DTO转换为Entity - 只复制基本字段（不包括关联集合）
+        Course course = new Course();
+        course.setCourseId(courseDTO.getCourseId());
+        course.setCourseCode(courseDTO.getCourseCode());
+        course.setName(courseDTO.getName());
+        course.setDescription(courseDTO.getDescription());
+        course.setCredit(courseDTO.getCredit());
+        course.setHours(courseDTO.getHours());
+        course.setSemester(courseDTO.getSemester());
+        course.setTeacherId(courseDTO.getTeacherId());
+        course.setCreateTime(courseDTO.getCreateTime());
+        course.setUpdateTime(courseDTO.getUpdateTime());
+        return course;
+    }
 }
