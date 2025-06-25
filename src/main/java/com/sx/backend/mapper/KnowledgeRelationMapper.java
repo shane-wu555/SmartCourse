@@ -18,4 +18,5 @@ public interface KnowledgeRelationMapper {
                             @Param("targetId") String targetId);
     int checkCircularDependency(@Param("sourceId") String sourceId,
                                 @Param("targetId") String targetId);
+     List<KnowledgeRelation> selectRelationsByCourseId(@Param("courseId") String courseId);
 }

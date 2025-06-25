@@ -3,6 +3,7 @@ package com.sx.backend.service;
 import java.util.List;
 
 import com.sx.backend.entity.KnowledgePoint;
+import com.sx.backend.dto.KnowledgeGraphDTO;
 import com.sx.backend.entity.RelationType;
 
 public interface KnowledgePointService {
@@ -79,4 +80,12 @@ public interface KnowledgePointService {
      * @return 是否存在循环依赖
      */
     boolean checkCircularDependency(String sourceId, String targetId);
+
+    /**
+     * 获取知识点的关系图数据
+     * @param courseId 课程ID
+     * @return 知识点关系图数据
+     */
+    KnowledgeGraphDTO getKnowledgeGraphByCourse(String courseId);
+
 }

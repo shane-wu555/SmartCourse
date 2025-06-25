@@ -3,6 +3,7 @@ package com.sx.backend.controller;
 import com.sx.backend.entity.KnowledgePoint;
 import com.sx.backend.entity.RelationType;
 import com.sx.backend.service.KnowledgePointService;
+import com.sx.backend.dto.KnowledgeGraphDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -150,6 +151,12 @@ public class KnowledgePointController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/courses/{courseId}/knowledge-graph")
+    public ResponseEntity<ResponseResult<KnowledgeGraphDTO>> getKnowledgeGraph(@PathVariable String courseId) {
+        KnowledgeGraphDTO dto = knowledgePointService.getKnowledgeGraphByCourse(courseId);
+        ResponseResult<KnowledgeGraphDTO> response = new ResponseResult<>(HttpStatus.OK.value(), "获取成功", dto);
+        return ResponseEntity.ok(response);
+    }
     // 通用的响应结果类
     public static class ResponseResult<T> {
         private int code;

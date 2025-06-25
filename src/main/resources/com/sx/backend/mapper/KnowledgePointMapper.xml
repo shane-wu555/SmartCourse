@@ -10,7 +10,7 @@
         <result property="name" column="name" />
         <result property="description" column="description" />
         <result property="parentId" column="parent_id" />
-        <result property="difficulty" column="difficulty"
+        <result property="difficultylevel" column="difficultylevel"
                 typeHandler="com.sx.backend.typehandler.DifficultyLevelTypeHandler"/>
         <result property="createdAt" column="created_at" />
         <result property="updatedAt" column="updated_at" />
@@ -24,7 +24,7 @@
             name,
             description,
             parent_id,
-            difficulty,
+            difficultylevel,
             created_at,
             updated_at
         ) VALUES (
@@ -33,7 +33,7 @@
                      #{name},
                      #{description},
                      #{parentId},
-                     #{difficulty, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                     #{difficultylevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
                      NOW(),
                      NOW()
                  )
@@ -44,7 +44,7 @@
         SET
             name = #{name},
             description = #{description},
-            difficulty = #{difficulty, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+            difficultylevel = #{difficultylevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
             updated_at = NOW()
         WHERE point_id = #{pointId}
     </update>
