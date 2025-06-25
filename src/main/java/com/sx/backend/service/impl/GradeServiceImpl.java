@@ -6,6 +6,7 @@ import com.sx.backend.entity.TaskGrade;
 import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.GradeMapper;
 import com.sx.backend.mapper.TaskGradeMapper;
+import com.sx.backend.mapper.TaskMapper;
 import com.sx.backend.service.AnalysisService;
 import com.sx.backend.service.CourseService;
 import com.sx.backend.service.GradeService;
@@ -24,6 +25,9 @@ public class GradeServiceImpl implements GradeService {
 
     @Autowired
     private TaskGradeMapper taskGradeMapper;
+
+    @Autowired
+    private TaskMapper taskMapper;
 
     @Autowired
     private AnalysisService analysisService;
@@ -46,23 +50,20 @@ public class GradeServiceImpl implements GradeService {
         updateFinalGrade(taskGrade);
 
         // 更新成绩趋势
-        analysisService.updateGradeTrend(taskGrade.getTask().getCourseId(),
-                                         taskGrade.getStudent().getStudentNumber());
+        analysisService.updateGradeTrend(taskMapper.getById(taskGrade.getTaskId()).getCourseId(),
+                                         taskGrade.getStudentId());
     }
 
     public void updateFinalGrade(TaskGrade taskGrade) {
-        Grade grade = gradeMapper.findByStudentAndCourse(taskGrade.getTask().getCourseId(),
-                                                         taskGrade.getStudent().getStudentNumber());
+
+        Grade grade = gradeMapper.findByStudentAndCourse(taskMapper.getById(taskGrade.getTaskId()).getCourseId(),
+                                                         taskGrade.getStudentId());
 
         if (grade == null) {
             grade = new Grade();
             grade.setGradeId(UUID.randomUUID().toString());
-            grade.setStudent(taskGrade.getStudent());
-            // 使用注入的courseService实例获取课程实体
-            Course course = courseService.getCourseEntityById(
-                    taskGrade.getTask().getCourseId()
-            );
-            grade.setCourse(course);
+            grade.setStudentId(taskGrade.getStudentId());
+            grade.setCourseId(taskMapper.getById(taskGrade.getTaskId()).getCourseId());
             grade.setFinalGrade(0.0f);
             gradeMapper.insert(grade);
         }

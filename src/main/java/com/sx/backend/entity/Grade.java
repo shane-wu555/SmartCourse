@@ -6,18 +6,18 @@ import java.util.List;
 
 public class Grade {
     private String gradeId;
-    private Student student;
-    private Course course;
+    private String studentId;
+    private String courseId;
     private List<TaskGrade> taskGrades; // 各任务成绩
     private Float finalGrade;           // 总成绩
     private String feedback;
-    private JsonNode gradeTrend;        // 成绩趋势数据
+    private String gradeTrend;        // 成绩趋势数据
     private Integer rankInClass;        // 班级排名
 
-    public Grade(String gradeId, Student student, Course course, List<TaskGrade> taskGrades, Float finalGrade, String feedback, JsonNode gradeTrend, Integer rankInClass) {
+    public Grade(String gradeId, String student, String course, List<TaskGrade> taskGrades, Float finalGrade, String feedback, String gradeTrend, Integer rankInClass) {
         this.gradeId = gradeId;
-        this.student = student;
-        this.course = course;
+        this.studentId = student;
+        this.courseId = course;
         this.taskGrades = taskGrades;
         this.finalGrade = finalGrade;
         this.feedback = feedback;
@@ -36,20 +36,20 @@ public class Grade {
         this.gradeId = gradeId;
     }
 
-    public Student getStudent() {
-        return student;
+    public String getStudentId() {
+        return studentId;
     }
 
-    public void setStudent(Student student) {
-        this.student = student;
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
     }
 
-    public Course getCourse() {
-        return course;
+    public String getCourseId() {
+        return courseId;
     }
 
-    public void setCourse(Course course) {
-        this.course = course;
+    public void setCourseId(String courseId) {
+        this.courseId = courseId;
     }
 
     public List<TaskGrade> getTaskGrades() {
@@ -76,11 +76,11 @@ public class Grade {
         this.feedback = feedback;
     }
 
-    public JsonNode getGradeTrend() {
+    public String getGradeTrend() {
         return gradeTrend;
     }
 
-    public void setGradeTrend(JsonNode gradeTrend) {
+    public void setGradeTrend(String gradeTrend) {
         this.gradeTrend = gradeTrend;
     }
 
