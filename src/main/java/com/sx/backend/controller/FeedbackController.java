@@ -16,6 +16,13 @@ public class FeedbackController {
     @Autowired
     private FeedbackService feedbackService;
 
+    /**
+     * 获取学生的课程反馈
+     *
+     * @param studentId 学生ID
+     * @param courseId  课程ID
+     * @return 学生的课程反馈
+     */
     @GetMapping("/{studentId}/{courseId}")
     public ResponseEntity<FeedbackDTO> getFeedback(
             @PathVariable String studentId,

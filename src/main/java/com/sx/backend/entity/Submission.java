@@ -1,14 +1,8 @@
 package com.sx.backend.entity;
 
-import ch.qos.logback.core.joran.sanity.Pair;
-import com.sx.backend.mapper.TaskMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Submission {
     private String submissionId;
@@ -18,14 +12,15 @@ public class Submission {
     private SubmissionStatus status = SubmissionStatus.SUBMITTED; // 默认状态
     private String content; // 文本内容
     private List<FileMeta> files; // 上传的文件
-    private List<AnswerRecord> answerRecords = new ArrayList<>(); // 学生答案记录
-    private Float grade; // 总成绩
+    private List<String> answerRecords = new ArrayList<>(); // 学生答案记录
+    private boolean completed; // 是否完成
+    private Float finalGrade; // 总成绩
     private Float autoGrade; // 自动批改成绩
     private String feedback; // 教师反馈
     private LocalDateTime gradeTime; // 批改时间
 
     public Submission(String submissionId, String taskId, String studentId, LocalDateTime submitTime,
-                      SubmissionStatus status, String content, List<FileMeta> files, Float grade,
+                      SubmissionStatus status, String content, List<FileMeta> files, Float finalGrade,
                       String feedback, LocalDateTime gradeTime) {
         this.submissionId = submissionId;
         this.taskId = taskId;
@@ -34,12 +29,20 @@ public class Submission {
         this.status = status;
         this.content = content;
         this.files = files;
-        this.grade = grade;
+        this.finalGrade = finalGrade;
         this.feedback = feedback;
         this.gradeTime = gradeTime;
     }
 
     public Submission() {
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public String getSubmissionId() {
@@ -98,16 +101,20 @@ public class Submission {
         this.files = files;
     }
 
-    public Float getGrade() {
-        return grade;
+    public Float getFinalGrade() {
+        return finalGrade;
     }
 
-    public void setGrade(Float grade) {
-        this.grade = grade;
+    public void setFinalGrade(Float finalGrade) {
+        this.finalGrade = finalGrade;
     }
 
-    public List<AnswerRecord> getAnswerRecords() {
+    public List<String> getAnswerRecords() {
         return answerRecords;
+    }
+
+    public void setAnswerRecords(List<String> answerRecords) {
+        this.answerRecords = answerRecords;
     }
 
     public Float getAutoGrade() {
@@ -132,57 +139,6 @@ public class Submission {
 
     public void setGradeTime(LocalDateTime gradeTime) {
         this.gradeTime = gradeTime;
-    }
-
-    // 自动批改
-    public Float autoGradePaper(List<AnswerRecord> answerRecords) {
-        Float autoScore = 0.0f;
-        for (AnswerRecord record : answerRecords) {
-            if (record.getQuestion().isAutoGradable()) {
-                record.autoGrade();
-                autoScore += record.getObtainedScore();
-            }
-        }
-
-        return autoScore;
-    }
-
-    // 获取需要手动批改的题目
-    public List<AnswerRecord> getQuestionForManualGrading(List<AnswerRecord> answerRecords) {
-        return answerRecords.stream()
-                .filter(record -> !record.isAutoGraded())
-                .collect(Collectors.toList());
-    }
-
-    // 处理学生提交的试卷
-    public void submitTestPaper(List<AnswerRecord> answerRecords) {
-        this.answerRecords = answerRecords;
-        this.submitTime = LocalDateTime.now();
-
-        // 自动批改
-        this.autoGrade = autoGradePaper(answerRecords);
-        this.grade = autoGrade;
-
-        // 更新提交状态
-        boolean hasManualGrading = !getQuestionForManualGrading(answerRecords).isEmpty();
-        this.status = hasManualGrading ? SubmissionStatus.AUTO_GRADED : SubmissionStatus.GRADED;
-    }
-
-    // 老师批改
-    public void gradeManualQuestions(Map<String, Pair<Float, String>> questionGrades, String feedback) {
-        List<AnswerRecord> manualRecords = getQuestionForManualGrading(answerRecords);
-
-        for (AnswerRecord record : manualRecords) {
-            Float score = questionGrades.get(record.getRecordId()).first;
-            String questionFeedback = questionGrades.get(record.getRecordId()).second;
-            if (score != null) {
-                record.manualGrade(score, questionFeedback);
-                this.grade += score;
-            }
-        }
-
-        this.status = SubmissionStatus.GRADED;
-        this.feedback = feedback;
     }
 }
 
