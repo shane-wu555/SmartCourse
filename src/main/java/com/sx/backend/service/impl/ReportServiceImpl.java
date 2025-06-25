@@ -3,7 +3,9 @@ package com.sx.backend.service.impl;
 import com.sx.backend.dto.AnalysisReportDTO;
 import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.TaskGrade;
+import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.GradeMapper;
+import com.sx.backend.mapper.StudentMapper;
 import com.sx.backend.mapper.TaskGradeMapper;
 import com.sx.backend.service.ReportService;
 import com.sx.backend.util.ExcelExporter;
@@ -17,6 +19,12 @@ import java.util.stream.Collectors;
 
 @Service
 public class ReportServiceImpl implements ReportService {
+
+    @Autowired
+    private StudentMapper studentMapper;
+
+    @Autowired
+    private CourseMapper courseMapper;
 
     @Autowired
     private GradeMapper gradeMapper;
@@ -34,7 +42,7 @@ public class ReportServiceImpl implements ReportService {
 
         AnalysisReportDTO report = new AnalysisReportDTO();
         report.setCourseId(courseId);
-        report.setCourseName(grades.get(0).getCourse().getName());
+        report.setCourseName(courseMapper.findById(grades.get(0).getCourseId()).getName());
 
         // 计算班级平均分
         double total = 0;
@@ -69,8 +77,8 @@ public class ReportServiceImpl implements ReportService {
 
     private AnalysisReportDTO.StudentPerformance convertToStudentPerformance(Grade grade) {
         AnalysisReportDTO.StudentPerformance sp = new AnalysisReportDTO.StudentPerformance();
-        sp.setStudentId(grade.getStudent().getStudentNumber());
-        sp.setStudentName(grade.getStudent().getRealName());
+        sp.setStudentId(grade.getStudentId());
+        sp.setStudentName(studentMapper.selectById(grade.getStudentId()).getRealName());
         sp.setAverageGrade(grade.getFinalGrade());
 
         // 计算完成率
