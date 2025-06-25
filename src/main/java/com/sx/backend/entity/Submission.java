@@ -13,6 +13,7 @@ public class Submission {
     private String content; // 文本内容
     private List<FileMeta> files; // 上传的文件
     private List<String> answerRecords = new ArrayList<>(); // 学生答案记录
+    private boolean completed; // 是否完成
     private Float finalGrade; // 总成绩
     private Float autoGrade; // 自动批改成绩
     private String feedback; // 教师反馈
@@ -34,6 +35,14 @@ public class Submission {
     }
 
     public Submission() {
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
+
+    public void setCompleted(boolean completed) {
+        this.completed = completed;
     }
 
     public String getSubmissionId() {

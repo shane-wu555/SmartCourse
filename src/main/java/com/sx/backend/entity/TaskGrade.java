@@ -7,7 +7,7 @@ public class TaskGrade {
     private String studentId;
     private String taskId;
     private Float score;
-    private Float completionRate;
+    private Float completionRate;   // 完成准确率
     private LocalDateTime submissionTime;
     private String feedback;
 
