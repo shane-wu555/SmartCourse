@@ -5,22 +5,32 @@ import java.util.List;
 
 public class Task {
     private String taskId;
-    private Course course;
+    private String courseId;
     private String title;
+    private String description;
     private TaskType type;
     private TestPaper testPaper;
     private LocalDateTime deadline;
     private Float maxScore;
     private List<Resource> resources;
-    private List<Submission> submissions; // 学生提交
-    //private List<knowledgePoint> knowledgePoints;
+    private List<KnowledgePoint> knowledgePoints;
+    private List<Submission> submissions;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
+    // 构造函数
+    public Task() {}
 
-    public Task(String taskId, Course course, String title, TaskType type, LocalDateTime deadline, Float maxScore,
+    public Task(String courseId, String title, String description, TaskType type, LocalDateTime deadline, Float maxScore) {
+        this.courseId = courseId;
+    }
+  
+    public Task(String taskId, String courseId, String title, TaskType type, LocalDateTime deadline, Float maxScore,
                 List<Resource> resources, List<Submission> submissions) {
         this.taskId = taskId;
-        this.course = course;
+        this.courseId = courseId;
         this.title = title;
+        this.description = description;
         this.type = type;
         this.deadline = deadline;
         this.maxScore = maxScore;
@@ -28,37 +38,19 @@ public class Task {
         this.submissions = submissions;
     }
 
-    public Task() {
-    }
+    // Getters and Setters
+    public String getTaskId() { return taskId; }
+    public void setTaskId(String taskId) { this.taskId = taskId; }
 
-    public String getTaskId() {
-        return taskId;
-    }
+    public String getCourseId() { return courseId; }
+    public void setCourseId(String courseId) { this.courseId = courseId; }
 
-    public void setTaskId(String taskId) {
-        this.taskId = taskId;
-    }
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
 
-    public Course getCourse() {
-        return course;
-    }
-
-    public void setCourse(Course course) {
-        this.course = course;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public TaskType getType() {
-        return type;
-    }
-
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+  
     public TestPaper getTestPaper() {
         return testPaper;
     }
@@ -67,39 +59,27 @@ public class Task {
         this.testPaper = testPaper;
     }
 
-    public void setType(TaskType type) {
-        this.type = type;
-    }
+    public TaskType getType() { return type; }
+    public void setType(TaskType type) { this.type = type; }
 
-    public LocalDateTime getDeadline() {
-        return deadline;
-    }
+    public LocalDateTime getDeadline() { return deadline; }
+    public void setDeadline(LocalDateTime deadline) { this.deadline = deadline; }
 
-    public void setDeadline(LocalDateTime deadline) {
-        this.deadline = deadline;
-    }
+    public Float getMaxScore() { return maxScore; }
+    public void setMaxScore(Float maxScore) { this.maxScore = maxScore; }
 
-    public Float getMaxScore() {
-        return maxScore;
-    }
+    public List<Resource> getResources() { return resources; }
+    public void setResources(List<Resource> resources) { this.resources = resources; }
 
-    public void setMaxScore(Float maxScore) {
-        this.maxScore = maxScore;
-    }
+    public List<KnowledgePoint> getKnowledgePoints() { return knowledgePoints; }
+    public void setKnowledgePoints(List<KnowledgePoint> knowledgePoints) { this.knowledgePoints = knowledgePoints; }
 
-    public List<Resource> getResources() {
-        return resources;
-    }
+    public List<Submission> getSubmissions() { return submissions; }
+    public void setSubmissions(List<Submission> submissions) { this.submissions = submissions; }
 
-    public void setResources(List<Resource> resources) {
-        this.resources = resources;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public List<Submission> getSubmissions() {
-        return submissions;
-    }
-
-    public void setSubmissions(List<Submission> submissions) {
-        this.submissions = submissions;
-    }
+    public LocalDateTime getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }
