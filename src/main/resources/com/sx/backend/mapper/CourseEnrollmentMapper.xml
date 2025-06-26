@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.CourseEnrollmentMapper">
+
+    <select id="findStudentsByCourseId" resultType="com.sx.backend.dto.TeacherStudentDTO">
+        SELECT
+            ce.enrollment_id AS enrollmentId,
+            ce.student_id AS studentId,
+            ce.final_grade AS finalGrade,
+            ce.status AS status,
+            s.student_number AS studentNumber,
+            u.real_name AS realName,
+            s.grade AS grade,
+            s.major AS major
+        FROM course_enrollment ce
+                 JOIN student s ON ce.student_id = s.student_id
+                 JOIN user u ON s.student_id = u.user_id
+        WHERE ce.course_id = #{courseId}
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO course_enrollment (
+        enrollment_id, student_id, course_id, status,
+        enrollment_time, final_grade, created_at, updated_at
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (UUID(), #{item.studentId}, #{item.courseId}, 'ENROLLED',
+            NOW(), 0.0, NOW(), NOW())
+        </foreach>
+    </insert>
+
+    <select id="existsByStudentIdAndCourseId" resultType="int">
+        SELECT COUNT(*)
+        FROM course_enrollment
+        WHERE student_id = #{studentId}
+          AND course_id = #{courseId}
+    </select>
+
+    <insert id="insertEnrollment" parameterType="com.sx.backend.entity.CourseEnrollment">
+        INSERT INTO course_enrollment (
+            enrollment_id, student_id, course_id, status,
+            final_grade, created_at, updated_at
+        ) VALUES (
+                     UUID(), #{studentId}, #{courseId}, #{status},
+                     #{finalGrade}, NOW(), NOW()
+                 )
+    </insert>
+</mapper>
