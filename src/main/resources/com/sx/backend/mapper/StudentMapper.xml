@@ -246,4 +246,29 @@
           AND course_id = #{courseId}
           AND status = 'WITHDRAWN'
     </select>
+
+    <!-- 在StudentMapper.xml中添加 -->
+    <select id="findByStudentNumbers" resultType="com.sx.backend.entity.Student">
+        SELECT
+        s.student_id,
+        s.student_number,
+        s.grade,
+        s.major,
+        u.user_id AS "userId",
+        u.username,
+        u.password,
+        u.email,
+        u.phone,
+        u.avatar,
+        u.real_name AS "realName",
+        u.role,
+        u.register_time AS "registerTime",
+        u.last_login_time AS "lastLoginTime"
+        FROM student s
+        JOIN user u ON s.student_id = u.user_id
+        WHERE s.student_number IN
+        <foreach collection="list" item="number" open="(" separator="," close=")">
+            #{number}
+        </foreach>
+    </select>
 </mapper>
