@@ -39,6 +39,4 @@ public interface CourseService {
     String getCurrentTeacherId();
 
     Course getCourseEntityById(String courseId);
-
-    CourseDTO getStudentCourseDetail(String courseId);
 }
