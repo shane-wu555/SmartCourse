@@ -38,6 +38,11 @@ public class StudentServiceImpl implements StudentService {
             throw new BusinessException(409, "您已选修该课程");
         }
 
+        // 新增：检查是否曾经选修并退课
+        if (studentMapper.isWithdrawn(studentId, courseId) > 0) {
+            throw new BusinessException(409, "退课后不能重选");
+        }
+
         return studentMapper.enrollCourse(studentId, courseId) > 0;
     }
 

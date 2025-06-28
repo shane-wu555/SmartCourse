@@ -3,6 +3,7 @@ package com.sx.backend.service;
 import com.sx.backend.dto.CourseDTO;
 import com.sx.backend.dto.request.CourseCreateRequest;
 import com.sx.backend.dto.request.CourseUpdateRequest;
+import com.sx.backend.entity.Course;
 import com.sx.backend.service.impl.PageResult;
 
 import java.util.List;
@@ -36,4 +37,6 @@ public interface CourseService {
     void deleteCourse(String courseId, String teacherId);
 
     String getCurrentTeacherId();
+
+    Course getCourseEntityById(String courseId);
 }

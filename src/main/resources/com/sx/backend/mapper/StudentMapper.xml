@@ -108,9 +108,25 @@
                  )
     </insert>
 
-    <!-- 通过id找到学生信息 -->
     <select id="findByUserId" resultType="com.sx.backend.entity.Student">
-        SELECT * FROM student WHERE student_id = #{userId}
+        SELECT
+            s.student_id,
+            s.student_number,
+            s.grade,
+            s.major,
+            u.user_id AS "userId",
+            u.username,
+            u.password,
+            u.email,
+            u.phone,
+            u.avatar,
+            u.real_name AS "realName",
+            u.role,
+            u.register_time AS "registerTime",
+            u.last_login_time AS "lastLoginTime"
+        FROM student s
+                 JOIN user u ON s.student_id = u.user_id
+        WHERE s.student_id = #{userId}
     </select>
 
     <!--    增加学生-->
@@ -124,9 +140,110 @@
 
     <!--    和findByUserId只有名字不一样-->
     <select id="selectById" resultType="com.sx.backend.entity.Student">
-        SELECT * FROM student
-        WHERE student_id = #{studentId}
+        SELECT
+            s.student_id,
+            s.student_number,
+            s.grade,
+            s.major,
+            u.user_id AS "userId",
+            u.username,
+            u.password,
+            u.email,
+            u.phone,
+            u.avatar,
+            u.real_name AS "realName",
+            u.role,
+            u.register_time AS "registerTime",
+            u.last_login_time AS "lastLoginTime"
+        FROM student s
+                 JOIN user u ON s.student_id = u.user_id
+        WHERE s.student_id = #{studentId}
     </select>
 
+    <select id="existsByStudentNumber" resultType="boolean">
+        SELECT COUNT(1) FROM student
+        WHERE student_number = #{studentNumber}
+    </select>
 
+    <select id="findStudentsByCondition" resultType="com.sx.backend.entity.Student">
+        SELECT
+        s.student_id,
+        s.student_number,
+        s.grade,
+        s.major,
+        u.user_id AS "userId",
+        u.username,
+        u.password,
+        u.email,
+        u.phone,
+        u.avatar,
+        u.real_name AS "realName",
+        u.role,
+        u.register_time AS "registerTime",
+        u.last_login_time AS "lastLoginTime"
+        FROM student s
+        JOIN user u ON s.student_id = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (s.student_number LIKE CONCAT('%', #{keyword}, '%')
+                OR u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR s.major LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="grade != null and grade != ''">
+                AND s.grade = #{grade}
+            </if>
+        </where>
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <select id="countStudentsByCondition" resultType="long">
+        SELECT COUNT(*)
+        FROM student s
+        JOIN user u ON s.student_id = u.user_id
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (s.student_number LIKE CONCAT('%', #{keyword}, '%')
+                OR u.real_name LIKE CONCAT('%', #{keyword}, '%')
+                OR s.major LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="grade != null and grade != ''">
+                AND s.grade = #{grade}
+            </if>
+        </where>
+    </select>
+
+    <delete id="deleteStudent">
+        DELETE FROM student WHERE student_id = #{studentId}
+    </delete>
+
+    <!-- 添加按学号查询学生的SQL -->
+    <select id="selectByStudentNumber" resultType="com.sx.backend.entity.Student">
+        SELECT
+            s.student_id,
+            s.student_number,
+            s.grade,
+            s.major,
+            u.user_id AS "userId",
+            u.username,
+            u.password,
+            u.email,
+            u.phone,
+            u.avatar,
+            u.real_name AS "realName",
+            u.role,
+            u.register_time AS "registerTime",
+            u.last_login_time AS "lastLoginTime"
+        FROM student s
+                 JOIN user u ON s.student_id = u.user_id
+        WHERE s.student_number = #{studentNumber}
+    </select>
+
+    <!-- 检查学生是否曾经退过某门课 -->
+    <select id="isWithdrawn" resultType="int">
+        SELECT COUNT(*)
+        FROM course_enrollment
+        WHERE student_id = #{studentId}
+          AND course_id = #{courseId}
+          AND status = 'WITHDRAWN'
+    </select>
 </mapper>
