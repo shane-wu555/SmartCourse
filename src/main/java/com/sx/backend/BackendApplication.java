@@ -7,8 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class BackendApplication {
 
     public static void main(String[] args) {
-        // 启用 headless 模式
-        System.setProperty("java.awt.headless", "true");
         SpringApplication.run(BackendApplication.class, args);
     }
+
 }

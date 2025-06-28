@@ -33,9 +33,4 @@ public interface ResourceMapper {
 
     @Select("SELECT COUNT(*) FROM task_resource WHERE resource_id = #{resourceId}")
     int countTaskReferences(String resourceId);
-
-    @Select("SELECT r.* FROM resource r " +
-            "INNER JOIN resource_knowledge_point rkp ON r.resource_id = rkp.resource_id " +
-            "WHERE rkp.point_id = #{pointId}")
-    List<Resource> getResourcesByKnowledgePointId(String pointId);
 }
