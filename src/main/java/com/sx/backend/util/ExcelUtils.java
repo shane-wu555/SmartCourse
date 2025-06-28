@@ -132,4 +132,32 @@ public class ExcelUtils {
                 return "";
         }
     }
+
+    // 在ExcelUtils.java中添加方法
+    public static List<String> parseStudentNumbers(MultipartFile file) throws IOException {
+        List<String> studentNumbers = new ArrayList<>();
+
+        try (InputStream inputStream = file.getInputStream()) {
+            Workbook workbook = WorkbookFactory.create(inputStream);
+            Sheet sheet = workbook.getSheetAt(0);
+            Iterator<Row> rowIterator = sheet.iterator();
+
+            // 跳过标题行
+            if (rowIterator.hasNext()) rowIterator.next();
+
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                // 学号在第一列
+                Cell numberCell = row.getCell(0);
+                if (numberCell != null) {
+                    String number = getCellValue(numberCell);
+                    if (!number.isEmpty()) {
+                        studentNumbers.add(number);
+                    }
+                }
+            }
+        }
+
+        return studentNumbers;
+    }
 }

@@ -4,16 +4,16 @@ import java.util.Set;
 
 public class AnswerRecord {
     private String recordId;
-    private Question question;
+    private String questionId;
     private Set<String> studentAnswers;
     private Float obtainedScore;
     private boolean autoGraded;
     private String teacherFeedback;
 
-    public AnswerRecord(String recordId, Question question, Set<String> studentAnswers, Float obtainedScore,
+    public AnswerRecord(String recordId, String question, Set<String> studentAnswers, Float obtainedScore,
                         boolean autoGraded, String teacherFeedback) {
         this.recordId = recordId;
-        this.question = question;
+        this.questionId = question;
         this.studentAnswers = studentAnswers;
         this.obtainedScore = obtainedScore;
         this.autoGraded = autoGraded;
@@ -31,12 +31,12 @@ public class AnswerRecord {
         this.recordId = recordId;
     }
 
-    public Question getQuestion() {
-        return question;
+    public String getQuestionId() {
+        return questionId;
     }
 
-    public void setQuestion(Question question) {
-        this.question = question;
+    public void setQuestionId(String questionId) {
+        this.questionId = questionId;
     }
 
     public Set<String> getStudentAnswers() {
@@ -69,25 +69,5 @@ public class AnswerRecord {
 
     public void setTeacherFeedback(String teacherFeedback) {
         this.teacherFeedback = teacherFeedback;
-    }
-
-    // 自动评分方法
-    public void autoGrade() {
-        if (question.isAutoGradable()) {
-            this.obtainedScore = question.autoGrade(studentAnswers);
-            this.autoGraded = true;
-        } else {
-            this.autoGraded = false;
-            this.obtainedScore = 0.0f; // 如果不能自动评分，默认分数为0
-        }
-    }
-
-    // 教师评分方法
-    public void manualGrade(Float score, String feedback) {
-        if (question.isAutoGradable()) {
-            throw new IllegalArgumentException("此题型应该自动评分，不能手动评分");
-        }
-        this.obtainedScore = score;
-        this.teacherFeedback = feedback;
     }
 }

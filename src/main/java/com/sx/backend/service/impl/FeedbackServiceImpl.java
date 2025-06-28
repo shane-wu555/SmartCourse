@@ -26,6 +26,9 @@ public class FeedbackServiceImpl implements FeedbackService {
     @Autowired
     private CourseMapper courseMapper;
 
+    @Autowired
+    private TaskMapper taskMapper;
+
     @Override
     public FeedbackDTO generateFeedback(String studentId, String courseId) {
         Grade grade = gradeMapper.findByStudentAndCourse(studentId, courseId);
@@ -61,7 +64,7 @@ public class FeedbackServiceImpl implements FeedbackService {
             message.append("\n\n建议重点关注以下任务:");
             for (TaskGrade taskGrade : taskGrades) {
                 if (taskGrade.getScore() < 60) {
-                    message.append("\n- ").append(taskGrade.getTask().getTitle()).append("\n");
+                    message.append("\n- ").append(taskMapper.getById(taskGrade.getTaskId()).getTitle()).append("\n");
                 }
             }
         }

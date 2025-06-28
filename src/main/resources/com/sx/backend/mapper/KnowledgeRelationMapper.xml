@@ -71,4 +71,11 @@
         FROM cte
         WHERE target_point_id = #{sourceId}
     </select>
+    
+    <select id="selectRelationsByCourseId" resultType="com.sx.backend.entity.KnowledgeRelation">
+        SELECT r.*
+        FROM knowledge_relation r
+        JOIN knowledge_point s ON r.source_point_id = s.point_id
+        WHERE s.course_id = #{courseId}
+    </select>
 </mapper>

@@ -75,4 +75,6 @@ public interface StudentMapper {
 
     int isWithdrawn(@Param("studentId") String studentId,
                     @Param("courseId") String courseId);
+
+    List<Student> findByStudentNumbers(List<String> studentNumbers);
 }
