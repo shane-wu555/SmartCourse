@@ -1,6 +1,8 @@
 package com.sx.backend.controller;
 
+import com.sx.backend.dto.CourseDTO;
 import com.sx.backend.entity.Course;
+import com.sx.backend.service.CourseService;
 import com.sx.backend.service.StudentService;
 import com.sx.backend.service.impl.PageResult;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,10 +15,12 @@ import org.springframework.web.bind.annotation.*;
 public class StudentCourseController {
 
     private final StudentService studentService;
+    private final CourseService courseService;
 
     @Autowired
-    public StudentCourseController(StudentService studentService) {
+    public StudentCourseController(StudentService studentService,CourseService courseService) {
         this.studentService = studentService;
+        this.courseService = courseService;
     }
 
     // 从请求属性中获取当前用户ID
@@ -75,5 +79,13 @@ public class StudentCourseController {
         String studentId = getCurrentStudentId(request);
         Course course = studentService.getCourseDetail(studentId, courseId);
         return ResponseEntity.ok(course);
+    }
+
+    @GetMapping("/detail/{courseId}")
+    public ResponseEntity<ApiResponse<CourseDTO>> getStudentCourseDetail(@PathVariable String courseId){
+
+        CourseDTO courseDTO = courseService.getStudentCourseDetail(courseId);
+        ApiResponse<CourseDTO> response = ApiResponse.success("成功获取课程详情", courseDTO);
+        return ResponseEntity.ok(response);
     }
 }

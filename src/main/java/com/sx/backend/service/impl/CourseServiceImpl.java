@@ -79,6 +79,15 @@ public class CourseServiceImpl implements CourseService {
     }
 
     @Override
+    public CourseDTO getStudentCourseDetail(String courseId){
+        CourseDTO courseDTO = courseMapper.findById(courseId);
+        if (courseDTO == null) {
+            throw new BusinessException(404, "课程不存在");
+        }
+        return courseDTO;
+    }
+
+    @Override
     public CourseDTO updateCourse(String courseId, CourseUpdateRequest request, String teacherId) {
         CourseDTO existingCourse = courseMapper.findById(courseId);
         if (existingCourse == null) {
