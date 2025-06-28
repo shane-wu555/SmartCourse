@@ -1,0 +1,27 @@
+# JVM参数配置 - 用于解决Java HotSpot警告
+# 这些参数可以在IDE或命令行中使用
+
+# 禁用类数据共享以避免警告
+-Xshare:off
+
+# 开放必要的模块访问权限（Java 9+模块系统）
+--add-opens=java.base/java.lang=ALL-UNNAMED
+--add-opens=java.base/java.util=ALL-UNNAMED
+--add-opens=java.base/java.time=ALL-UNNAMED
+--add-opens=java.base/java.net=ALL-UNNAMED
+--add-opens=java.base/java.io=ALL-UNNAMED
+
+# 内存配置
+-Xmx1024m
+-Xms512m
+
+# 垃圾回收配置
+-XX:+UseG1GC
+-XX:MaxGCPauseMillis=200
+
+# 测试环境激活
+-Dspring.profiles.active=test
+
+# 禁用某些警告
+-XX:+IgnoreUnrecognizedVMOptions
+-Djava.awt.headless=true
