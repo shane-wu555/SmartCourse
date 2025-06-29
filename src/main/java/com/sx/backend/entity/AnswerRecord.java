@@ -1,16 +1,16 @@
 package com.sx.backend.entity;
 
-import java.util.Set;
+import java.util.List;
 
 public class AnswerRecord {
     private String recordId;
     private String questionId;
-    private Set<String> studentAnswers;
+    private List<String> studentAnswers;
     private Float obtainedScore;
     private boolean autoGraded;
     private String teacherFeedback;
 
-    public AnswerRecord(String recordId, String question, Set<String> studentAnswers, Float obtainedScore,
+    public AnswerRecord(String recordId, String question, List<String> studentAnswers, Float obtainedScore,
                         boolean autoGraded, String teacherFeedback) {
         this.recordId = recordId;
         this.questionId = question;
@@ -39,11 +39,11 @@ public class AnswerRecord {
         this.questionId = questionId;
     }
 
-    public Set<String> getStudentAnswers() {
+    public List<String> getStudentAnswers() {
         return studentAnswers;
     }
 
-    public void setStudentAnswers(Set<String> studentAnswers) {
+    public void setStudentAnswers(List<String> studentAnswers) {
         this.studentAnswers = studentAnswers;
     }
 

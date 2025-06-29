@@ -60,9 +60,12 @@ public class GradingController {
         gradingService.manualGradeSubmission(submissionId, request.getQuestionGrades(), request.getFeedback());
 
         // 更新提交状态和批改时间
-        Submission updated = submissionMapper.update(submission);
+        int updated = submissionMapper.update(submission);
 
-        return ResponseEntity.ok(updated);
+        if (updated == 0) {
+            return ResponseEntity.status(500).body(null);
+        }
+        return ResponseEntity.ok(submission);
     }
 
     

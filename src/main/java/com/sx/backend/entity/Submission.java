@@ -10,9 +10,8 @@ public class Submission {
     private String studentId;
     private LocalDateTime submitTime;
     private SubmissionStatus status = SubmissionStatus.SUBMITTED; // 默认状态
-    private String content; // 文本内容
     private List<FileMeta> files; // 上传的文件
-    private List<String> answerRecords = new ArrayList<>(); // 学生答案记录
+    private List<String> answerRecords = new ArrayList<>(); // 学生答案id记录
     private boolean completed; // 是否完成
     private Float finalGrade; // 总成绩
     private Float autoGrade; // 自动批改成绩
@@ -20,14 +19,13 @@ public class Submission {
     private LocalDateTime gradeTime; // 批改时间
 
     public Submission(String submissionId, String taskId, String studentId, LocalDateTime submitTime,
-                      SubmissionStatus status, String content, List<FileMeta> files, Float finalGrade,
+                      SubmissionStatus status, List<FileMeta> files, Float finalGrade,
                       String feedback, LocalDateTime gradeTime) {
         this.submissionId = submissionId;
         this.taskId = taskId;
         this.studentId = studentId;
         this.submitTime = submitTime;
         this.status = status;
-        this.content = content;
         this.files = files;
         this.finalGrade = finalGrade;
         this.feedback = feedback;
@@ -83,14 +81,6 @@ public class Submission {
 
     public void setStatus(SubmissionStatus status) {
         this.status = status;
-    }
-
-    public String getContent() {
-        return content;
-    }
-
-    public void setContent(String content) {
-        this.content = content;
     }
 
     public List<FileMeta> getFiles() {

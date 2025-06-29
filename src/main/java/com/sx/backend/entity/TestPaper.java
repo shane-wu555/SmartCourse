@@ -6,6 +6,7 @@ public class TestPaper {
     private String paperId;
     private String taskId;
     private String title;
+    private String courseId; // 课程ID
     private List<String> questions;
     private Float totalScore;
     private Integer timeLimit; // 以分钟为单位
@@ -76,28 +77,19 @@ public class TestPaper {
         return generationMethod;
     }
 
+    public String getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(String courseId) {
+        this.courseId = courseId;
+    }
+
     // 设置组卷方式
     public void setGenerationMethod(PaperGenerationMethod generationMethod) {
         this.generationMethod = generationMethod;
     }
 
-    // 设置总分（自动计算）
-    public void calculateTotalScore() {
-        if (questions != null && !questions.isEmpty()) {
-            float sum = 0f;
-            for (Question q : questions) {
-                if (q.getScore() != null) sum += q.getScore();
-            }
-            this.totalScore = sum;
-        } else {
-            this.totalScore = 0f;
-        }
-    }
 
-    // 设置课程ID（通过Task）
-    public void setCourseId(String courseId) {
-        if (this.task == null) this.task = new Task();
-        if (this.task.getCourse() == null) this.task.setCourse(new Course());
-        this.task.getCourse().setCourseId(courseId);
-    }
+
 }

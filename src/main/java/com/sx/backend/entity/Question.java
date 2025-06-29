@@ -30,7 +30,7 @@ public class Question {
     }
 
     // 自动评分逻辑
-    public Float autoGrade(Set<String> studentAnswer) {
+    public Float autoGrade(List<String> studentAnswer) {
         if (!isAutoGradable()) {
             throw new UnsupportedOperationException("此题型不支持自动评分");
         }
