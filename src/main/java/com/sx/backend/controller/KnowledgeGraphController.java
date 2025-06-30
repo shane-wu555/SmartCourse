@@ -10,6 +10,7 @@ import com.sx.backend.service.KnowledgeGraphService;
 
 @RestController
 @RequestMapping("/api/knowledge-graph")
+@CrossOrigin(origins = "*") // 添加这个注解
 public class KnowledgeGraphController {
     
     @Autowired
@@ -71,4 +72,24 @@ public class KnowledgeGraphController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
+    
+    /**
+     * 测试AI生成功能 - 无需认证
+     */
+    @GetMapping("/test-ai/{courseId}")
+    @CrossOrigin(origins = "*")
+    public ResponseEntity<String> testAIGeneration(@PathVariable String courseId) {
+        try {
+            System.out.println("=== 开始测试AI生成 ===");
+            System.out.println("课程ID: " + courseId);
+            knowledgeGraphService.testAIGeneration(courseId);
+            return ResponseEntity.ok("测试完成，请查看控制台日志");
+        } catch (Exception e) {
+            System.err.println("测试失败: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("测试失败: " + e.getMessage());
+        }
+    }
+    
 }

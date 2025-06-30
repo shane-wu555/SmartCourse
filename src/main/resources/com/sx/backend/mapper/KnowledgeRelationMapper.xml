@@ -8,9 +8,9 @@
         <id property="relationId" column="relation_id" />
         <result property="sourcePointId" column="source_point_id" />
         <result property="targetPointId" column="target_point_id" />
-        <result property="relationType" column="relation_type"
-                typeHandler="org.apache.ibatis.type.EnumTypeHandler"
-                javaType="com.sx.backend.entity.RelationType"/> <!-- 明确指定枚举类型 -->
+        <result property="relationType" column="relation_type" 
+                javaType="com.sx.backend.entity.RelationType" 
+                jdbcType="VARCHAR"/>
         <result property="createdAt" column="created_at" />
     </resultMap>
 
@@ -25,7 +25,7 @@
                      #{relationId},
                      #{sourcePointId},
                      #{targetPointId},
-                     #{relationType, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
+                     #{relationType, javaType=com.sx.backend.entity.RelationType, jdbcType=VARCHAR},
                      NOW()
                  )
     </insert>
@@ -38,6 +38,13 @@
     <delete id="deleteRelationsByPointId">
         DELETE FROM knowledge_relation
         WHERE source_point_id = #{pointId} OR target_point_id = #{pointId}
+    </delete>
+
+    <delete id="deleteRelationsByCourseId">
+        DELETE FROM knowledge_relation
+        WHERE source_point_id IN (
+            SELECT point_id FROM knowledge_point WHERE course_id = #{courseId}
+        )
     </delete>
 
     <delete id="deleteRelationByPoints">
@@ -72,7 +79,7 @@
         WHERE target_point_id = #{sourceId}
     </select>
     
-    <select id="selectRelationsByCourseId" resultType="com.sx.backend.entity.KnowledgeRelation">
+    <select id="selectRelationsByCourseId" resultMap="knowledgeRelationMap">
         SELECT r.*
         FROM knowledge_relation r
         JOIN knowledge_point s ON r.source_point_id = s.point_id
