@@ -9,7 +9,7 @@ public class Task {
     private String title;
     private String description;
     private TaskType type;
-    private TestPaper testPaper;
+    private String testPaperId;
     private LocalDateTime deadline;
     private Float maxScore;
     private List<Resource> resources;
@@ -51,12 +51,12 @@ public class Task {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
   
-    public TestPaper getTestPaper() {
-        return testPaper;
+    public String getTestPaperId() {
+        return testPaperId;
     }
 
-    public void setTestPaper(TestPaper testPaper) {
-        this.testPaper = testPaper;
+    public void setTestPaperId(String testPaper) {
+        this.testPaperId = testPaper;
     }
 
     public TaskType getType() { return type; }

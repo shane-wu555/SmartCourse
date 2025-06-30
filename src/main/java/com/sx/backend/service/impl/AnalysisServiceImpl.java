@@ -62,7 +62,7 @@ public class AnalysisServiceImpl implements AnalysisService {
         trendData.put("chartImage", chartImage);
 
         // 更新到成绩实体
-        grade.setGradeTrend(trendData);
+        grade.setGradeTrend(trendData.toString());
         gradeMapper.update(grade);
     }
 
@@ -73,22 +73,26 @@ public class AnalysisServiceImpl implements AnalysisService {
             return null;
         }
 
-        JsonNode trend = grade.getGradeTrend();
-        GradeTrendDTO dto = new GradeTrendDTO();
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+            JsonNode trend = objectMapper.readTree(grade.getGradeTrend());
+            GradeTrendDTO dto = new GradeTrendDTO();
 
-        // 从JsonNode提取数据
-        if (trend.has("dates")) {
-            List<String> dates = new ArrayList<>();
-            trend.get("dates").forEach(date -> dates.add(date.asText()));
-            dto.setDates(dates);
-        }
+            // 从JsonNode提取数据
+            if (trend.has("dates")) {
+                List<String> dates = new ArrayList<>();
+                trend.get("dates").forEach(date -> dates.add(date.asText()));
+                dto.setDates(dates);
+            }
 
-        if (trend.has("scores")) {
-            List<Float> scores = new ArrayList<>();
-            trend.get("scores").forEach(score -> scores.add(score.floatValue()));
-            dto.setScores(scores);
-        }
+            if (trend.has("scores")) {
+                List<Float> scores = new ArrayList<>();
+                trend.get("scores").forEach(score -> scores.add(score.floatValue()));
+                dto.setScores(scores);
+            }
 
-        return dto;
+            return dto;
+        }catch (Exception e) {}
+            return null;
     }
 }

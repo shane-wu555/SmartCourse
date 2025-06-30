@@ -1,39 +1,35 @@
 package com.sx.backend.entity;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.time.LocalDateTime;
 
 public class TaskGrade {
     private String taskGradeId;
-    private Student student;
-    private Task task;
+    private String studentId;
+    private String taskId;
     private Float score;
-    private Float completionRate;
+    private Float completionRate;   // 完成准确率
     private LocalDateTime submissionTime;
     private String feedback;
-    private JsonNode detailedAnalysis;
 
-    public TaskGrade(String taskGradeId, Student student, Task task, Float score, Float completionRate, LocalDateTime submissionTime, String feedback, JsonNode detailedAnalysis) {
+    public TaskGrade(String taskGradeId, String studentId, String taskID, Float score, Float completionRate, LocalDateTime submissionTime, String feedback) {
         this.taskGradeId = taskGradeId;
-        this.student = student;
-        this.task = task;
+        this.studentId = studentId;
+        this.taskId = taskId;
         this.score = score;
         this.completionRate = completionRate;
         this.submissionTime = submissionTime;
         this.feedback = feedback;
-        this.detailedAnalysis = detailedAnalysis;
     }
 
     public TaskGrade() {
     }
 
-    public Student getStudent() {
-        return student;
+    public String getStudentId() {
+        return studentId;
     }
 
-    public void setStudent(Student student) {
-        this.student = student;
+    public void setStudentId(String studentId) {
+        this.studentId = studentId;
     }
 
     public String getTaskGradeId() {
@@ -44,12 +40,12 @@ public class TaskGrade {
         this.taskGradeId = taskGradeId;
     }
 
-    public Task getTask() {
-        return task;
+    public String getTaskId() {
+        return taskId;
     }
 
-    public void setTask(Task task) {
-        this.task = task;
+    public void setTaskId(String taskId) {
+        this.taskId = taskId;
     }
 
     public Float getScore() {
@@ -82,13 +78,5 @@ public class TaskGrade {
 
     public void setFeedback(String feedback) {
         this.feedback = feedback;
-    }
-
-    public JsonNode getDetailedAnalysis() {
-        return detailedAnalysis;
-    }
-
-    public void setDetailedAnalysis(JsonNode detailedAnalysis) {
-        this.detailedAnalysis = detailedAnalysis;
     }
 }

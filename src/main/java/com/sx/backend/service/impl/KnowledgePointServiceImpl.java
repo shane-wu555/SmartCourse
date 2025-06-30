@@ -4,13 +4,16 @@ import com.sx.backend.dto.CourseDTO;
 import com.sx.backend.entity.KnowledgePoint;
 import com.sx.backend.entity.KnowledgeRelation;
 import com.sx.backend.entity.RelationType;
+import com.sx.backend.entity.Resource;
 import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.KnowledgePointMapper;
 import com.sx.backend.mapper.KnowledgeRelationMapper;
+import com.sx.backend.mapper.ResourceMapper;
 import com.sx.backend.service.KnowledgePointService;
 import com.sx.backend.service.OllamaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,7 +30,6 @@ import org.springframework.scheduling.annotation.Async;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-@RequiredArgsConstructor
 public class KnowledgePointServiceImpl implements KnowledgePointService {
 
     private static final Logger logger = LoggerFactory.getLogger(KnowledgePointServiceImpl.class);
@@ -41,6 +43,19 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
     // 用于跟踪AI生成任务状态的内存缓存
     private final java.util.concurrent.ConcurrentHashMap<String, String> aiGenerationStatus = new java.util.concurrent.ConcurrentHashMap<>();
     private final java.util.concurrent.ConcurrentHashMap<String, String> aiGenerationResults = new java.util.concurrent.ConcurrentHashMap<>();
+    private final ResourceMapper resourceMapper;
+
+    // 在构造函数中添加resourceMapper参数
+    @Autowired
+    public KnowledgePointServiceImpl(KnowledgePointMapper knowledgePointMapper,
+                                     KnowledgeRelationMapper knowledgeRelationMapper,
+                                     CourseMapper courseMapper,
+                                     ResourceMapper resourceMapper) {
+        this.knowledgePointMapper = knowledgePointMapper;
+        this.knowledgeRelationMapper = knowledgeRelationMapper;
+        this.courseMapper = courseMapper;
+        this.resourceMapper = resourceMapper;
+    }
 
     @Override
     @Transactional
@@ -261,8 +276,27 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
 
     @Override
     public List<Object> getKnowledgePointResources(String pointId) {
-        // TODO: 实现获取知识点关联的资源
-        return Collections.emptyList();
+        // 获取知识点关联的资源列表
+        List<Resource> resources = resourceMapper.getResourcesByKnowledgePointId(pointId);
+
+        // 转换为前端需要的格式
+        List<Object> result = new ArrayList<>();
+        for (Resource resource : resources) {
+            Map<String, Object> resourceMap = new HashMap<>();
+            resourceMap.put("resourceId", resource.getResourceId());
+            resourceMap.put("name", resource.getName());
+            resourceMap.put("type", resource.getType().name());
+            resourceMap.put("url", resource.getUrl());
+            resourceMap.put("size", resource.getSize());
+            resourceMap.put("description", resource.getDescription());
+            resourceMap.put("uploaderId", resource.getUploaderId());
+            resourceMap.put("uploadTime", resource.getUploadTime());
+            resourceMap.put("viewCount", resource.getViewCount());
+            resourceMap.put("duration", resource.getDuration());
+            result.add(resourceMap);
+        }
+
+        return result;
     }
 
     @Override
