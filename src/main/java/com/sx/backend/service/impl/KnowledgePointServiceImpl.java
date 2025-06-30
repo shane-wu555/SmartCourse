@@ -50,11 +50,13 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
     public KnowledgePointServiceImpl(KnowledgePointMapper knowledgePointMapper,
                                      KnowledgeRelationMapper knowledgeRelationMapper,
                                      CourseMapper courseMapper,
-                                     ResourceMapper resourceMapper) {
+                                     ResourceMapper resourceMapper,
+                                     OllamaService ollamaService) {
         this.knowledgePointMapper = knowledgePointMapper;
         this.knowledgeRelationMapper = knowledgeRelationMapper;
         this.courseMapper = courseMapper;
         this.resourceMapper = resourceMapper;
+        this.ollamaService = ollamaService; // 这里初始化
     }
 
     @Override
