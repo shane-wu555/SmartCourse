@@ -39,8 +39,8 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public List<Question> getQuestionsByCondition(String type, String difficultyLevel, List<String> knowledgePointIds) {
-        return questionMapper.selectQuestionsByCondition(type, difficultyLevel, knowledgePointIds);
+    public List<Question> getQuestionsByCondition(String type, String difficultylevel, List<String> knowledgePointIds) {
+        return questionMapper.selectQuestionsByCondition(type, difficultylevel, knowledgePointIds);
     }
 
     @Override

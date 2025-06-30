@@ -247,7 +247,7 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
             node.setId(point.getPointId());
             node.setName(point.getName());
             node.setDescription(point.getDescription());
-            node.setDifficultyLevel(point.getDifficultylevel() != null ? point.getDifficultylevel().name() : null);
+            node.setDifficultylevel(point.getDifficultylevel() != null ? point.getDifficultylevel().name() : null);
             return node;
         }).collect(Collectors.toList());
 
