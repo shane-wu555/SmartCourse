@@ -4,6 +4,7 @@ import com.sx.backend.dto.GeneratePaperRequestDTO;
 import com.sx.backend.entity.Question;
 import com.sx.backend.entity.TestPaper;
 import com.sx.backend.entity.PaperGenerationMethod;
+import com.sx.backend.mapper.QuestionMapper;
 import com.sx.backend.service.QuestionService;
 import com.sx.backend.service.TestPaperService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,9 @@ import java.util.stream.Collectors;
 public class TestPaperServiceImpl implements TestPaperService {
     @Autowired
     private QuestionService questionService;
+
+    @Autowired
+    private QuestionMapper questionMapper;
 
     @Override
     public TestPaper generatePaper(GeneratePaperRequestDTO requestDTO) {
@@ -52,7 +56,8 @@ public class TestPaperServiceImpl implements TestPaperService {
         // 组装TestPaper对象
         TestPaper paper = new TestPaper();
         paper.setCourseId(requestDTO.getCourseId());
-        paper.setQuestions(selected);
+        paper.setQuestions(selected.stream().map(Question::getQuestionId).collect(Collectors.toList()));
+        paper.setTotalScore((float)selected.stream().mapToDouble(Question::getScore).sum());
         paper.setTitle("智能组卷试卷");
         if ("random".equalsIgnoreCase(mode)) {
             paper.setGenerationMethod(PaperGenerationMethod.RANDOM);
@@ -61,7 +66,7 @@ public class TestPaperServiceImpl implements TestPaperService {
         } else if ("difficulty".equalsIgnoreCase(mode)) {
             paper.setGenerationMethod(PaperGenerationMethod.DIFFICULTY_BALANCE);
         }
-        paper.calculateTotalScore();
+
         return paper;
     }
 }
