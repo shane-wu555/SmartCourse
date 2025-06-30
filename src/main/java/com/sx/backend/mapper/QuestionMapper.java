@@ -13,7 +13,7 @@ public interface QuestionMapper {
     Question selectQuestionById(@Param("questionId") String questionId);
     List<Question> selectQuestionsByBankId(@Param("bankId") String bankId);
     List<Question> selectQuestionsByCondition(@Param("type") String type,
-                                              @Param("difficultyLevel") String difficultyLevel,
+                                              @Param("difficultylevel") String difficultyLevel,
                                               @Param("knowledgePointIds") List<String> knowledgePointIds);
     int batchInsertQuestions(@Param("questions") List<Question> questions);
 }

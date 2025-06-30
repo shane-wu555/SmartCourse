@@ -45,14 +45,6 @@ public interface KnowledgePointService {
     void deleteKnowledgePoint(String pointId);
 
     /**
-     * 更新知识点父节点
-     * @param pointId 知识点ID
-     * @param parentId 新的父节点ID
-     * @return 更新后的知识点
-     */
-    KnowledgePoint updateKnowledgePointParent(String pointId, String parentId);
-
-    /**
      * 管理知识点关系
      * @param sourceId 源知识点ID
      * @param targetId 目标知识点ID
@@ -88,4 +80,35 @@ public interface KnowledgePointService {
      */
     KnowledgeGraphDTO getKnowledgeGraphByCourse(String courseId);
 
+    /**
+     * 基于AI生成知识点关系并保存到数据库
+     * @param courseId 课程ID
+     */
+    void generateKnowledgeRelationsByAI(String courseId);
+
+    /**
+     * 检查课程知识点是否发生变化，如果变化则重新生成关系
+     * @param courseId 课程ID
+     */
+    void updateKnowledgeRelationsIfChanged(String courseId);
+
+    /**
+     * 异步生成知识点关系
+     * @param courseId 课程ID
+     * @return CompletableFuture
+     */
+    java.util.concurrent.CompletableFuture<Void> generateKnowledgeRelationsByAIAsync(String courseId);
+
+    /**
+     * 获取AI生成任务状态
+     * @param courseId 课程ID
+     * @return 任务状态信息
+     */
+    java.util.Map<String, Object> getAIGenerationStatus(String courseId);
+
+    /**
+     * 清理AI生成任务状态
+     * @param courseId 课程ID
+     */
+    void clearAIGenerationStatus(String courseId);
 }

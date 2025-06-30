@@ -89,7 +89,4 @@ public class TestPaper {
     public void setGenerationMethod(PaperGenerationMethod generationMethod) {
         this.generationMethod = generationMethod;
     }
-
-
-
 }

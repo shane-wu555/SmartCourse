@@ -9,6 +9,6 @@ public interface QuestionService {
     int deleteQuestion(String questionId);
     Question getQuestionById(String questionId);
     List<Question> getQuestionsByBankId(String bankId);
-    List<Question> getQuestionsByCondition(String type, String difficultyLevel, List<String> knowledgePointIds);
+    List<Question> getQuestionsByCondition(String type, String difficultylevel, List<String> knowledgePointIds);
     int batchAddQuestions(List<Question> questions);
 }

@@ -6,7 +6,6 @@ import lombok.Data;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -45,12 +44,11 @@ public class Question {
         return 0f; // 默认返回0分
     }
 
-    // 获取所有知识点ID（递归）
+    // 检查是否包含指定的知识点ID
     public static boolean containsKnowledgePoint(List<KnowledgePoint> knowledgePoints, List<String> targetIds) {
         if (knowledgePoints == null || targetIds == null) return false;
         for (KnowledgePoint kp : knowledgePoints) {
             if (targetIds.contains(kp.getPointId())) return true;
-            if (kp.getChildren() != null && containsKnowledgePoint(kp.getChildren(), targetIds)) return true;
         }
         return false;
     }

@@ -40,8 +40,8 @@ public class QuestionController {
 
     @PostMapping("/search")
     public List<Question> getQuestionsByCondition(@RequestParam String type,
-                                                  @RequestParam String difficultyLevel,
+                                                  @RequestParam String difficultylevel,
                                                   @RequestBody List<String> knowledgePointIds) {
-        return questionService.getQuestionsByCondition(type, difficultyLevel, knowledgePointIds);
+        return questionService.getQuestionsByCondition(type, difficultylevel, knowledgePointIds);
     }
 }
