@@ -16,10 +16,6 @@ public interface KnowledgePointMapper {
     int checkNameExists(@Param("courseId") String courseId,
                         @Param("name") String name,
                         @Param("pointId") String pointId);
-    int checkHasChildren(String pointId);
     int checkHasResources(String pointId);
     int checkHasTasks(String pointId);
-    List<KnowledgePoint> selectChildrenPoints(String parentId);
-    int updatePointParent(@Param("pointId") String pointId,
-                          @Param("parentId") String parentId);
 }

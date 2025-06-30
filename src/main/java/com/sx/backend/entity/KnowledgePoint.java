@@ -5,7 +5,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Date;
-import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -15,11 +14,8 @@ public class KnowledgePoint {
     private String courseId;
     private String name;
     private String description;
-    private String parentId;
     private DifficultyLevel difficultylevel; // 使用枚举类型
     private Date createdAt;
     private Date updatedAt;
     private Integer resourceCount;
-    private List<KnowledgePoint> children;
-
 }

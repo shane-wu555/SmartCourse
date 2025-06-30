@@ -9,7 +9,6 @@
         <result property="courseId" column="course_id" />
         <result property="name" column="name" />
         <result property="description" column="description" />
-        <result property="parentId" column="parent_id" />
         <result property="difficultylevel" column="difficultylevel"
                 typeHandler="com.sx.backend.typehandler.DifficultyLevelTypeHandler"/>
         <result property="createdAt" column="created_at" />
@@ -23,7 +22,6 @@
             course_id,
             name,
             description,
-            parent_id,
             difficultylevel,
             created_at,
             updated_at
@@ -32,7 +30,6 @@
                      #{courseId},
                      #{name},
                      #{description},
-                     #{parentId},
                      #{difficultylevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
                      NOW(),
                      NOW()
@@ -46,12 +43,6 @@
             description = #{description},
             difficultylevel = #{difficultylevel, typeHandler=org.apache.ibatis.type.EnumTypeHandler},
             updated_at = NOW()
-        WHERE point_id = #{pointId}
-    </update>
-
-    <update id="updatePointParent">
-        UPDATE knowledge_point
-        SET parent_id = #{parentId}
         WHERE point_id = #{pointId}
     </update>
 
@@ -77,12 +68,6 @@
         ORDER BY created_at ASC
     </select>
 
-    <select id="selectChildrenPoints" resultMap="knowledgePointMap">
-        SELECT *
-        FROM knowledge_point
-        WHERE parent_id = #{parentId}
-    </select>
-
     <select id="checkNameExists" resultType="int">
         SELECT COUNT(*)
         FROM knowledge_point
@@ -90,12 +75,6 @@
         <if test="pointId != null and pointId != ''">
             AND point_id != #{pointId}
         </if>
-    </select>
-
-    <select id="checkHasChildren" resultType="int">
-        SELECT COUNT(*)
-        FROM knowledge_point
-        WHERE parent_id = #{pointId}
     </select>
 
     <select id="checkHasResources" resultType="int">

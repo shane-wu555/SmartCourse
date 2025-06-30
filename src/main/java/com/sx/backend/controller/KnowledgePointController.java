@@ -37,10 +37,10 @@ public class KnowledgePointController {
     // 获取课程知识点列表
     @GetMapping("/courses/{courseId}/knowledge-points")
     public ResponseEntity<ResponseResult<List<KnowledgePoint>>> getKnowledgePointsByCourse(
-            @PathVariable String courseId,
-            @RequestParam(required = false, defaultValue = "false") Boolean tree) {
+            @PathVariable String courseId) {
 
-        List<KnowledgePoint> points = knowledgePointService.getKnowledgePointsByCourse(courseId, tree);
+        // 移除 tree 参数，始终返回扁平列表
+        List<KnowledgePoint> points = knowledgePointService.getKnowledgePointsByCourse(courseId, false);
         ResponseResult<List<KnowledgePoint>> response = new ResponseResult<>(
                 HttpStatus.OK.value(), "成功获取知识点列表", points);
         return ResponseEntity.ok(response);
@@ -118,24 +118,6 @@ public class KnowledgePointController {
         List<Object> resources = knowledgePointService.getKnowledgePointResources(pointId);
         ResponseResult<List<Object>> response = new ResponseResult<>(
                 HttpStatus.OK.value(), "成功获取知识点关联资源", resources);
-        return ResponseEntity.ok(response);
-    }
-
-    // 更新知识点父节点
-    @PatchMapping("/knowledge-points/{pointId}/parent")
-    public ResponseEntity<ResponseResult<KnowledgePoint>> updateKnowledgePointParent(
-            @PathVariable String pointId,
-            @RequestBody Map<String, String> request) {
-
-        String parentId = request.get("parentId");
-        // 处理空值情况
-        if (parentId != null && parentId.isEmpty()) {
-            parentId = null;
-        }
-
-        KnowledgePoint updatedPoint = knowledgePointService.updateKnowledgePointParent(pointId, parentId);
-        ResponseResult<KnowledgePoint> response = new ResponseResult<>(
-                HttpStatus.OK.value(), "知识点父节点更新成功", updatedPoint);
         return ResponseEntity.ok(response);
     }
 
@@ -229,6 +211,25 @@ public class KnowledgePointController {
         } catch (Exception e) {
             ResponseResult<String> response = new ResponseResult<>(
                     HttpStatus.INTERNAL_SERVER_ERROR.value(), "更新关系失败: " + e.getMessage(), null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // 强制重新生成知识点关系
+    @PostMapping("/courses/{courseId}/knowledge-points/force-regenerate-relations")
+    public ResponseEntity<ResponseResult<String>> forceRegenerateKnowledgeRelations(
+            @PathVariable String courseId) {
+        
+        try {
+            // 直接调用生成方法
+            knowledgePointService.generateKnowledgeRelationsByAI(courseId);
+            
+            ResponseResult<String> response = new ResponseResult<>(
+                    HttpStatus.OK.value(), "知识点关系已强制重新生成", "重新生成完成");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            ResponseResult<String> response = new ResponseResult<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(), "重新生成关系失败: " + e.getMessage(), null);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }

@@ -12,7 +12,6 @@ import com.sx.backend.mapper.KnowledgeRelationMapper;
 import com.sx.backend.mapper.ResourceMapper;
 import com.sx.backend.service.KnowledgePointService;
 import com.sx.backend.service.OllamaService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,26 +83,26 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
             knowledgePoint.setDifficultylevel(MEDIUM);
         }
 
-        // 验证父知识点
-        if (knowledgePoint.getParentId() != null) {
-            KnowledgePoint parent = getKnowledgePointById(knowledgePoint.getParentId());
-            if (!parent.getCourseId().equals(courseId)) {
-                throw new BusinessException(400, "父知识点不属于该课程");
-            }
-
-            // 检查层级深度
-            int depth = calculateDepth(parent);
-            if (depth >= 5) {
-                throw new BusinessException(400, "知识点层级深度不能超过5级");
-            }
-        }
-
         // 插入数据库
         knowledgePointMapper.insertKnowledgePoint(knowledgePoint);
         
-        // 知识点创建后，异步更新关系（移除自动调用，避免频繁的锁竞争）
-        // 关系更新由用户主动调用或定时任务处理
-        logger.info("知识点创建成功，关系更新请手动调用相关接口");
+        // 知识点创建后，检测并自动修复孤立节点
+        try {
+            // 异步执行检测，避免阻塞用户操作
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // 稍微延迟一下，确保事务提交完成
+                    Thread.sleep(1000);
+                    List<KnowledgePoint> allPoints = getKnowledgePointsByCourse(courseId, false);
+                    detectAndFixIsolatedNodes(courseId, allPoints);
+                    logger.info("知识点创建成功，孤立节点检测已在后台自动执行");
+                } catch (Exception e) {
+                    logger.error("后台检测孤立节点失败", e);
+                }
+            });
+        } catch (Exception e) {
+            logger.warn("启动后台孤立节点检测任务失败", e);
+        }
         
         return knowledgePoint;
     }
@@ -119,9 +118,7 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
         // 获取课程所有知识点
         List<KnowledgePoint> points = knowledgePointMapper.selectKnowledgePointsByCourseId(courseId);
 
-        if (includeTree) {
-            return buildKnowledgeTree(points);
-        }
+        // 移除树形结构逻辑，直接返回扁平列表
         return points;
     }
 
@@ -157,6 +154,24 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
 
         // 更新数据库
         knowledgePointMapper.updateKnowledgePoint(existingPoint);
+        
+        // 知识点更新后，检测并自动修复孤立节点
+        try {
+            String courseId = existingPoint.getCourseId();
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(1000);
+                    List<KnowledgePoint> allPoints = getKnowledgePointsByCourse(courseId, false);
+                    detectAndFixIsolatedNodes(courseId, allPoints);
+                    logger.info("知识点更新成功，孤立节点检测已在后台自动执行");
+                } catch (Exception e) {
+                    logger.error("后台检测孤立节点失败", e);
+                }
+            });
+        } catch (Exception e) {
+            logger.warn("启动后台孤立节点检测任务失败", e);
+        }
+        
         return existingPoint;
     }
 
@@ -166,11 +181,6 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
         // 验证知识点存在并获取课程ID
         KnowledgePoint point = getKnowledgePointById(pointId);
         String courseId = point.getCourseId();
-
-        // 检查是否有子节点
-        if (knowledgePointMapper.checkHasChildren(pointId) > 0) {
-            throw new BusinessException(409, "知识点包含子节点，无法删除");
-        }
 
         // 检查是否关联资源
         if (knowledgePointMapper.checkHasResources(pointId) > 0) {
@@ -188,51 +198,21 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
         // 删除知识点
         knowledgePointMapper.deleteKnowledgePoint(pointId);
         
-        // 知识点删除后，异步更新关系
+        // 知识点删除后，检测并自动修复孤立节点
         try {
-            updateKnowledgeRelationsIfChanged(courseId);
-            logger.info("知识点删除后已更新关系");
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(1000);
+                    List<KnowledgePoint> allPoints = getKnowledgePointsByCourse(courseId, false);
+                    detectAndFixIsolatedNodes(courseId, allPoints);
+                    logger.info("知识点删除成功，孤立节点检测已在后台自动执行");
+                } catch (Exception e) {
+                    logger.error("后台检测孤立节点失败", e);
+                }
+            });
         } catch (Exception e) {
-            logger.error("知识点删除后更新关系失败", e);
-            // 不影响知识点删除的主要流程
+            logger.warn("启动后台孤立节点检测任务失败", e);
         }
-    }
-
-    @Override
-    @Transactional
-    public KnowledgePoint updateKnowledgePointParent(String pointId, String parentId) {
-        KnowledgePoint point = getKnowledgePointById(pointId);
-
-        // 如果parentId为空，表示设为根节点
-        if (parentId == null || parentId.isEmpty()) {
-            point.setParentId(null);
-            knowledgePointMapper.updatePointParent(pointId, null);
-            return point;
-        }
-
-        // 验证新父节点
-        KnowledgePoint newParent = getKnowledgePointById(parentId);
-
-        // 验证同一课程
-        if (!point.getCourseId().equals(newParent.getCourseId())) {
-            throw new BusinessException(400, "知识点和父节点不属于同一课程");
-        }
-
-        // 防止循环依赖
-        if (checkCircularDependency(parentId, pointId)) {
-            throw new BusinessException(409, "设置父节点会导致循环依赖");
-        }
-
-        // 检查层级深度
-        int depth = calculateDepth(newParent);
-        if (depth >= 5) {
-            throw new BusinessException(400, "知识点层级深度不能超过5级");
-        }
-
-        // 更新父节点
-        point.setParentId(parentId);
-        knowledgePointMapper.updatePointParent(pointId, parentId);
-        return point;
     }
 
     @Override
@@ -344,6 +324,9 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
                 logger.error("AI生成关系失败", e);
                 // 即使AI生成失败，也返回节点数据
             }
+        } else if (!relations.isEmpty()) {
+            // 5. 如果有关系数据，检测是否存在孤立节点
+            detectAndFixIsolatedNodes(courseId, points);
         }
         
         // 5. 构建边数据
@@ -379,61 +362,6 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
             default:
                 return "相关";
         }
-    }
-
-    // 构建知识点树形结构
-    private List<KnowledgePoint> buildKnowledgeTree(List<KnowledgePoint> points) {
-        // 按ID分组
-        Map<String, KnowledgePoint> pointMap = new HashMap<>();
-        for (KnowledgePoint point : points) {
-            pointMap.put(point.getPointId(), point);
-            point.setChildren(new ArrayList<>());
-        }
-
-        // 构建树结构
-        List<KnowledgePoint> rootPoints = new ArrayList<>();
-        for (KnowledgePoint point : points) {
-            if (point.getParentId() == null || point.getParentId().isEmpty()) {
-                rootPoints.add(point);
-            } else {
-                KnowledgePoint parent = pointMap.get(point.getParentId());
-                if (parent != null) {
-                    parent.getChildren().add(point);
-                }
-            }
-        }
-
-        // 对根节点排序
-        rootPoints.sort(Comparator.comparing(KnowledgePoint::getName));
-
-        // 递归排序子节点
-        for (KnowledgePoint root : rootPoints) {
-            sortChildren(root);
-        }
-
-        return rootPoints;
-    }
-
-    // 递归排序子节点
-    private void sortChildren(KnowledgePoint point) {
-        if (point.getChildren() != null && !point.getChildren().isEmpty()) {
-            point.getChildren().sort(Comparator.comparing(KnowledgePoint::getName));
-            for (KnowledgePoint child : point.getChildren()) {
-                sortChildren(child);
-            }
-        }
-    }
-
-    // 计算知识点深度
-    private int calculateDepth(KnowledgePoint point) {
-        int depth = 1;
-        if (point.getParentId() != null) {
-            KnowledgePoint parent = knowledgePointMapper.selectKnowledgePointById(point.getParentId());
-            if (parent != null) {
-                depth += calculateDepth(parent);
-            }
-        }
-        return depth;
     }
 
     /**
@@ -474,15 +402,20 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
                     .map(KnowledgePoint::getPointId)
                     .collect(Collectors.toSet());
             
+            logger.info("有效的知识点ID列表: {}", validPointIds);
+            
             for (JsonNode edge : edgesNode) {
                 try {
                     String sourceId = edge.get("source").asText();
                     String targetId = edge.get("target").asText();
                     String relationTypeStr = edge.get("relationType").asText();
                     
+                    logger.info("处理关系: {} -> {} ({})", sourceId, targetId, relationTypeStr);
+                    
                     // 验证知识点ID是否有效
                     if (!validPointIds.contains(sourceId) || !validPointIds.contains(targetId)) {
-                        logger.warn("跳过无效的关系: {} -> {}", sourceId, targetId);
+                        logger.warn("跳过无效的关系: {} -> {} (源ID有效: {}, 目标ID有效: {})", 
+                                   sourceId, targetId, validPointIds.contains(sourceId), validPointIds.contains(targetId));
                         continue;
                     }
                     
@@ -512,6 +445,9 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
             
             // 5. 在短事务中批量保存关系
             saveRelationsInTransaction(courseId, relationsToSave);
+            
+            // 6. 检测并自动修复孤立节点
+            detectAndFixIsolatedNodes(courseId, knowledgePoints);
             
             logger.info("成功为课程 {} 生成并保存了 {} 个知识点关系", courseId, relationsToSave.size());
             
@@ -660,5 +596,55 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
     public void clearAIGenerationStatus(String courseId) {
         aiGenerationStatus.remove(courseId);
         aiGenerationResults.remove(courseId);
+    }
+
+    /**
+     * 检测并自动修复孤立节点
+     */
+    private void detectAndFixIsolatedNodes(String courseId, List<KnowledgePoint> knowledgePoints) {
+        try {
+            // 获取现有关系
+            List<KnowledgeRelation> existingRelations = knowledgeRelationMapper.selectRelationsByCourseId(courseId);
+            
+            // 找出已连接的知识点ID
+            Set<String> connectedPointIds = new HashSet<>();
+            for (KnowledgeRelation relation : existingRelations) {
+                connectedPointIds.add(relation.getSourcePointId());
+                connectedPointIds.add(relation.getTargetPointId());
+            }
+            
+            // 找出孤立的知识点
+            List<KnowledgePoint> isolatedPoints = new ArrayList<>();
+            for (KnowledgePoint point : knowledgePoints) {
+                if (!connectedPointIds.contains(point.getPointId())) {
+                    isolatedPoints.add(point);
+                }
+            }
+            
+            logger.info("检测到 {} 个孤立的知识点: {}", isolatedPoints.size(), 
+                       isolatedPoints.stream().map(KnowledgePoint::getName).collect(Collectors.toList()));
+            
+            // 如果有孤立节点且知识点总数大于1，则自动调用AI重新生成关系
+            if (!isolatedPoints.isEmpty() && knowledgePoints.size() > 1) {
+                logger.info("发现孤立节点，自动调用AI重新生成关系");
+                
+                // 异步调用AI重新生成关系，避免阻塞当前操作
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        Thread.sleep(2000); // 等待2秒确保当前事务提交
+                        logger.info("开始自动重新生成知识点关系...");
+                        generateKnowledgeRelationsByAI(courseId);
+                        logger.info("自动重新生成关系完成");
+                    } catch (Exception e) {
+                        logger.error("自动重新生成关系失败", e);
+                    }
+                });
+            } else if (isolatedPoints.isEmpty()) {
+                logger.info("所有知识点都已连接，无需重新生成关系");
+            }
+            
+        } catch (Exception e) {
+            logger.error("检测孤立节点时发生错误", e);
+        }
     }
 }
