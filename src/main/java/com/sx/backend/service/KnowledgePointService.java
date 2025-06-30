@@ -45,14 +45,6 @@ public interface KnowledgePointService {
     void deleteKnowledgePoint(String pointId);
 
     /**
-     * 更新知识点父节点
-     * @param pointId 知识点ID
-     * @param parentId 新的父节点ID
-     * @return 更新后的知识点
-     */
-    KnowledgePoint updateKnowledgePointParent(String pointId, String parentId);
-
-    /**
      * 管理知识点关系
      * @param sourceId 源知识点ID
      * @param targetId 目标知识点ID

@@ -37,7 +37,8 @@ public class OllamaService {
         
         System.out.println("发送给AI的知识点信息: " + knowledgeInfo.toString());
         
-        String prompt = "请分析以下知识点，并明确节点之间的三种关系：先修（PREREQUISITE）、包含（PART_OF）、相关（RELATED）。" +
+        String prompt = "请分析以下知识点，并为每个知识点建立与其他知识点的关系。确保每个知识点至少与一个其他知识点有关系连接。" +
+                       "关系类型包括：先修（PREREQUISITE）、包含（PART_OF）、相关（RELATED）。" +
                        "严格按照以下JSON格式输出，不要包含任何其他文字：\n" +
                        "{\"nodes\":[{\"id\":\"现有知识点ID\",\"name\":\"知识点名称\",\"description\":\"\",\"difficultylevel\":\"\",\"courseId\":\"\"}],\"edges\":[{\"source\":\"源知识点ID\",\"target\":\"目标知识点ID\",\"relationType\":\"PREREQUISITE\",\"type\":\"先修\"}]}\n" +
                        "要求：\n" +
@@ -45,8 +46,10 @@ public class OllamaService {
                        "2. type 字段只能为先修、包含或相关\n" +
                        "3. 节点 id 必须使用现有知识点的真实ID\n" +
                        "4. 边的 source/target 必须是现有知识点的ID\n" +
-                       "5. 至少生成3-5条边关系\n" +
-                       "6. 只输出JSON，不要解释\n\n" +
+                       "5. 确保每个知识点都至少参与一条关系（作为source或target）\n" +
+                       "6. 生成足够多的边关系，建议至少生成" + (knowledgePoints.size() - 1) + "条边\n" +
+                       "7. 优先建立有意义的学习顺序关系\n" +
+                       "8. 只输出JSON，不要解释\n\n" +
                        knowledgeInfo.toString();
                        
         return callOllamaAPI(prompt);
