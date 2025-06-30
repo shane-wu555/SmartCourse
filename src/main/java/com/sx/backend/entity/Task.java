@@ -23,8 +23,13 @@ public class Task {
 
     public Task(String courseId, String title, String description, TaskType type, LocalDateTime deadline, Float maxScore) {
         this.courseId = courseId;
+        this.title = title;
+        this.description = description;
+        this.type = type;
+        this.deadline = deadline;
+        this.maxScore = maxScore;
     }
-  
+
     public Task(String taskId, String courseId, String title, TaskType type, LocalDateTime deadline, Float maxScore,
                 List<Resource> resources, List<Submission> submissions) {
         this.taskId = taskId;
@@ -50,7 +55,7 @@ public class Task {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-  
+
     public String getTestPaperId() {
         return testPaperId;
     }

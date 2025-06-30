@@ -33,8 +33,8 @@
 
     <select id="selectPointsByTaskId" resultType="com.sx.backend.entity.KnowledgePoint">
         SELECT kp.point_id, kp.course_id, kp.name, kp.description,
-               kp.sort_order, kp.created_at, kp.updated_at,
-               kp.difficulty
+               kp.parent_id, kp.sort_order, kp.created_at, kp.updated_at,
+               kp.difficultylevel
         FROM knowledge_point kp
                  JOIN task_knowledge_point tkp ON kp.point_id = tkp.point_id
         WHERE tkp.task_id = #{taskId}
