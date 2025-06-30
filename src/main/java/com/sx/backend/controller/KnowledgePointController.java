@@ -151,12 +151,88 @@ public class KnowledgePointController {
         return ResponseEntity.ok(response);
     }
 
+    // 获取知识图谱数据
     @GetMapping("/courses/{courseId}/knowledge-graph")
-    public ResponseEntity<ResponseResult<KnowledgeGraphDTO>> getKnowledgeGraph(@PathVariable String courseId) {
-        KnowledgeGraphDTO dto = knowledgePointService.getKnowledgeGraphByCourse(courseId);
-        ResponseResult<KnowledgeGraphDTO> response = new ResponseResult<>(HttpStatus.OK.value(), "获取成功", dto);
+    public ResponseEntity<ResponseResult<KnowledgeGraphDTO>> getKnowledgeGraph(
+            @PathVariable String courseId) {
+
+        KnowledgeGraphDTO graph = knowledgePointService.getKnowledgeGraphByCourse(courseId);
+        ResponseResult<KnowledgeGraphDTO> response = new ResponseResult<>(
+                HttpStatus.OK.value(), "成功获取知识图谱", graph);
         return ResponseEntity.ok(response);
     }
+
+    // AI生成知识点关系（异步处理）
+    @PostMapping("/courses/{courseId}/knowledge-points/generate-relations")
+    public ResponseEntity<ResponseResult<String>> generateKnowledgeRelationsByAI(
+            @PathVariable String courseId) {
+
+        try {
+            // 检查是否已经在处理中
+            Map<String, Object> status = knowledgePointService.getAIGenerationStatus(courseId);
+            if ("PROCESSING".equals(status.get("status"))) {
+                ResponseResult<String> response = new ResponseResult<>(
+                        HttpStatus.ACCEPTED.value(), "AI生成任务正在进行中，请稍后查询状态", 
+                        "任务ID: " + courseId);
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+            }
+
+            // 启动异步任务
+            knowledgePointService.generateKnowledgeRelationsByAIAsync(courseId);
+            
+            ResponseResult<String> response = new ResponseResult<>(
+                    HttpStatus.ACCEPTED.value(), "AI生成任务已启动，请通过状态接口查询进度", 
+                    "任务ID: " + courseId);
+            return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
+            
+        } catch (Exception e) {
+            ResponseResult<String> response = new ResponseResult<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(), "启动生成任务失败: " + e.getMessage(), null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    // 查询AI生成任务状态
+    @GetMapping("/courses/{courseId}/knowledge-points/generation-status")
+    public ResponseEntity<ResponseResult<Map<String, Object>>> getAIGenerationStatus(
+            @PathVariable String courseId) {
+        
+        Map<String, Object> status = knowledgePointService.getAIGenerationStatus(courseId);
+        ResponseResult<Map<String, Object>> response = new ResponseResult<>(
+                HttpStatus.OK.value(), "获取任务状态成功", status);
+        return ResponseEntity.ok(response);
+    }
+
+    // 清理AI生成任务状态
+    @DeleteMapping("/courses/{courseId}/knowledge-points/generation-status")
+    public ResponseEntity<ResponseResult<String>> clearAIGenerationStatus(
+            @PathVariable String courseId) {
+        
+        knowledgePointService.clearAIGenerationStatus(courseId);
+        ResponseResult<String> response = new ResponseResult<>(
+                HttpStatus.OK.value(), "任务状态已清理", "清理完成");
+        return ResponseEntity.ok(response);
+    }
+
+    // 检查并更新知识点关系（在知识点发生变化时调用）
+    @PutMapping("/courses/{courseId}/knowledge-points/update-relations")
+    public ResponseEntity<ResponseResult<String>> updateKnowledgeRelationsIfChanged(
+            @PathVariable String courseId) {
+        
+        try {
+            // 调用检查并更新关系的方法
+            knowledgePointService.updateKnowledgeRelationsIfChanged(courseId);
+            
+            ResponseResult<String> response = new ResponseResult<>(
+                    HttpStatus.OK.value(), "知识点关系检查并更新完成", "关系已检查并更新");
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            ResponseResult<String> response = new ResponseResult<>(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(), "更新关系失败: " + e.getMessage(), null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
     // 通用的响应结果类
     public static class ResponseResult<T> {
         private int code;

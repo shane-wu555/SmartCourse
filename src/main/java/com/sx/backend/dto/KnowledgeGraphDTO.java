@@ -13,7 +13,7 @@ public class KnowledgeGraphDTO {
         private String id;
         private String name;
         private String description;
-        private String difficultyLevel;
+        private String difficultylevel;
         private String courseId;      // 新增：所属课程ID
         // 可扩展更多字段
     }

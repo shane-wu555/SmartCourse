@@ -35,26 +35,63 @@ public class KnowledgeGraphService {
      */
     @Transactional
     public KnowledgeGraphDTO generateGraphForCourse(String courseId) throws Exception {
+        System.out.println("开始为课程生成知识图谱关系: " + courseId);
+
         // 1. 从数据库获取该课程的所有知识点
         List<KnowledgePoint> knowledgePoints = knowledgePointMapper.selectKnowledgePointsByCourseId(courseId);
-        
+
         if (knowledgePoints == null || knowledgePoints.isEmpty()) {
             throw new RuntimeException("该课程没有知识点，无法生成知识图谱");
         }
-        
+
+        System.out.println("找到知识点数量: " + knowledgePoints.size());
+        for (KnowledgePoint point : knowledgePoints) {
+            System.out.println("知识点: " + point.getPointId() + " - " + point.getName());
+        }
+
         // 2. 调用大模型生成知识点关系
+        System.out.println("开始调用AI生成关系...");
         String response = ollamaService.generateKnowledgeRelations(knowledgePoints);
+        System.out.println("AI原始响应: " + response);
+
         String json = extractJson(response);
-        
+        System.out.println("提取的JSON: " + json);
+
         // 3. 解析大模型返回的JSON
         ObjectMapper mapper = new ObjectMapper();
-        KnowledgeGraphDTO graphDto = mapper.readValue(json, KnowledgeGraphDTO.class);
-        
+        KnowledgeGraphDTO graphDto;
+        try {
+            graphDto = mapper.readValue(json, KnowledgeGraphDTO.class);
+            System.out.println("JSON解析成功");
+            System.out.println("节点数量: " + (graphDto.getNodes() != null ? graphDto.getNodes().size() : 0));
+            System.out.println("边数量: " + (graphDto.getEdges() != null ? graphDto.getEdges().size() : 0));
+
+            if (graphDto.getEdges() != null) {
+                for (KnowledgeGraphDTO.Edge edge : graphDto.getEdges()) {
+                    System.out.println("Edge: " + edge.getSource() + " -> " + edge.getTarget() + " (" + edge.getRelationType() + ")");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("JSON解析失败: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("解析AI返回的JSON失败: " + e.getMessage());
+        }
+
         // 4. 保存生成的关系到数据库
-        saveRelationsToDatabase(graphDto.getEdges(), courseId);
-        
+        if (graphDto.getEdges() != null && !graphDto.getEdges().isEmpty()) {
+            System.out.println("开始保存关系到数据库...");
+            saveRelationsToDatabase(graphDto.getEdges(), courseId);
+            System.out.println("关系保存完成");
+        } else {
+            System.out.println("没有找到边关系数据，跳过保存");
+        }
+
         // 5. 返回完整的知识图谱数据
-        return getKnowledgeGraphFromDatabase(courseId);
+        System.out.println("从数据库获取最终的知识图谱数据...");
+        KnowledgeGraphDTO result = getKnowledgeGraphFromDatabase(courseId);
+        System.out.println("最终结果 - 节点: " + result.getNodes().size() + ", 边: " + result.getEdges().size());
+
+        return result;
     }
 
     /**
@@ -78,7 +115,7 @@ public class KnowledgeGraphService {
             node.setId(point.getPointId());
             node.setName(point.getName());
             node.setDescription(point.getDescription());
-            node.setDifficultyLevel(point.getDifficultylevel() != null ? point.getDifficultylevel().toString() : "");
+            node.setDifficultylevel(point.getDifficultylevel() != null ? point.getDifficultylevel().toString() : "");
             node.setCourseId(point.getCourseId());
             return node;
         }).toList();
@@ -113,13 +150,17 @@ public class KnowledgeGraphService {
         
         // 保存新的关系（避免重复关系）
         for (KnowledgeGraphDTO.Edge edge : edges) {
+            System.out.println("处理边: " + edge.getSource() + " -> " + edge.getTarget() + " (关系类型: " + edge.getRelationType() + ")");
+            
             // 验证source和target知识点是否存在
             if (!pointMap.containsKey(edge.getSource()) || !pointMap.containsKey(edge.getTarget())) {
+                System.err.println("跳过无效关系 - 知识点不存在: " + edge.getSource() + " -> " + edge.getTarget());
                 continue; // 跳过无效的关系
             }
             
             // 检查关系是否已存在
             if (knowledgeRelationMapper.checkRelationExists(edge.getSource(), edge.getTarget()) > 0) {
+                System.out.println("跳过已存在的关系: " + edge.getSource() + " -> " + edge.getTarget());
                 continue; // 跳过已存在的关系
             }
             
@@ -127,9 +168,11 @@ public class KnowledgeGraphService {
             relation.setRelationId(UUID.randomUUID().toString());
             relation.setSourcePointId(edge.getSource());
             relation.setTargetPointId(edge.getTarget());
-            relation.setRelationType(convertStringToRelationType(edge.getRelationType()));
+            RelationType relationType = convertStringToRelationType(edge.getRelationType());
+            relation.setRelationType(relationType);
             relation.setCreatedAt(new Date());
             
+            System.out.println("保存关系: " + edge.getSource() + " -> " + edge.getTarget() + " (" + relationType + ")");
             knowledgeRelationMapper.insertKnowledgeRelation(relation);
         }
     }
@@ -138,14 +181,17 @@ public class KnowledgeGraphService {
      * 将字符串转换为RelationType枚举
      */
     private RelationType convertStringToRelationType(String relationType) {
-        switch (relationType.toLowerCase()) {
-            case "prerequisite":
+        // 先转为大写再匹配，兼容大小写
+        switch (relationType.toUpperCase()) {
+            case "PREREQUISITE":
                 return RelationType.PREREQUISITE;
-            case "related":
+            case "RELATED":
                 return RelationType.RELATED;
-            case "part-of":
-                return RelationType.DEPENDENCY; // 使用DEPENDENCY表示包含关系
+            case "PART_OF":
+            case "PART-OF":  // 兼容带连字符的形式
+                return RelationType.PART_OF;
             default:
+                System.err.println("未知的关系类型: " + relationType + "，使用默认值 RELATED");
                 return RelationType.RELATED;
         }
     }
@@ -159,7 +205,7 @@ public class KnowledgeGraphService {
                 return "先修";
             case RELATED:
                 return "相关";
-            case DEPENDENCY:
+            case PART_OF:
                 return "包含";
             default:
                 return "相关";
@@ -185,5 +231,35 @@ public class KnowledgeGraphService {
         }
         
         return response;
+    }
+    
+    /**
+     * 测试方法：验证AI生成的关系
+     */
+    public void testAIGeneration(String courseId) throws Exception {
+        List<KnowledgePoint> knowledgePoints = knowledgePointMapper.selectKnowledgePointsByCourseId(courseId);
+        System.out.println("测试AI生成 - 知识点数量: " + knowledgePoints.size());
+        
+        String response = ollamaService.generateKnowledgeRelations(knowledgePoints);
+        System.out.println("=== AI完整响应 ===");
+        System.out.println(response);
+        System.out.println("=== 响应结束 ===");
+        
+        String json = extractJson(response);
+        System.out.println("=== 提取的JSON ===");
+        System.out.println(json);
+        System.out.println("=== JSON结束 ===");
+        
+        // 尝试解析JSON
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            KnowledgeGraphDTO graphDto = mapper.readValue(json, KnowledgeGraphDTO.class);
+            System.out.println("JSON解析成功！");
+            System.out.println("节点数: " + (graphDto.getNodes() != null ? graphDto.getNodes().size() : 0));
+            System.out.println("边数: " + (graphDto.getEdges() != null ? graphDto.getEdges().size() : 0));
+        } catch (Exception e) {
+            System.err.println("JSON解析失败: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

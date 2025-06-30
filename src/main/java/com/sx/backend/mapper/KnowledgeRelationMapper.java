@@ -11,6 +11,7 @@ public interface KnowledgeRelationMapper {
     int insertKnowledgeRelation(KnowledgeRelation relation);
     int deleteKnowledgeRelationById(String relationId);
     int deleteRelationsByPointId(String pointId);
+    int deleteRelationsByCourseId(String courseId);
     int deleteRelationByPoints(@Param("sourceId") String sourceId,
                                @Param("targetId") String targetId);
     List<KnowledgeRelation> selectRelationsByPointId(String pointId);
