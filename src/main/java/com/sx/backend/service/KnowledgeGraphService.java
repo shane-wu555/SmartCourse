@@ -144,7 +144,7 @@ public class KnowledgeGraphService {
             case "related":
                 return RelationType.RELATED;
             case "part-of":
-                return RelationType.DEPENDENCY; // 使用DEPENDENCY表示包含关系
+                return RelationType.PART_OF; // 使用PART_OF表示包含关系
             default:
                 return RelationType.RELATED;
         }
@@ -159,7 +159,7 @@ public class KnowledgeGraphService {
                 return "先修";
             case RELATED:
                 return "相关";
-            case DEPENDENCY:
+            case PART_OF:
                 return "包含";
             default:
                 return "相关";

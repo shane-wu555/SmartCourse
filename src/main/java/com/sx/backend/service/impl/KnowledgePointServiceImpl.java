@@ -203,13 +203,6 @@ public class KnowledgePointServiceImpl implements KnowledgePointService {
             throw new BusinessException(409, "知识点关联已存在");
         }
 
-        // 检查循环依赖（针对依赖关系）
-        if (relationType == RelationType.DEPENDENCY) {
-            if (checkCircularDependency(targetId, sourceId)) {
-                throw new BusinessException(409, "添加依赖关系会导致循环依赖");
-            }
-        }
-
         // 创建新关系
         KnowledgeRelation relation = new KnowledgeRelation();
         relation.setRelationId(UUID.randomUUID().toString());
