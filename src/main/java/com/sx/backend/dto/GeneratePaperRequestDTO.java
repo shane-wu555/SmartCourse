@@ -8,7 +8,9 @@ import java.util.List;
 public class GeneratePaperRequestDTO {
     /** 课程ID */
     private String courseId;
-    /** 组卷方式：random/knowledge/type/difficulty */
+    /** 题库ID */
+    private String bankId;
+    /** 组卷方式：random/knowledge/difficulty */
     private String mode;
     /** 题目总数 */
     private Integer totalCount;
@@ -38,6 +40,14 @@ public class GeneratePaperRequestDTO {
 
     public void setCourseId(String courseId) {
         this.courseId = courseId;
+    }
+
+    public String getBankId() {
+        return bankId;
+    }
+
+    public void setBankId(String bankId) {
+        this.bankId = bankId;
     }
 
     public String getMode() {
