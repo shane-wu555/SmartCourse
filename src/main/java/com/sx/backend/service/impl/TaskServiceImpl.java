@@ -7,6 +7,7 @@ import com.sx.backend.entity.Task;
 import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.TaskMapper;
 import com.sx.backend.service.TaskService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class TaskServiceImpl implements TaskService {
 
     private final TaskMapper taskMapper;
@@ -31,6 +33,7 @@ public class TaskServiceImpl implements TaskService {
         if (taskDTO.getType() == null) {
             throw new BusinessException(400, "任务类型不能为空");
         }
+
         String taskId = UUID.randomUUID().toString();
         Task task = new Task(
                 taskDTO.getCourseId(),
@@ -43,17 +46,31 @@ public class TaskServiceImpl implements TaskService {
         task.setTaskId(taskId);
         task.setCreatedAt(LocalDateTime.now());
 
+        log.info("开始创建任务: {}", task);
         taskMapper.insert(task);
+        log.info("任务已插入数据库，taskId={}", taskId);
 
+        // 插入资源关联
         if (taskDTO.getResourceIds() != null && !taskDTO.getResourceIds().isEmpty()) {
-            taskMapper.insertTaskResources(taskId, taskDTO.getResourceIds());
+            log.info("接收到的资源ID列表: {}", taskDTO.getResourceIds());
+            int inserted = taskMapper.insertTaskResources(taskId, taskDTO.getResourceIds());
+            log.info("成功插入 task_resource 关联 {} 条记录", inserted);
+        } else {
+            log.info("未收到任何资源ID，不插入 task_resource 记录");
         }
 
+        // 插入知识点关联
         if (taskDTO.getPointIds() != null && !taskDTO.getPointIds().isEmpty()) {
-            taskMapper.insertTaskPoints(taskId, taskDTO.getPointIds());
+            log.info("接收到的知识点ID列表: {}", taskDTO.getPointIds());
+            int insertedPoints = taskMapper.insertTaskPoints(taskId, taskDTO.getPointIds());
+            log.info("成功插入 task_knowledge_point 关联 {} 条记录", insertedPoints);
+        } else {
+            log.info("未收到任何知识点ID，不插入 task_knowledge_point 记录");
         }
 
-        return taskMapper.getById(taskId);
+        Task createdTask = taskMapper.getById(taskId);
+        log.info("任务创建完成: {}", createdTask.getTaskId());
+        return createdTask;
     }
 
     @Override
