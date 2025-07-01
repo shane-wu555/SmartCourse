@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.QuestionMapper">
+
+    <!-- ✅ 自定义 resultMap，防止 enum/list 映射错误 -->
+    <resultMap id="questionMap" type="com.sx.backend.entity.Question">
+        <id property="questionId" column="question_id" />
+        <result property="bankId" column="bank_id" />
+        <result property="content" column="content" />
+        <result property="type" column="type" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+        <result property="answer" column="answer" />
+        <result property="score" column="score" />
+        <result property="difficultylevel" column="difficulty_level" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+        <!-- ❗ options 和 knowledgePoints 是复杂类型，不能直接用字段，需要在 service 中二次封装 -->
+    </resultMap>
+
+    <!-- ✅ 核心查询 -->
+    <select id="selectQuestionsByBankId" resultMap="questionMap">
+        SELECT * FROM question WHERE bank_id = #{bankId}
+    </select>
+
+    <!-- 你可以根据需要补充其他查询 -->
+</mapper>
