@@ -8,7 +8,9 @@ import java.util.List;
 public class GeneratePaperRequestDTO {
     /** 课程ID */
     private String courseId;
-    /** 组卷方式：random/knowledge/type/difficulty */
+    /** 题库ID */
+    private String bankId;
+    /** 组卷方式：random/knowledge/difficulty */
     private String mode;
     /** 题目总数 */
     private Integer totalCount;
@@ -18,6 +20,10 @@ public class GeneratePaperRequestDTO {
     private List<String> questionTypes;
     /** 难度分布（如：{"easy":5,"medium":3,"hard":2}） */
     private DifficultyDistribution difficultyDistribution;
+    /** 试卷标题 */
+    private String title;
+    /** 时间限制（分钟） */
+    private Integer timeLimit;
 
     public static class DifficultyDistribution {
         private Integer easy;
@@ -38,6 +44,14 @@ public class GeneratePaperRequestDTO {
 
     public void setCourseId(String courseId) {
         this.courseId = courseId;
+    }
+
+    public String getBankId() {
+        return bankId;
+    }
+
+    public void setBankId(String bankId) {
+        this.bankId = bankId;
     }
 
     public String getMode() {
@@ -78,5 +92,36 @@ public class GeneratePaperRequestDTO {
 
     public void setDifficultyDistribution(DifficultyDistribution difficultyDistribution) {
         this.difficultyDistribution = difficultyDistribution;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Integer getTimeLimit() {
+        return timeLimit;
+    }
+
+    public void setTimeLimit(Integer timeLimit) {
+        this.timeLimit = timeLimit;
+    }
+
+    @Override
+    public String toString() {
+        return "GeneratePaperRequestDTO{" +
+                "courseId='" + courseId + '\'' +
+                ", bankId='" + bankId + '\'' +
+                ", mode='" + mode + '\'' +
+                ", totalCount=" + totalCount +
+                ", knowledgePointIds=" + knowledgePointIds +
+                ", questionTypes=" + questionTypes +
+                ", difficultyDistribution=" + difficultyDistribution +
+                ", title='" + title + '\'' +
+                ", timeLimit=" + timeLimit +
+                '}';
     }
 }

@@ -35,7 +35,6 @@ public class Task {
         this.taskId = taskId;
         this.courseId = courseId;
         this.title = title;
-        this.description = description;
         this.type = type;
         this.deadline = deadline;
         this.maxScore = maxScore;

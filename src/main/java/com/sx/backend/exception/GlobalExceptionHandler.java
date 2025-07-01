@@ -38,6 +38,13 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(400, errorMsg, null));
     }
 
+    // 处理参数异常（如IllegalArgumentException）
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<?>> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest()
+                .body(new ApiResponse<>(400, ex.getMessage(), null));
+    }
+
     // 处理其他异常
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex) {

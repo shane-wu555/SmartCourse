@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.TestPaperMapper">
+
+    <!-- 试卷结果映射 -->
+    <resultMap id="TestPaperResultMap" type="com.sx.backend.entity.TestPaper">
+        <id property="paperId" column="paper_id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="title" column="title"/>
+        <result property="courseId" column="course_id"/>
+        <result property="questions" column="questions" typeHandler="com.sx.backend.typehandler.JsonStringListTypeHandler"/>
+        <result property="totalScore" column="total_score"/>
+        <result property="timeLimit" column="time_limit"/>
+        <result property="generationMethod" column="generation_method"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <!-- 插入试卷 -->
+    <insert id="insert" parameterType="com.sx.backend.entity.TestPaper">
+        INSERT INTO test_paper (
+            paper_id, task_id, title, course_id, questions, total_score, 
+            time_limit, generation_method, created_at, updated_at
+        ) VALUES (
+            #{paperId}, #{taskId}, #{title}, #{courseId}, 
+            #{questions, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}, 
+            #{totalScore}, #{timeLimit}, #{generationMethod}, 
+            #{createdAt}, #{updatedAt}
+        )
+    </insert>
+
+    <!-- 根据ID查询试卷 -->
+    <select id="selectById" parameterType="string" resultMap="TestPaperResultMap">
+        SELECT * FROM test_paper WHERE paper_id = #{paperId}
+    </select>
+
+    <!-- 根据课程ID查询试卷列表 -->
+    <select id="selectByCourseId" parameterType="string" resultMap="TestPaperResultMap">
+        SELECT * FROM test_paper WHERE course_id = #{courseId} ORDER BY created_at DESC
+    </select>
+
+    <!-- 根据任务ID查询试卷 -->
+    <select id="selectByTaskId" parameterType="string" resultMap="TestPaperResultMap">
+        SELECT * FROM test_paper WHERE task_id = #{taskId}
+    </select>
+
+    <!-- 更新试卷 -->
+    <update id="update" parameterType="com.sx.backend.entity.TestPaper">
+        UPDATE test_paper 
+        SET title = #{title},
+            course_id = #{courseId},
+            questions = #{questions, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler},
+            total_score = #{totalScore},
+            time_limit = #{timeLimit},
+            generation_method = #{generationMethod},
+            updated_at = #{updatedAt}
+        WHERE paper_id = #{paperId}
+    </update>
+
+    <!-- 根据ID删除试卷 -->
+    <delete id="deleteById" parameterType="string">
+        DELETE FROM test_paper WHERE paper_id = #{paperId}
+    </delete>
+
+    <!-- 分页查询试卷列表 -->
+    <select id="selectByPage" resultMap="TestPaperResultMap">
+        SELECT * FROM test_paper
+        WHERE 1=1
+        <if test="courseId != null and courseId != ''">
+            AND course_id = #{courseId}
+        </if>
+        ORDER BY created_at DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <!-- 统计试卷数量 -->
+    <select id="countByCondition" resultType="int">
+        SELECT COUNT(*) FROM test_paper
+        WHERE 1=1
+        <if test="courseId != null and courseId != ''">
+            AND course_id = #{courseId}
+        </if>
+    </select>
+
+</mapper>

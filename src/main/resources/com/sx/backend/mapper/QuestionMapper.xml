@@ -1,24 +1,96 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.sx.backend.mapper.QuestionMapper">
 
-    <!-- ✅ 自定义 resultMap，防止 enum/list 映射错误 -->
-    <resultMap id="questionMap" type="com.sx.backend.entity.Question">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.sx.backend.mapper.QuestionMapper">
+    <!-- Question 实体 resultMap -->
+    <resultMap id="QuestionResultMap" type="com.sx.backend.entity.Question">
         <id property="questionId" column="question_id" />
         <result property="bankId" column="bank_id" />
         <result property="content" column="content" />
-        <result property="type" column="type" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
+        <result property="type" column="type" typeHandler="com.sx.backend.typehandler.QuestionTypeTypeHandler" />
+        <result property="options" column="options" typeHandler="com.sx.backend.typehandler.JsonStringListTypeHandler" />
         <result property="answer" column="answer" />
         <result property="score" column="score" />
-        <result property="difficultylevel" column="difficulty_level" typeHandler="org.apache.ibatis.type.EnumOrdinalTypeHandler" />
-        <!-- ❗ options 和 knowledgePoints 是复杂类型，不能直接用字段，需要在 service 中二次封装 -->
+        <result property="difficultylevel" column="difficulty_level" typeHandler="com.sx.backend.typehandler.DifficultyLevelTypeHandler" />
+        <result property="knowledgePoints" column="knowledge_points" typeHandler="com.sx.backend.typehandler.JsonStringListTypeHandler" />
     </resultMap>
 
-    <!-- ✅ 核心查询 -->
-    <select id="selectQuestionsByBankId" resultMap="questionMap">
+    <!-- 插入题目 -->
+    <insert id="insertQuestion" parameterType="com.sx.backend.entity.Question">
+        INSERT INTO question (
+            question_id, bank_id, content, type, options, answer, score, difficulty_level, knowledge_points
+        ) VALUES (
+            #{questionId}, #{bankId}, #{content}, #{type, typeHandler=com.sx.backend.typehandler.QuestionTypeTypeHandler}, 
+            #{options, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}, 
+            #{answer}, #{score}, #{difficultylevel, typeHandler=com.sx.backend.typehandler.DifficultyLevelTypeHandler}, 
+            #{knowledgePoints, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}
+        )
+    </insert>
+
+    <!-- 更新题目 -->
+    <update id="updateQuestion" parameterType="com.sx.backend.entity.Question">
+        UPDATE question SET
+            bank_id = #{bankId},
+            content = #{content},
+            type = #{type, typeHandler=com.sx.backend.typehandler.QuestionTypeTypeHandler},
+            options = #{options, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler},
+            answer = #{answer},
+            score = #{score},
+            difficulty_level = #{difficultylevel, typeHandler=com.sx.backend.typehandler.DifficultyLevelTypeHandler},
+            knowledge_points = #{knowledgePoints, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}
+        WHERE question_id = #{questionId}
+    </update>
+
+    <!-- 删除题目 -->
+    <delete id="deleteQuestion" parameterType="string">
+        DELETE FROM question WHERE question_id = #{questionId}
+    </delete>
+
+    <!-- 根据ID查询题目 -->
+    <select id="selectQuestionById" resultMap="QuestionResultMap" parameterType="string">
+        SELECT * FROM question WHERE question_id = #{questionId}
+    </select>
+
+    <!-- 根据题库ID查询题目列表 -->
+    <select id="selectQuestionsByBankId" resultMap="QuestionResultMap" parameterType="string">
         SELECT * FROM question WHERE bank_id = #{bankId}
     </select>
 
-    <!-- 你可以根据需要补充其他查询 -->
+    <!-- 条件查询题目 -->
+    <select id="selectQuestionsByCondition" resultMap="QuestionResultMap">
+        SELECT * FROM question
+        WHERE 1=1
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        <if test="difficultylevel != null and difficultylevel != ''">
+            AND difficultylevel = #{difficultylevel}
+        </if>
+        <if test="knowledgePointIds != null and knowledgePointIds.size > 0">
+            AND (
+                <!-- 假设 knowledge_points 字段为 JSON 数组字符串，使用 LIKE 简单匹配 -->
+                <foreach collection="knowledgePointIds" item="kpId" separator=" OR ">
+                    knowledge_points LIKE CONCAT('%', #{kpId}, '%')
+                </foreach>
+            )
+        </if>
+    </select>
+
+    <!-- 批量插入题目 -->
+    <insert id="batchInsertQuestions">
+        INSERT INTO question (
+            question_id, bank_id, content, type, options, answer, score, difficultylevel, knowledge_points
+        ) VALUES
+        <foreach collection="questions" item="q" separator=",">
+            (
+                #{q.questionId}, #{q.bankId}, #{q.content}, #{q.type},
+                #{q.options, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}, 
+                #{q.answer}, #{q.score}, #{q.difficultylevel}, 
+                #{q.knowledgePoints, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}
+            )
+        </foreach>
+    </insert>
 </mapper>

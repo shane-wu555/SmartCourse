@@ -46,6 +46,20 @@ public class QuestionBankController {
         return questionBankService.getAllQuestionBanks();
     }
 
+    // RESTful风格的题库信息获取接口（兼容前端）
+    @GetMapping("/{bankId}/info")
+    public ApiResponse<QuestionBank> getQuestionBankInfo(@PathVariable String bankId) {
+        try {
+            QuestionBank bank = questionBankService.getQuestionBankById(bankId);
+            if (bank == null) {
+                return ApiResponse.error("题库不存在");
+            }
+            return ApiResponse.success(bank);
+        } catch (Exception e) {
+            return ApiResponse.error("获取题库信息失败：" + e.getMessage());
+        }
+    }
+
     // 题库内题目增删改查
     @PostMapping("/{bankId}/question/add")
     public int addQuestionToBank(@PathVariable String bankId, @RequestBody Question question) {
@@ -85,4 +99,5 @@ public class QuestionBankController {
     public int importQuestionsFromExcel(@PathVariable String bankId, @RequestParam("file") MultipartFile file) {
         return excelQuestionImportService.importQuestionsFromExcel(bankId, file);
     }
+
 }

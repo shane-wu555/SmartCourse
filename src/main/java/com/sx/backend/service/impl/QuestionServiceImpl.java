@@ -15,11 +15,13 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public int addQuestion(Question question) {
+        validateQuestion(question);
         return questionMapper.insertQuestion(question);
     }
 
     @Override
     public int updateQuestion(Question question) {
+        validateQuestion(question);
         return questionMapper.updateQuestion(question);
     }
 
@@ -45,7 +47,29 @@ public class QuestionServiceImpl implements QuestionService {
 
     @Override
     public int batchAddQuestions(List<Question> questions) {
+        // 验证每个题目的必需字段
+        for (Question question : questions) {
+            validateQuestion(question);
+        }
+        
         // 需在Mapper中实现批量插入
         return questionMapper.batchInsertQuestions(questions);
+    }
+    
+    /**
+     * 验证题目的必需字段
+     * @param question 题目对象
+     * @throws IllegalArgumentException 如果必需字段为空
+     */
+    private void validateQuestion(Question question) {
+        if (question.getBankId() == null || question.getBankId().trim().isEmpty()) {
+            throw new IllegalArgumentException("题库ID不能为空");
+        }
+        if (question.getContent() == null || question.getContent().trim().isEmpty()) {
+            throw new IllegalArgumentException("题干内容不能为空");
+        }
+        if (question.getType() == null) {
+            throw new IllegalArgumentException("题目类型不能为空");
+        }
     }
 }
