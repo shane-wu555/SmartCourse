@@ -18,8 +18,9 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // 添加 CORS 配置
-                .csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 配置
+                .csrf(csrf -> csrf.disable()) // 关闭 CSRF
+                .headers(headers -> headers.frameOptions().disable()) // ✅ 允许 iframe 加载资源
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().permitAll()
@@ -27,17 +28,17 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 添加 CORS 配置源
+    // CORS 配置源
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080")); // 允许的前端地址
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080")); // 前端地址
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true); // 允许凭证（如 cookies）
+        configuration.setAllowCredentials(true); // 支持携带 cookie
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration); // 应用到所有路径
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 

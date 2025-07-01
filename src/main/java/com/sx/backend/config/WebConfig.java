@@ -4,6 +4,7 @@ import com.sx.backend.security.JwtInterceptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
@@ -15,7 +16,16 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
-                .addPathPatterns("/api/**") // 拦截所有API请求
-                .excludePathPatterns("/api/auth/**"); // 排除认证接口
+                .addPathPatterns("/api/**")
+                .excludePathPatterns("/api/auth/**");
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/converted/**")
+                .addResourceLocations("file:C:/Users/86150/Desktop/SmartCourse/uploads/converted/");
+
+        registry.addResourceHandler("/thumbnails/**")
+                .addResourceLocations("file:C:/Users/86150/Desktop/SmartCourse/uploads/thumbnails/");
     }
 }
