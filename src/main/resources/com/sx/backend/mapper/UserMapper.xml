@@ -11,7 +11,7 @@
         <result property="phone" column="phone"/>
         <result property="avatar" column="avatar"/>
         <result property="realName" column="real_name"/>
-        <result property="role" column="role" typeHandler="org.apache.ibatis.type.EnumTypeHandler"/>
+        <result property="role" column="role" />
         <result property="registerTime" column="register_time"/>
         <result property="lastLoginTime" column="last_login_time"/>
     </resultMap>

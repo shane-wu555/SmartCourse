@@ -15,6 +15,8 @@ public class QuestionController {
 
     @PostMapping("/add")
     public int addQuestion(@RequestBody Question question) {
+        // 注意：建议使用 POST /api/questionbank/{bankId}/question/add 来添加题目
+        // 这个端点要求在请求体中包含 bankId
         return questionService.addQuestion(question);
     }
 

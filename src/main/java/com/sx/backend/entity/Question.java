@@ -18,7 +18,7 @@ public class Question {
     private String answer; // 选择题答案或判断题答案
     private Float score;
     private DifficultyLevel difficultylevel;
-    private List<KnowledgePoint> knowledgePoints;
+    private List<String> knowledgePoints; // 知识点ID列表
 
     public Question() {
     }
@@ -45,10 +45,10 @@ public class Question {
     }
 
     // 检查是否包含指定的知识点ID
-    public static boolean containsKnowledgePoint(List<KnowledgePoint> knowledgePoints, List<String> targetIds) {
+    public static boolean containsKnowledgePoint(List<String> knowledgePoints, List<String> targetIds) {
         if (knowledgePoints == null || targetIds == null) return false;
-        for (KnowledgePoint kp : knowledgePoints) {
-            if (targetIds.contains(kp.getPointId())) return true;
+        for (String kpId : knowledgePoints) {
+            if (targetIds.contains(kpId)) return true;
         }
         return false;
     }
@@ -56,7 +56,7 @@ public class Question {
     // 获取题目主知识点ID（第一个知识点ID，若有）
     public String getMainKnowledgePointId() {
         if (knowledgePoints != null && !knowledgePoints.isEmpty()) {
-            return knowledgePoints.get(0).getPointId();
+            return knowledgePoints.get(0);
         }
         return null;
     }

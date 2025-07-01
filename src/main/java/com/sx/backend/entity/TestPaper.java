@@ -1,5 +1,6 @@
 package com.sx.backend.entity;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TestPaper {
@@ -11,6 +12,8 @@ public class TestPaper {
     private Float totalScore;
     private Integer timeLimit; // 以分钟为单位
     private PaperGenerationMethod generationMethod;
+    private LocalDateTime createdAt; // 创建时间
+    private LocalDateTime updatedAt; // 更新时间
 
     public TestPaper(String paperId, String taskId, String title, List<String> questions, Float totalScore, Integer timeLimit, PaperGenerationMethod generationMethod) {
         this.paperId = paperId;
@@ -88,5 +91,21 @@ public class TestPaper {
     // 设置组卷方式
     public void setGenerationMethod(PaperGenerationMethod generationMethod) {
         this.generationMethod = generationMethod;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

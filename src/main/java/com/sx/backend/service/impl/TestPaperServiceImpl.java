@@ -4,11 +4,13 @@ import com.sx.backend.dto.GeneratePaperRequestDTO;
 import com.sx.backend.entity.Question;
 import com.sx.backend.entity.TestPaper;
 import com.sx.backend.entity.PaperGenerationMethod;
+import com.sx.backend.mapper.TestPaperMapper;
 import com.sx.backend.service.QuestionService;
 import com.sx.backend.service.TestPaperService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -16,14 +18,21 @@ import java.util.stream.Collectors;
 public class TestPaperServiceImpl implements TestPaperService {
     @Autowired
     private QuestionService questionService;
+    
+    @Autowired
+    private TestPaperMapper testPaperMapper;
 
     @Override
     public TestPaper generatePaper(GeneratePaperRequestDTO requestDTO) {
+        System.out.println("DEBUG: Starting generatePaper method");
+        
         // 获取题库中的所有题目
         List<Question> allQuestions;
         if (requestDTO.getBankId() != null && !requestDTO.getBankId().isEmpty()) {
+            System.out.println("DEBUG: Getting questions from bank: " + requestDTO.getBankId());
             // 如果指定了题库ID，直接从题库获取题目
             allQuestions = questionService.getQuestionsByBankId(requestDTO.getBankId());
+            System.out.println("DEBUG: Found " + allQuestions.size() + " questions in bank");
         } else {
             // 如果没有指定题库ID，抛出异常
             throw new IllegalArgumentException("题库ID不能为空");
@@ -31,14 +40,17 @@ public class TestPaperServiceImpl implements TestPaperService {
         
         List<Question> selected = new ArrayList<>();
         String mode = requestDTO.getMode();
+        System.out.println("DEBUG: Generation mode: " + mode);
         
         if ("random".equalsIgnoreCase(mode)) {
+            System.out.println("DEBUG: Using random generation mode");
             // 校验题目数量
             if (allQuestions.size() < requestDTO.getTotalCount()) {
                 throw new IllegalArgumentException("题库中可用题目不足，最多可选 " + allQuestions.size() + " 道题");
             }
             Collections.shuffle(allQuestions);
             selected = allQuestions.stream().limit(requestDTO.getTotalCount()).collect(Collectors.toList());
+            System.out.println("DEBUG: Selected " + selected.size() + " questions randomly");
             
         } else if ("knowledge".equalsIgnoreCase(mode)) {
             List<String> kpIds = requestDTO.getKnowledgePointIds();
@@ -106,12 +118,29 @@ public class TestPaperServiceImpl implements TestPaperService {
             throw new IllegalArgumentException("不支持的组卷模式: " + mode);
         }
         
+        System.out.println("DEBUG: Question selection completed, selected count: " + selected.size());
+        
         // 组装TestPaper对象
         TestPaper paper = new TestPaper();
+        paper.setPaperId(UUID.randomUUID().toString());
         paper.setCourseId(requestDTO.getCourseId());
         paper.setQuestions(selected.stream().map(Question::getQuestionId).collect(Collectors.toList()));
         paper.setTotalScore((float)selected.stream().mapToDouble(Question::getScore).sum());
-        paper.setTitle("智能组卷试卷");
+        
+        System.out.println("DEBUG: Created TestPaper object with ID: " + paper.getPaperId());
+        
+        // 设置试卷标题，如果DTO中有标题则使用，否则使用默认标题
+        if (requestDTO.getTitle() != null && !requestDTO.getTitle().trim().isEmpty()) {
+            paper.setTitle(requestDTO.getTitle());
+        } else {
+            paper.setTitle("智能组卷试卷");
+        }
+        
+        // 设置时间限制
+        paper.setTimeLimit(requestDTO.getTimeLimit());
+        
+        paper.setCreatedAt(LocalDateTime.now());
+        paper.setUpdatedAt(LocalDateTime.now());
         
         // 设置组卷方式
         if ("random".equalsIgnoreCase(mode)) {
@@ -122,6 +151,73 @@ public class TestPaperServiceImpl implements TestPaperService {
             paper.setGenerationMethod(PaperGenerationMethod.DIFFICULTY_BALANCE);
         }
 
+        // 直接保存到数据库并返回
+        System.out.println("DEBUG: About to insert paper: " + paper);
+        System.out.println("DEBUG: Paper ID: " + paper.getPaperId());
+        System.out.println("DEBUG: Paper questions: " + paper.getQuestions());
+        
+        try {
+            int insertResult = testPaperMapper.insert(paper);
+            System.out.println("DEBUG: Insert result: " + insertResult);
+            System.out.println("DEBUG: Paper inserted successfully");
+        } catch (Exception e) {
+            System.err.println("ERROR: Failed to insert paper: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+        
         return paper;
+    }
+
+    @Override
+    public TestPaper savePaper(TestPaper testPaper) {
+        if (testPaper.getPaperId() == null) {
+            testPaper.setPaperId(UUID.randomUUID().toString());
+        }
+        if (testPaper.getCreatedAt() == null) {
+            testPaper.setCreatedAt(LocalDateTime.now());
+        }
+        testPaper.setUpdatedAt(LocalDateTime.now());
+        
+        testPaperMapper.insert(testPaper);
+        return testPaper;
+    }
+
+    @Override
+    public TestPaper getPaperById(String paperId) {
+        return testPaperMapper.selectById(paperId);
+    }
+
+    @Override
+    public List<TestPaper> getPapersByCourseId(String courseId) {
+        return testPaperMapper.selectByCourseId(courseId);
+    }
+
+    @Override
+    public TestPaper getPaperByTaskId(String taskId) {
+        return testPaperMapper.selectByTaskId(taskId);
+    }
+
+    @Override
+    public TestPaper updatePaper(TestPaper testPaper) {
+        testPaper.setUpdatedAt(LocalDateTime.now());
+        testPaperMapper.update(testPaper);
+        return testPaper;
+    }
+
+    @Override
+    public boolean deletePaper(String paperId) {
+        return testPaperMapper.deleteById(paperId) > 0;
+    }
+
+    @Override
+    public List<TestPaper> getPapersByPage(String courseId, int page, int size) {
+        int offset = (page - 1) * size;
+        return testPaperMapper.selectByPage(courseId, offset, size);
+    }
+
+    @Override
+    public int countPapers(String courseId) {
+        return testPaperMapper.countByCondition(courseId);
     }
 }

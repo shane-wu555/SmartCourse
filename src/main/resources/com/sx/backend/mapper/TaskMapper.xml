@@ -34,7 +34,7 @@
     <select id="selectPointsByTaskId" resultType="com.sx.backend.entity.KnowledgePoint">
         SELECT kp.point_id, kp.course_id, kp.name, kp.description,
                kp.sort_order, kp.created_at, kp.updated_at,
-               kp.difficulty
+               kp.difficultylevel
         FROM knowledge_point kp
                  JOIN task_knowledge_point tkp ON kp.point_id = tkp.point_id
         WHERE tkp.task_id = #{taskId}
@@ -53,7 +53,7 @@
 
     <insert id="insert" parameterType="com.sx.backend.entity.Task">
         INSERT INTO task (task_id, course_id, title, description, type, deadline, max_score, created_at)
-        VALUES (#{taskId}, #{courseId}, #{title}, #{description}, #{type}, #{deadline}, #{maxScore}, NOW())
+        VALUES (#{taskId}, #{courseId}, #{title}, #{description}, #{type, typeHandler=com.sx.backend.typehandler.TaskTypeTypeHandler}, #{deadline}, #{maxScore}, NOW())
     </insert>
 
     <update id="update" parameterType="com.sx.backend.entity.Task">
