@@ -4,9 +4,11 @@ import com.sx.backend.dto.GeneratePaperRequestDTO;
 import com.sx.backend.entity.Question;
 import com.sx.backend.entity.TestPaper;
 import com.sx.backend.entity.PaperGenerationMethod;
+import com.sx.backend.entity.KnowledgePoint;
 import com.sx.backend.mapper.TestPaperMapper;
 import com.sx.backend.service.QuestionService;
 import com.sx.backend.service.TestPaperService;
+import com.sx.backend.service.KnowledgePointService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +23,9 @@ public class TestPaperServiceImpl implements TestPaperService {
     
     @Autowired
     private TestPaperMapper testPaperMapper;
+    
+    @Autowired
+    private KnowledgePointService knowledgePointService;
 
     @Override
     public TestPaper generatePaper(GeneratePaperRequestDTO requestDTO) {
@@ -36,26 +41,42 @@ public class TestPaperServiceImpl implements TestPaperService {
         
         List<Question> selected = new ArrayList<>();
         String mode = requestDTO.getMode();
-        System.out.println("DEBUG: Generation mode: " + mode);
         
         if ("random".equalsIgnoreCase(mode)) {
-            System.out.println("DEBUG: Using random generation mode");
             // 校验题目数量
             if (allQuestions.size() < requestDTO.getTotalCount()) {
                 throw new IllegalArgumentException("题库中可用题目不足，最多可选 " + allQuestions.size() + " 道题");
             }
             Collections.shuffle(allQuestions);
             selected = allQuestions.stream().limit(requestDTO.getTotalCount()).collect(Collectors.toList());
-            System.out.println("DEBUG: Selected " + selected.size() + " questions randomly");
             
         } else if ("knowledge".equalsIgnoreCase(mode)) {
             List<String> kpIds = requestDTO.getKnowledgePointIds();
             if (kpIds == null || kpIds.isEmpty()) {
                 throw new IllegalArgumentException("按知识点组卷时，知识点ID列表不能为空");
             }
+            
+            // 将知识点ID转换为知识点名称
+            List<String> kpNames = new ArrayList<>();
+            for (String kpId : kpIds) {
+                try {
+                    KnowledgePoint kp = knowledgePointService.getKnowledgePointById(kpId);
+                    if (kp != null) {
+                        kpNames.add(kp.getName());
+                    }
+                } catch (Exception e) {
+                    // 忽略找不到的知识点
+                }
+            }
+            
+            if (kpNames.isEmpty()) {
+                throw new IllegalArgumentException("未找到有效的知识点");
+            }
+            
             List<Question> filteredQuestions = allQuestions.stream()
-                    .filter(q -> Question.containsKnowledgePoint(q.getKnowledgePoints(), kpIds))
+                    .filter(q -> Question.containsKnowledgePoint(q.getKnowledgePoints(), kpNames))
                     .collect(Collectors.toList());
+            
             // 校验题目数量
             if (filteredQuestions.size() < requestDTO.getTotalCount()) {
                 throw new IllegalArgumentException("符合知识点条件的题目不足，最多可选 " + filteredQuestions.size() + " 道题");
