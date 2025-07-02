@@ -24,15 +24,11 @@ public class TestPaperServiceImpl implements TestPaperService {
 
     @Override
     public TestPaper generatePaper(GeneratePaperRequestDTO requestDTO) {
-        System.out.println("DEBUG: Starting generatePaper method");
-        
         // 获取题库中的所有题目
         List<Question> allQuestions;
         if (requestDTO.getBankId() != null && !requestDTO.getBankId().isEmpty()) {
-            System.out.println("DEBUG: Getting questions from bank: " + requestDTO.getBankId());
             // 如果指定了题库ID，直接从题库获取题目
             allQuestions = questionService.getQuestionsByBankId(requestDTO.getBankId());
-            System.out.println("DEBUG: Found " + allQuestions.size() + " questions in bank");
         } else {
             // 如果没有指定题库ID，抛出异常
             throw new IllegalArgumentException("题库ID不能为空");
@@ -124,7 +120,8 @@ public class TestPaperServiceImpl implements TestPaperService {
         TestPaper paper = new TestPaper();
         paper.setPaperId(UUID.randomUUID().toString());
         paper.setCourseId(requestDTO.getCourseId());
-        paper.setQuestions(selected.stream().map(Question::getQuestionId).collect(Collectors.toList()));
+        // 修改：直接存储完整的题目对象，而不是题目ID
+        paper.setQuestions(selected);
         paper.setTotalScore((float)selected.stream().mapToDouble(Question::getScore).sum());
         
         System.out.println("DEBUG: Created TestPaper object with ID: " + paper.getPaperId());
@@ -219,5 +216,41 @@ public class TestPaperServiceImpl implements TestPaperService {
     @Override
     public int countPapers(String courseId) {
         return testPaperMapper.countByCondition(courseId);
+    }
+
+    @Override
+    public Map<String, Object> getPaperWithQuestions(String paperId) {
+        System.out.println("DEBUG: Getting paper with questions for paperId: " + paperId);
+        
+        TestPaper testPaper = testPaperMapper.selectById(paperId);
+        if (testPaper == null) {
+            throw new IllegalArgumentException("试卷不存在");
+        }
+        
+        System.out.println("DEBUG: Found testPaper: " + testPaper.getPaperId());
+        System.out.println("DEBUG: testPaper.getQuestions(): " + testPaper.getQuestions());
+        System.out.println("DEBUG: Questions list size: " + (testPaper.getQuestions() != null ? testPaper.getQuestions().size() : "null"));
+        
+        // 现在题目已经完整存储在试卷中，直接获取即可
+        List<Question> questions = testPaper.getQuestions();
+        if (questions == null || questions.isEmpty()) {
+            System.out.println("WARN: No questions found in test paper");
+            throw new IllegalArgumentException("试卷中没有题目");
+        }
+        
+        System.out.println("DEBUG: Retrieved questions count: " + questions.size());
+        if (!questions.isEmpty()) {
+            System.out.println("DEBUG: First question details: " + questions.get(0));
+        }
+        
+        // 组装返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("paper", testPaper);
+        result.put("questions", questions);
+        
+        System.out.println("DEBUG: Final result - paper: " + (testPaper != null));
+        System.out.println("DEBUG: Final result - questions count: " + questions.size());
+        
+        return result;
     }
 }

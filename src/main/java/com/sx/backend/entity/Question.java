@@ -1,5 +1,6 @@
 package com.sx.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -23,7 +24,8 @@ public class Question {
     public Question() {
     }
 
-    // 判断是否可以自动评分
+    // 判断是否可以自动评分 - 添加@JsonIgnore避免序列化
+    @JsonIgnore
     public boolean isAutoGradable() {
         return type == QuestionType.MULTIPLE_CHOICE || type == QuestionType.SINGLE_CHOICE || type == QuestionType.JUDGE || type == QuestionType.FILL_BLANK;
     }
@@ -44,7 +46,7 @@ public class Question {
         return 0f; // 默认返回0分
     }
 
-    // 检查是否包含指定的知识点ID
+    // 检查是否包含指定的知识点ID - 静态方法，不会被序列化
     public static boolean containsKnowledgePoint(List<String> knowledgePoints, List<String> targetIds) {
         if (knowledgePoints == null || targetIds == null) return false;
         for (String kpId : knowledgePoints) {
@@ -53,7 +55,8 @@ public class Question {
         return false;
     }
 
-    // 获取题目主知识点ID（第一个知识点ID，若有）
+    // 获取题目主知识点ID（第一个知识点ID，若有）- 添加@JsonIgnore避免序列化
+    @JsonIgnore
     public String getMainKnowledgePointId() {
         if (knowledgePoints != null && !knowledgePoints.isEmpty()) {
             return knowledgePoints.get(0);
@@ -61,12 +64,14 @@ public class Question {
         return null;
     }
 
-    // 获取题目难度等级（字符串）
+    // 获取题目难度等级（字符串）- 添加@JsonIgnore避免序列化
+    @JsonIgnore
     public String getDifficultyLevel() {
         return difficultylevel != null ? difficultylevel.name().toLowerCase() : null;
     }
 
-    // 获取题目类型（字符串）
+    // 获取题目类型（字符串）- 添加@JsonIgnore避免序列化
+    @JsonIgnore
     public String getTypeString() {
         return type != null ? type.name() : null;
     }

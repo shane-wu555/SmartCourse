@@ -47,6 +47,11 @@ public class Course {
     public Course() {
     }
 
+    public Course(String courseId, String name) {
+        this.courseId = courseId;
+        this.name = name;
+    }
+
     public String getCourseId() {
         return courseId;
     }

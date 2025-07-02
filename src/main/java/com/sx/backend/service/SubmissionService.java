@@ -1,7 +1,6 @@
 package com.sx.backend.service;
 
 import com.sx.backend.dto.SubmissionDTO;
-import com.sx.backend.entity.FileMeta;
 import com.sx.backend.entity.Submission;
 
 import java.util.List;

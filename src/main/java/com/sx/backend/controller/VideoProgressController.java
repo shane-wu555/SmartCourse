@@ -3,13 +3,12 @@ package com.sx.backend.controller;
 import com.sx.backend.dto.VideoProgressDTO;
 import com.sx.backend.dto.VideoProgressReportDTO;
 import com.sx.backend.dto.request.UpdateProgressRequest;
-import com.sx.backend.entity.User;
 import com.sx.backend.entity.VideoProgress;
 import com.sx.backend.service.VideoProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,12 +19,17 @@ import java.util.Map;
 public class VideoProgressController {
     private final VideoProgressService videoProgressService;
 
+    // 从请求属性中获取当前用户ID
+    private String getCurrentUserId(HttpServletRequest request) {
+        return (String) request.getAttribute("userId");
+    }
+
     @GetMapping("/{resourceId}")
     public ResponseEntity<VideoProgressDTO> getProgress(
             @PathVariable String resourceId,
-            @AuthenticationPrincipal User user) {
+            HttpServletRequest request) {
 
-        String studentId = user.getUserId();
+        String studentId = getCurrentUserId(request);
 
         VideoProgress progress = videoProgressService.getOrCreateProgress(resourceId, studentId);
 
@@ -37,9 +41,9 @@ public class VideoProgressController {
     public ResponseEntity<VideoProgressDTO> updateProgress(
             @PathVariable String resourceId,
             @RequestBody UpdateProgressRequest request,
-            @AuthenticationPrincipal User user) {
+            HttpServletRequest httpRequest) {
 
-        String studentId = user.getUserId();
+        String studentId = getCurrentUserId(httpRequest);
 
         VideoProgress progress = videoProgressService.updateProgress(
                 resourceId,
@@ -55,9 +59,9 @@ public class VideoProgressController {
     @GetMapping("/{resourceId}/report")
     public ResponseEntity<VideoProgressReportDTO> getProgressReport(
             @PathVariable String resourceId,
-            @AuthenticationPrincipal User user) {
+            HttpServletRequest request) {
 
-        String studentId = user.getUserId();
+        String studentId = getCurrentUserId(request);
 
         VideoProgress progress = videoProgressService.getOrCreateProgress(resourceId, studentId);
         VideoProgressReportDTO report = generateProgressReport(progress);

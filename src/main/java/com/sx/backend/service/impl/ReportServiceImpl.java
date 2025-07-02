@@ -35,6 +35,7 @@ public class ReportServiceImpl implements ReportService {
     @Autowired
     private TaskGradeMapper taskGradeMapper;
 
+    // 生成课程分析报告
     @Override
     public AnalysisReportDTO generateCourseReport(String courseId) {
         List<Grade> grades = gradeMapper.findByCourseId(courseId);
@@ -54,41 +55,28 @@ public class ReportServiceImpl implements ReportService {
         // 按成绩排序
         grades.sort(Comparator.comparing(Grade::getFinalGrade).reversed());
 
-        // 获取前5名
-        report.setTopPerformers(grades.stream()
-                .limit(5)
-                .map(this::convertToStudentPerformance)
-                .collect(Collectors.toList()));
-
-        // 获取后5名
-        report.setNeedImprovement(grades.stream()
-                .skip(Math.max(0, grades.size() - 5))
+        // 设置班级完成情况
+        report.setPerformers(grades.stream()
+                .limit(grades.size())
                 .map(this::convertToStudentPerformance)
                 .collect(Collectors.toList()));
 
         return report;
     }
 
+    // 导出成绩报告
     @Override
     public void exportGradeReport(String courseId, HttpServletResponse response) {
         AnalysisReportDTO report = generateCourseReport(courseId);
         excelExporter.exportCourseReport(report, response);
     }
 
+    // 将Grade转换为StudentPerformance DTO
     private AnalysisReportDTO.StudentPerformance convertToStudentPerformance(Grade grade) {
         AnalysisReportDTO.StudentPerformance sp = new AnalysisReportDTO.StudentPerformance();
         sp.setStudentId(grade.getStudentId());
         sp.setStudentName(studentMapper.selectById(grade.getStudentId()).getRealName());
         sp.setAverageGrade(grade.getFinalGrade());
-
-        // 计算完成率
-        List<TaskGrade> taskGrades = taskGradeMapper.findByGradeId(grade.getGradeId());
-        double completionRate = taskGrades.stream()
-                .mapToDouble(TaskGrade::getCompletionRate)
-                .average()
-                .orElse(0);
-
-        sp.setCompletionRate(completionRate);
         return sp;
     }
 }

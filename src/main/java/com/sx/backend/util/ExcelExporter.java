@@ -26,16 +26,7 @@ public class ExcelExporter {
 
             // 填充学生数据
             int rowNum = 1;
-            for (AnalysisReportDTO.StudentPerformance sp : report.getTopPerformers()) {
-                Row row = sheet.createRow(rowNum++);
-                fillStudentRow(row, sp);
-            }
-
-            // 添加分隔行
-            Row separator = sheet.createRow(rowNum++);
-            separator.createCell(0).setCellValue("--- 需改进学生 ---");
-
-            for (AnalysisReportDTO.StudentPerformance sp : report.getNeedImprovement()) {
+            for (AnalysisReportDTO.StudentPerformance sp : report.getPerformers()) {
                 Row row = sheet.createRow(rowNum++);
                 fillStudentRow(row, sp);
             }
@@ -60,7 +51,6 @@ public class ExcelExporter {
         row.createCell(0).setCellValue(sp.getStudentId());
         row.createCell(1).setCellValue(sp.getStudentName());
         row.createCell(2).setCellValue(sp.getAverageGrade());
-        row.createCell(3).setCellValue(sp.getCompletionRate() + "%");
         row.createCell(4).setCellValue(sp.getRank());
     }
 }
