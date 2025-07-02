@@ -54,6 +54,19 @@ public class FileController {
             case "docx": return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
             case "ppt": return "application/vnd.ms-powerpoint";
             case "pptx": return "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+            // 视频文件类型
+            case "mp4": return "video/mp4";
+            case "avi": return "video/x-msvideo";
+            case "mov": return "video/quicktime";
+            case "wmv": return "video/x-ms-wmv";
+            case "flv": return "video/x-flv";
+            case "webm": return "video/webm";
+            case "mkv": return "video/x-matroska";
+            // 音频文件类型
+            case "mp3": return "audio/mpeg";
+            case "wav": return "audio/wav";
+            case "flac": return "audio/flac";
+            case "aac": return "audio/aac";
             default: return "application/octet-stream";
         }
     }
