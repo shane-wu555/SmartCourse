@@ -7,16 +7,14 @@ public class TaskGrade {
     private String studentId;
     private String taskId;
     private Float score;
-    private Float completionRate;   // 完成准确率
     private LocalDateTime submissionTime;
     private String feedback;
 
-    public TaskGrade(String taskGradeId, String studentId, String taskID, Float score, Float completionRate, LocalDateTime submissionTime, String feedback) {
+    public TaskGrade(String taskGradeId, String studentId, String taskId, Float score, LocalDateTime submissionTime, String feedback) {
         this.taskGradeId = taskGradeId;
         this.studentId = studentId;
         this.taskId = taskId;
         this.score = score;
-        this.completionRate = completionRate;
         this.submissionTime = submissionTime;
         this.feedback = feedback;
     }
@@ -54,14 +52,6 @@ public class TaskGrade {
 
     public void setScore(Float score) {
         this.score = score;
-    }
-
-    public Float getCompletionRate() {
-        return completionRate;
-    }
-
-    public void setCompletionRate(Float completionRate) {
-        this.completionRate = completionRate;
     }
 
     public LocalDateTime getSubmissionTime() {

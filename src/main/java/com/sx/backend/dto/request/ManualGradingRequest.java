@@ -1,6 +1,6 @@
 package com.sx.backend.dto.request;
 
-import ch.qos.logback.core.joran.sanity.Pair;
+import com.sx.backend.util.Pair;
 
 import java.util.Map;
 

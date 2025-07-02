@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.AnswerRecordMapper">
+
+    <resultMap id="AnswerRecordMap" type="com.sx.backend.entity.AnswerRecord">
+        <id property="recordId" column="record_id"/>
+        <result property="questionId" column="question_id"/>
+        <result property="submissionId" column="submission_id"/>
+        <result property="obtainedScore" column="obtained_score"/>
+        <result property="autoGraded" column="auto_graded"/>
+        <result property="feedback" column="teacher_feedback"/>
+        <result property="answers" column="answers" typeHandler="com.sx.backend.typehandler.JsonStringListTypeHandler"/>
+    </resultMap>
+
+    <!--查询学生答案-->
+    <select id="findStudentAnswersByRecordId" resultType="java.lang.String">
+        SELECT answer FROM answer_record_answer WHERE record_id = #{recordId}
+    </select>
+
+    <select id="findById" resultMap="AnswerRecordMap">
+        SELECT * FROM answer_record WHERE record_id = #{recordId}
+    </select>
+
+    <update id="update">
+        UPDATE answer_record
+        SET question_id = #{questionId},
+            obtained_score = #{obtainedScore},
+            auto_graded = #{autoGraded},
+            teacher_feedback = #{teacherFeedback},
+            submission_id = #{submissionId},
+            answers = #{answers, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}
+        WHERE record_id = #{recordId}
+    </update>
+
+    <insert id="create">
+        INSERT INTO answer_record (
+                record_id, question_id, obtained_score, auto_graded, teacher_feedback, answers, submission_id
+        )VALUES (
+                #{recordId},
+                #{questionId},
+                #{obtainedScore},
+                #{autoGraded},
+                #{teacherFeedback},
+                #{answers, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler},
+                #{submissionId}
+        )
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM answer_record WHERE record_id = #{recordId}
+    </delete>
+</mapper>

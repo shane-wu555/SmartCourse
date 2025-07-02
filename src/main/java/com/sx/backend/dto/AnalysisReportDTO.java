@@ -7,21 +7,18 @@ public class AnalysisReportDTO {
     private String courseName;
     private int totalStudents;
     private double classAverage;
-    private List<StudentPerformance> topPerformers;
-    private List<StudentPerformance> needImprovement;
+    private List<StudentPerformance> performers;
 
     public static class StudentPerformance {
         private String studentId;
         private String studentName;
         private double averageGrade;
-        private double completionRate;
         private int rank;
 
-        public StudentPerformance(String studentId, String studentName, double averageGrade, double completionRate, int rank) {
+        public StudentPerformance(String studentId, String studentName, double averageGrade, int rank) {
             this.studentId = studentId;
             this.studentName = studentName;
             this.averageGrade = averageGrade;
-            this.completionRate = completionRate;
             this.rank = rank;
         }
 
@@ -52,14 +49,6 @@ public class AnalysisReportDTO {
             this.averageGrade = averageGrade;
         }
 
-        public double getCompletionRate() {
-            return completionRate;
-        }
-
-        public void setCompletionRate(double completionRate) {
-            this.completionRate = completionRate;
-        }
-
         public int getRank() {
             return rank;
         }
@@ -69,13 +58,12 @@ public class AnalysisReportDTO {
         }
     }
 
-    public AnalysisReportDTO(String courseId, String courseName, int totalStudents, double classAverage, List<StudentPerformance> topPerformers, List<StudentPerformance> needImprovement) {
+    public AnalysisReportDTO(String courseId, String courseName, int totalStudents, double classAverage, List<StudentPerformance> performers) {
         this.courseId = courseId;
         this.courseName = courseName;
         this.totalStudents = totalStudents;
         this.classAverage = classAverage;
-        this.topPerformers = topPerformers;
-        this.needImprovement = needImprovement;
+        this.performers = performers;
     }
 
     public AnalysisReportDTO() {
@@ -113,19 +101,11 @@ public class AnalysisReportDTO {
         this.classAverage = classAverage;
     }
 
-    public List<StudentPerformance> getTopPerformers() {
-        return topPerformers;
+    public List<StudentPerformance> getPerformers() {
+        return performers;
     }
 
-    public void setTopPerformers(List<StudentPerformance> topPerformers) {
-        this.topPerformers = topPerformers;
-    }
-
-    public List<StudentPerformance> getNeedImprovement() {
-        return needImprovement;
-    }
-
-    public void setNeedImprovement(List<StudentPerformance> needImprovement) {
-        this.needImprovement = needImprovement;
+    public void setPerformers(List<StudentPerformance> performers) {
+        this.performers = performers;
     }
 }

@@ -21,12 +21,6 @@ public class FeedbackServiceImpl implements FeedbackService {
     private TaskGradeMapper taskGradeMapper;
 
     @Autowired
-    private StudentMapper studentMapper;
-
-    @Autowired
-    private CourseMapper courseMapper;
-
-    @Autowired
     private TaskMapper taskMapper;
 
     @Override

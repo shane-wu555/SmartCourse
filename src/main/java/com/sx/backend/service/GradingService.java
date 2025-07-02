@@ -1,6 +1,6 @@
 package com.sx.backend.service;
 
-import ch.qos.logback.core.joran.sanity.Pair;
+import com.sx.backend.util.Pair;
 import com.sx.backend.entity.AnswerRecord;
 
 import java.util.List;
