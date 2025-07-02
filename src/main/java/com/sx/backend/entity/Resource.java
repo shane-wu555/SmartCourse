@@ -14,6 +14,7 @@ public class Resource {
     private String description;
     private Integer viewCount;
     private Float duration;
+    private String mimeType; // Added mimeType field
 
     public Resource(String resourceId, String name, String courseId, String url, ResourceType type, String uploaderId, String description) {
         this.resourceId = resourceId;
@@ -112,4 +113,12 @@ public class Resource {
     public Float getDuration() { return duration; }
 
     public void setDuration(Float duration) { this.duration = duration; }
+
+    public String getMimeType() { // Getter for mimeType
+        return mimeType;
+    }
+
+    public void setMimeType(String mimeType) { // Setter for mimeType
+        this.mimeType = mimeType;
+    }
 }

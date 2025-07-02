@@ -20,7 +20,10 @@ public class SecurityConfig {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // CORS 配置
                 .csrf(csrf -> csrf.disable()) // 关闭 CSRF
-                .headers(headers -> headers.frameOptions().disable()) // ✅ 允许 iframe 加载资源
+                .headers(headers -> headers
+                        .frameOptions(frameOptions -> frameOptions.disable()) // 允许 iframe 加载资源
+                        .contentTypeOptions(contentTypeOptions -> contentTypeOptions.disable()) // 允许不同类型的内容
+                ) 
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().permitAll()
@@ -32,10 +35,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:8080")); // 前端地址
+        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // 允许所有来源
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true); // 支持携带 cookie
+        configuration.setMaxAge(3600L); // 预检请求缓存时间
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
