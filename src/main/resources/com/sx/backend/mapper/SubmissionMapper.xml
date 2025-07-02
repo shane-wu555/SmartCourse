@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.SubmissionMapper">
+
+    <resultMap id="SubmissionMap" type="com.sx.backend.entity.Submission">
+        <id property="submissionId" column="submission_id"/>
+        <result property="taskId" column="task_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="submitTime" column="submit_time"/>
+        <result property="status" column="status"/>
+        <result property="completed" column="completed"/>
+        <result property="finalGrade" column="final_grade"/>
+        <result property="autoGrade" column="auto_grade"/>
+        <result property="feedback" column="feedback"/>
+        <result property="gradeTime" column="grade_time"/>
+
+        <!-- 嵌套查询提交文件 -->
+        <collection property="files" ofType="java.lang.String" column="submission_id" select = "findFilesBySubmissionId"/>
+
+        <!-- 嵌套查询答题记录 -->
+        <collection property="answerRecords" ofType="java.lang.String" column="submission_id" select="findAnswerRecordsBySubmissionId"/>
+    </resultMap>
+
+    <select id="findFilesBySubmissionId" resultType="java.lang.String">
+        SELECT file_url FROM file WHERE submission_id = #{submissionId}
+    </select>
+
+    <select id="findAnswerRecordsBySubmissionId" resultType="java.lang.String">
+        SELECT record_id FROM answer_record WHERE submission_id = #{submissionId}
+    </select>
+
+    <select id="findById" resultMap="SubmissionMap">
+        SELECT * FROM submission WHERE submission_id = #{submissionId}
+    </select>
+
+    <select id="findByTaskIdAndStudentId" resultMap="SubmissionMap">
+        SELECT * FROM submission WHERE task_id = #{taskId} AND student_id = #{studentId}
+    </select>
+
+    <select id="findByTaskId" resultMap="SubmissionMap">
+        SELECT * FROM submission WHERE task_id = #{taskId}
+    </select>
+
+    <update id="update">
+        UPDATE submission
+        SET task_id = #{taskId},
+            student_id = #{studentId},
+            submit_time = #{submitTime},
+            status = #{status},
+            completed = #{completed},
+            final_grade = #{finalGrade},
+            auto_grade = #{autoGrade},
+            feedback = #{feedback},
+            grade_time = #{gradeTime}
+        WHERE submission_id = #{submissionId}
+    </update>
+
+    <insert id="create">
+        INSERT INTO submission (submission_id, task_id, student_id, submit_time, status, completed, final_grade, auto_grade, feedback, grade_time)
+        VALUES (#{submissionId}, #{taskId}, #{studentId}, #{submitTime}, #{status}, #{completed}, #{finalGrade}, #{autoGrade}, #{feedback}, #{gradeTime})
+    </insert>
+
+    <delete id="delete">
+        DELETE FROM submission WHERE submission_id = #{submissionId}
+    </delete>
+
+    <insert id="insertFile">
+        INSERT INTO file (file_id, submission_id, file_url)
+        VALUES  (#{fileId}, #{submissionId}, #{fileUrl})
+    </insert>
+
+    <update id="updateCompletedToTrue">
+        UPDATE submission
+        SET completed = true
+        WHERE submission_id = #{submissionId}
+    </update>
+</mapper>

@@ -1,6 +1,6 @@
 package com.sx.backend.service.impl;
 
-import ch.qos.logback.core.joran.sanity.Pair;
+import com.sx.backend.util.Pair;
 import com.sx.backend.entity.AnswerRecord;
 import com.sx.backend.entity.Question;
 import com.sx.backend.entity.Submission;
@@ -44,7 +44,7 @@ public class GradingServiceImpl implements GradingService {
         for (AnswerRecord record : answerRecords) {
             Question question = questionMapper.selectQuestionById(record.getQuestionId());
             if (question.isAutoGradable()) {
-                record.setObtainedScore(question.autoGrade(record.getStudentAnswers()));
+                record.setObtainedScore(question.autoGrade(record.getAnswers()));
                 record.setAutoGraded(true);
                 autoScore += record.getObtainedScore();
             }
@@ -56,6 +56,9 @@ public class GradingServiceImpl implements GradingService {
 
         submission.setAutoGrade(autoScore);
         submission.setFinalGrade(autoScore);
+        submission.setStatus(SubmissionStatus.AUTO_GRADED);
+
+        submissionMapper.update(submission);
     }
 
     @Override
@@ -70,11 +73,18 @@ public class GradingServiceImpl implements GradingService {
         Float grade = submission.getFinalGrade();
 
         for (AnswerRecord record : manualRecords) {
-            Float score = questionGrades.get(record.getRecordId()).first;
-            String questionFeedback = questionGrades.get(record.getRecordId()).second;
-            if (score != null) {
-                manualGrade(record, score, questionFeedback);
-                grade += score;
+            Pair<Float, String> gradePair = questionGrades.get(record.getRecordId());
+            if (gradePair != null) {
+                // 正常赋值
+                Float score = gradePair.first;
+                String questionFeedback = gradePair.second;
+                if (score != null) {
+                    manualGrade(record, score, questionFeedback);
+                    grade += score;
+                }
+            }
+            else {
+                throw new IllegalArgumentException("提交中缺少问题 " + record.getRecordId() + " 的评分信息");
             }
         }
 

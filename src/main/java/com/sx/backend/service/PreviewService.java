@@ -86,18 +86,15 @@ public class PreviewService {
 
         switch (resource.getType()) {
             case PDF:
+
                 log.info("处理PDF文件");
                 return "/uploads/" + pathHandler.toWebPath(resource.getUrl()); // PDF加上前缀后返回
-
+            case DOCUMENT:
+            case PPT:
+                return convertToPdf(sourcePath, resource.getResourceId());
             case IMAGE:
                 log.info("处理图片文件");
-                return generateThumbnail(sourcePath, resource.getResourceId());
-
-            case DOCUMENT: // doc, docx
-            case PPT: // ppt, pptx
-                log.info("处理文档文件，类型: {}", resource.getType());
-                return convertToPdf(sourcePath, resource.getResourceId());
-
+                return generateThumbnail(sourcePath, resource.getResourc
             default:
                 log.error("不支持的文件类型: {}", resource.getType());
                 throw new UnsupportedOperationException("预览不支持此文件类型: " + resource.getType());
@@ -324,7 +321,7 @@ public class PreviewService {
         return "/thumbnails/" + target.getFileName().toString();
     }
 
-    private String convertToPdf(Path source, String resourceId) throws OfficeException, IOException {
+    private String convertToPdf(Path source, String resourceId) throws IOException, OfficeException {
         Path convertedDir = pathHandler.getWindowsPath(storageLocation, "converted");
         Files.createDirectories(convertedDir);
 
@@ -332,9 +329,15 @@ public class PreviewService {
         String escapedSource = pathHandler.escapeSpaces(source.toString());
         String escapedTarget = pathHandler.escapeSpaces(target.toString());
 
-        documentConverter.convert(new File(escapedSource))
-                .to(new File(escapedTarget))
-                .execute();
+        if (source.toString().toLowerCase().endsWith(".pdf")) {
+            // 若原文件已是 PDF，直接复制
+            Files.copy(source, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } else {
+            // 否则进行转换
+            documentConverter.convert(new File(escapedSource))
+                    .to(new File(escapedTarget))
+                    .execute();
+        }
 
         return "/converted/" + target.getFileName().toString();
     }

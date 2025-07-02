@@ -17,6 +17,7 @@ public class ReportController {
     @Autowired
     private ReportService reportService;
 
+    // 获取学生的课程分析报告
     @GetMapping("/course/{courseId}")
     public ResponseEntity<AnalysisReportDTO> getCourseReport(
             @PathVariable String courseId) {
@@ -25,6 +26,7 @@ public class ReportController {
         return ResponseEntity.ok(report);
     }
 
+    // 导出课程成绩报表
     @GetMapping("/export/{courseId}")
     public void exportReport(
             @PathVariable String courseId,
