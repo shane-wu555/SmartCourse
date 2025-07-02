@@ -6,6 +6,7 @@ import com.sx.backend.service.QuestionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -54,6 +55,33 @@ public class QuestionServiceImpl implements QuestionService {
         
         // 需在Mapper中实现批量插入
         return questionMapper.batchInsertQuestions(questions);
+    }
+    
+    @Override
+    public List<Question> getQuestionsByIds(List<String> questionIds) {
+        System.out.println("DEBUG: QuestionService.getQuestionsByIds called with: " + questionIds);
+        
+        if (questionIds == null || questionIds.isEmpty()) {
+            System.out.println("DEBUG: questionIds is null or empty, returning empty list");
+            return new ArrayList<>();
+        }
+        
+        System.out.println("DEBUG: About to call questionMapper.selectQuestionsByIds");
+        List<Question> questions = questionMapper.selectQuestionsByIds(questionIds);
+        
+        System.out.println("DEBUG: questionMapper.selectQuestionsByIds returned: " + (questions != null ? questions.size() : "null") + " questions");
+        
+        if (questions != null && !questions.isEmpty()) {
+            for (int i = 0; i < Math.min(questions.size(), 2); i++) {
+                Question q = questions.get(i);
+                System.out.println("DEBUG: Question " + i + " - ID: " + q.getQuestionId() + ", Content: " + 
+                    (q.getContent() != null ? q.getContent().substring(0, Math.min(50, q.getContent().length())) + "..." : "null"));
+            }
+        } else {
+            System.out.println("WARN: No questions found for IDs: " + questionIds);
+        }
+        
+        return questions;
     }
     
     /**

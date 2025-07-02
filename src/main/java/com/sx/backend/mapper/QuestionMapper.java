@@ -16,4 +16,11 @@ public interface QuestionMapper {
                                               @Param("difficultylevel") String difficultyLevel,
                                               @Param("knowledgePointIds") List<String> knowledgePointIds);
     int batchInsertQuestions(@Param("questions") List<Question> questions);
+    
+    /**
+     * 批量根据题目ID获取题目详情
+     * @param questionIds 题目ID列表
+     * @return 题目详情列表
+     */
+    List<Question> selectQuestionsByIds(@Param("questionIds") List<String> questionIds);
 }
