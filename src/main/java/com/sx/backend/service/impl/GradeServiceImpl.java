@@ -54,6 +54,7 @@ public class GradeServiceImpl implements GradeService {
                                          taskGrade.getStudentId());
     }
 
+    // 更新最终成绩
     public void updateFinalGrade(TaskGrade taskGrade) {
 
         Grade grade = gradeMapper.findByStudentAndCourse(taskMapper.getById(taskGrade.getTaskId()).getCourseId(),

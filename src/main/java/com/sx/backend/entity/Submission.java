@@ -10,7 +10,7 @@ public class Submission {
     private String studentId;
     private LocalDateTime submitTime;
     private SubmissionStatus status = SubmissionStatus.SUBMITTED; // 默认状态
-    private List<FileMeta> files; // 上传的文件
+    private List<String> files; // 上传的文件url
     private List<String> answerRecords = new ArrayList<>(); // 学生答案id记录
     private boolean completed; // 是否完成
     private Float finalGrade; // 总成绩
@@ -19,7 +19,7 @@ public class Submission {
     private LocalDateTime gradeTime; // 批改时间
 
     public Submission(String submissionId, String taskId, String studentId, LocalDateTime submitTime,
-                      SubmissionStatus status, List<FileMeta> files, Float finalGrade,
+                      SubmissionStatus status, List<String> files, Float finalGrade,
                       String feedback, LocalDateTime gradeTime) {
         this.submissionId = submissionId;
         this.taskId = taskId;
@@ -83,11 +83,11 @@ public class Submission {
         this.status = status;
     }
 
-    public List<FileMeta> getFiles() {
+    public List<String> getFiles() {
         return files;
     }
 
-    public void setFiles(List<FileMeta> files) {
+    public void setFiles(List<String> files) {
         this.files = files;
     }
 
