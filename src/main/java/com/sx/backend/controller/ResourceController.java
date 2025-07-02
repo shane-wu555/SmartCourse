@@ -54,16 +54,30 @@ public class ResourceController {
             @RequestParam("type") String type,
             @RequestParam(value = "description", required = false) String description) { // 移除 uploaderId 参数
 
+        log.info("收到资源上传请求: courseId={}, name={}, type={}, description={}", 
+                 courseId, name, type, description);
+        
+        if (file != null) {
+            log.info("文件信息: filename={}, size={}, contentType={}", 
+                     file.getOriginalFilename(), file.getSize(), file.getContentType());
+        } else {
+            log.warn("文件为空");
+        }
+
         try {
             // TODO: 实现完整的用户认证机制
             // 暂时使用默认用户ID
             String uploaderId = "default-user-id";
             
             if (file == null || file.isEmpty()) {
+                log.error("文件验证失败: 文件不能为空");
                 return ResponseEntity.badRequest().body(errorResponse(400, "文件不能为空"));
             }
 
+            log.info("开始验证文件类型: {}", type);
             ResourceType resourceType = validateFileType(file, type);
+            log.info("文件类型验证成功: {}", resourceType);
+            
             validateFileSize(file);
 
             String originalFilename = file.getOriginalFilename();
@@ -114,10 +128,13 @@ public class ResourceController {
             return ResponseEntity.status(201).body(response);
 
         } catch (IllegalArgumentException e) {
+            log.error("参数验证失败: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(errorResponse(400, e.getMessage()));
         } catch (IOException e) {
+            log.error("文件保存失败: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(errorResponse(500, "文件保存失败: " + e.getMessage()));
         } catch (Exception e) {
+            log.error("服务器错误: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().body(errorResponse(500, "服务器错误: " + e.getMessage()));
         }
     }
@@ -542,26 +559,78 @@ public class ResourceController {
     }
 
     private ResourceType validateFileType(MultipartFile file, String type) {
-        ResourceType resourceType;
-        try {
-            resourceType = ResourceType.valueOf(type.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("不支持的文件类型: " + type);
-        }
-
         String filename = file.getOriginalFilename();
         if (filename == null || filename.isEmpty()) {
             throw new IllegalArgumentException("文件名无效");
         }
 
         String extension = getFileExtension(filename).toLowerCase();
-        Set<String> allowedExtensions = getAllowedExtensions(resourceType);
+        
+        // 如果传入的type是文件扩展名，根据扩展名推断ResourceType
+        ResourceType resourceType = inferResourceTypeFromExtension(extension);
+        if (resourceType != null) {
+            log.info("根据文件扩展名 {} 推断出资源类型: {}", extension, resourceType);
+            return resourceType;
+        }
+        
+        // 如果传入的type是ResourceType枚举值，直接使用
+        try {
+            resourceType = ResourceType.valueOf(type.toUpperCase());
+            log.info("使用传入的资源类型: {}", resourceType);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("不支持的文件类型: " + type + "，文件扩展名: " + extension);
+        }
 
+        // 验证文件扩展名是否与资源类型匹配
+        Set<String> allowedExtensions = getAllowedExtensions(resourceType);
         if (!allowedExtensions.contains(extension)) {
-            throw new IllegalArgumentException("不支持的文件扩展名: " + extension);
+            throw new IllegalArgumentException("文件扩展名 " + extension + " 与资源类型 " + resourceType + " 不匹配");
         }
 
         return resourceType;
+    }
+
+    // 根据文件扩展名推断ResourceType
+    private ResourceType inferResourceTypeFromExtension(String extension) {
+        switch (extension.toLowerCase()) {
+            case "ppt":
+            case "pptx":
+                return ResourceType.PPT;
+            case "pdf":
+                return ResourceType.PDF;
+            case "mp4":
+            case "mov":
+            case "avi":
+            case "mkv":
+                return ResourceType.VIDEO;
+            case "doc":
+            case "docx":
+            case "txt":
+            case "md":
+            case "xls":
+            case "xlsx":
+                return ResourceType.DOCUMENT;
+            case "url":
+            case "lnk":
+            case "html":
+                return ResourceType.LINK;
+            case "jpg":
+            case "png":
+            case "jpeg":
+            case "bmp":
+            case "webp":
+                return ResourceType.IMAGE;
+            case "mp3":
+            case "wav":
+            case "flac":
+            case "aac":
+            case "ogg":
+            case "wma":
+            case "m4a":
+                return ResourceType.AUDIO;
+            default:
+                return null; // 无法推断
+        }
     }
 
     private Set<String> getAllowedExtensions(ResourceType type) {
