@@ -3,11 +3,11 @@ package com.sx.backend.entity;
 public enum ResourceType {
     PPT("PPT", "演示文稿"),
     PDF("PDF", "便携式文档"),
-    VIDEO("视频", "视频文件"),
-    DOCUMENT("文档", "通用文档"),
-    LINK("链接", "网页链接"),
-    IMAGE("图片", "图像文件"),
-    AUDIO("音频", "声音文件");
+    VIDEO("VIDEO", "视频文件"),
+    DOCUMENT("DOCUMENT", "通用文档"),
+    LINK("LINK", "网页链接"),
+    IMAGE("IMAGE", "图像文件"),
+    AUDIO("AUDIO", "声音文件");
 
     private final String value;
     private final String desc;
