@@ -50,36 +50,36 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setTaskId(submissionDTO.getTaskId());
         submission.setStudentId(submissionDTO.getStudentId());
         submission.setSubmitTime(submissionDTO.getSubmitTime());
+        submission.setSubmissionId(UUID.randomUUID().toString());
+        submissionMapper.create(submission);
 
         List<AnswerRecordDTO> answerRecordDTO = submissionDTO.getAnswerRecordDTO();
         if (answerRecordDTO == null) {
             throw new IllegalArgumentException("Invalid answer record DTO");
         }
 
-        List<String> answerRecordIds = new ArrayList<>();
         // 3. 创建答题记录
         for (AnswerRecordDTO recordDTO : answerRecordDTO) {
-            if (recordDTO.getQuestionId() == null || recordDTO.getStudentAnswers() == null) {
+            if (recordDTO.getQuestionId() == null || recordDTO.getAnswers() == null) {
                 throw new IllegalArgumentException("Invalid answer record data");
             }
             AnswerRecord answerRecord = new AnswerRecord();
             answerRecord.setRecordId(UUID.randomUUID().toString());
             answerRecord.setQuestionId(recordDTO.getQuestionId());
-            answerRecord.setStudentAnswers(recordDTO.getStudentAnswers());
+            answerRecord.setAnswers(recordDTO.getAnswers());
             Question question = questionMapper.selectQuestionById(recordDTO.getQuestionId());
             if (question == null) {
                 throw new IllegalArgumentException("Invalid question ID: " + recordDTO.getQuestionId());
             }
             answerRecord.setObtainedScore(question.getScore());
-            answerRecordIds.add(answerRecord.getRecordId());
+            answerRecord.setSubmissionId(submission.getSubmissionId());
             answerRecordMapper.create(answerRecord);
         }
 
-        submission.setAnswerRecords(answerRecordIds);
-
+        submissionMapper.updateCompletedToTrue(submission.getSubmissionId());
         gradingService.autoGradeSubmission(submission.getSubmissionId());
 
-        return submissionMapper.create(submission) != 0 ? submission : null; // 返回提交结果
+        return submissionMapper.findById(submission.getSubmissionId()); // 返回提交结果
     }
 
     @Override
@@ -93,13 +93,21 @@ public class SubmissionServiceImpl implements SubmissionService {
         }
 
         Submission submission = new Submission();
+        submission.setSubmissionId(UUID.randomUUID().toString());
         submission.setTaskId(submissionDTO.getTaskId());
         submission.setStudentId(submissionDTO.getStudentId());
         submission.setSubmitTime(submissionDTO.getSubmitTime());
 
         submission.setFiles(submissionDTO.getFileId()); // 设置文件列表
-
-        return submissionMapper.create(submission) != 0 ? submission : null; // 返回提交结果
+        int created = submissionMapper.create(submission);
+        for (String fileUrl : submissionDTO.getFileId()) {
+            if (fileUrl == null || fileUrl.isEmpty()) {
+                throw new IllegalArgumentException("Invalid file ID: " + fileUrl);
+            }
+            String fileId = UUID.randomUUID().toString();
+            submissionMapper.insertFile(fileId, submission.getSubmissionId(), fileUrl);
+        }
+        return created != 0 ? submission : null; // 返回提交结果
     }
 }
 

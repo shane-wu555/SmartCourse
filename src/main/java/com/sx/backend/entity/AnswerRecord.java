@@ -4,23 +4,32 @@ import java.util.List;
 
 public class AnswerRecord {
     private String recordId;
+    private String submissionId; // 提交ID
     private String questionId;
-    private List<String> studentAnswers;
+    private List<String> answers;
     private Float obtainedScore;
     private boolean autoGraded;
     private String teacherFeedback;
 
-    public AnswerRecord(String recordId, String question, List<String> studentAnswers, Float obtainedScore,
+    public AnswerRecord(String recordId, String question, List<String> answers, Float obtainedScore,
                         boolean autoGraded, String teacherFeedback) {
         this.recordId = recordId;
         this.questionId = question;
-        this.studentAnswers = studentAnswers;
+        this.answers = answers;
         this.obtainedScore = obtainedScore;
         this.autoGraded = autoGraded;
         this.teacherFeedback = teacherFeedback;
     }
 
     public AnswerRecord() {
+    }
+
+    public String getSubmissionId() {
+        return submissionId;
+    }
+
+    public void setSubmissionId(String submissionId) {
+        this.submissionId = submissionId;
     }
 
     public String getRecordId() {
@@ -39,12 +48,12 @@ public class AnswerRecord {
         this.questionId = questionId;
     }
 
-    public List<String> getStudentAnswers() {
-        return studentAnswers;
+    public List<String> getAnswers() {
+        return answers;
     }
 
-    public void setStudentAnswers(List<String> studentAnswers) {
-        this.studentAnswers = studentAnswers;
+    public void setAnswers(List<String> answers) {
+        this.answers = answers;
     }
 
     public Float getObtainedScore() {
@@ -71,3 +80,4 @@ public class AnswerRecord {
         this.teacherFeedback = teacherFeedback;
     }
 }
+

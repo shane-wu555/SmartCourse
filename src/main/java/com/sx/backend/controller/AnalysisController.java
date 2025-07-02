@@ -16,6 +16,7 @@ public class AnalysisController {
     @Autowired
     private AnalysisService analysisService;
 
+    // 获取学生在特定课程的成绩趋势
     @GetMapping("/trend/{studentId}/{courseId}")
     public ResponseEntity<GradeTrendDTO> getGradeTrend(
             @PathVariable String studentId,
