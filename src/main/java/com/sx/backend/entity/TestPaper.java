@@ -8,14 +8,14 @@ public class TestPaper {
     private String taskId;
     private String title;
     private String courseId; // 课程ID
-    private List<String> questions;
+    private List<Question> questions; // 修改为存储完整题目对象
     private Float totalScore;
     private Integer timeLimit; // 以分钟为单位
     private PaperGenerationMethod generationMethod;
     private LocalDateTime createdAt; // 创建时间
     private LocalDateTime updatedAt; // 更新时间
 
-    public TestPaper(String paperId, String taskId, String title, List<String> questions, Float totalScore, Integer timeLimit, PaperGenerationMethod generationMethod) {
+    public TestPaper(String paperId, String taskId, String title, List<Question> questions, Float totalScore, Integer timeLimit, PaperGenerationMethod generationMethod) {
         this.paperId = paperId;
         this.taskId = taskId;
         this.title = title;
@@ -44,11 +44,11 @@ public class TestPaper {
         this.taskId = taskId;
     }
 
-    public List<String> getQuestions() {
+    public List<Question> getQuestions() {
         return questions;
     }
 
-    public void setQuestions(List<String> questions) {
+    public void setQuestions(List<Question> questions) {
         this.questions = questions;
     }
 

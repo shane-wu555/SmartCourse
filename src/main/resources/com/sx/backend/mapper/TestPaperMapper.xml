@@ -8,7 +8,7 @@
         <result property="taskId" column="task_id"/>
         <result property="title" column="title"/>
         <result property="courseId" column="course_id"/>
-        <result property="questions" column="questions" typeHandler="com.sx.backend.typehandler.JsonStringListTypeHandler"/>
+        <result property="questions" column="questions" typeHandler="com.sx.backend.typehandler.JsonQuestionListTypeHandler"/>
         <result property="totalScore" column="total_score"/>
         <result property="timeLimit" column="time_limit"/>
         <result property="generationMethod" column="generation_method"/>
@@ -23,7 +23,7 @@
             time_limit, generation_method, created_at, updated_at
         ) VALUES (
             #{paperId}, #{taskId}, #{title}, #{courseId}, 
-            #{questions, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler}, 
+            #{questions, typeHandler=com.sx.backend.typehandler.JsonQuestionListTypeHandler}, 
             #{totalScore}, #{timeLimit}, #{generationMethod}, 
             #{createdAt}, #{updatedAt}
         )
@@ -49,7 +49,7 @@
         UPDATE test_paper 
         SET title = #{title},
             course_id = #{courseId},
-            questions = #{questions, typeHandler=com.sx.backend.typehandler.JsonStringListTypeHandler},
+            questions = #{questions, typeHandler=com.sx.backend.typehandler.JsonQuestionListTypeHandler},
             total_score = #{totalScore},
             time_limit = #{timeLimit},
             generation_method = #{generationMethod},

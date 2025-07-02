@@ -11,4 +11,11 @@ public interface QuestionService {
     List<Question> getQuestionsByBankId(String bankId);
     List<Question> getQuestionsByCondition(String type, String difficultylevel, List<String> knowledgePointIds);
     int batchAddQuestions(List<Question> questions);
+    
+    /**
+     * 批量根据题目ID获取题目详情
+     * @param questionIds 题目ID列表
+     * @return 题目详情列表
+     */
+    List<Question> getQuestionsByIds(List<String> questionIds);
 }

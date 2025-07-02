@@ -1,6 +1,9 @@
 package com.sx.backend.config;
 
+import com.sx.backend.typehandler.JsonQuestionListTypeHandler;
+import com.sx.backend.typehandler.JsonStringListTypeHandler;
 import com.sx.backend.typehandler.RelationTypeHandler;
+import com.sx.backend.typehandler.ResourceTypeTypeHandler;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.SqlSessionFactoryBean;
 import org.springframework.context.annotation.Bean;
@@ -23,8 +26,13 @@ public class MyBatisConfig {
                 .getResources("classpath:com/sx/backend/mapper/*.xml")
         );
         
-        // 注册类型处理器
-        factoryBean.setTypeHandlers(new RelationTypeHandler());
+        // 注册类型处理器 - 添加新的JsonQuestionListTypeHandler
+        factoryBean.setTypeHandlers(
+            new RelationTypeHandler(), 
+            new ResourceTypeTypeHandler(),
+            new JsonStringListTypeHandler(),
+            new JsonQuestionListTypeHandler()
+        );
         
         // 其他配置
         org.apache.ibatis.session.Configuration configuration = new org.apache.ibatis.session.Configuration();

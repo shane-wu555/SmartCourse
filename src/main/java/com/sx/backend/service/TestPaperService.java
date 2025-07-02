@@ -4,6 +4,7 @@ import com.sx.backend.dto.GeneratePaperRequestDTO;
 import com.sx.backend.entity.TestPaper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 智能组卷服务接口
@@ -73,4 +74,11 @@ public interface TestPaperService {
      * @return 试卷数量
      */
     int countPapers(String courseId);
+
+    /**
+     * 获取试卷详情（包含完整的题目信息）
+     * @param paperId 试卷ID
+     * @return 包含试卷信息和题目详情的Map
+     */
+    Map<String, Object> getPaperWithQuestions(String paperId);
 }
