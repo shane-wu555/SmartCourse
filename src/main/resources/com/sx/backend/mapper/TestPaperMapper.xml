@@ -81,5 +81,11 @@
             AND course_id = #{courseId}
         </if>
     </select>
+    <!-- 根据 paperId 更新 taskId -->
+    <update id="updateTaskIdByPaperId">
+        UPDATE test_paper
+        SET task_id = #{taskId}
+        WHERE paper_id = #{paperId}
+    </update>
 
 </mapper>
