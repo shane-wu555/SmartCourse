@@ -1,6 +1,7 @@
 package com.sx.backend.exception;
 
 import com.sx.backend.controller.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +48,16 @@ public class GlobalExceptionHandler {
 
     // 处理其他异常
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex) {
+    public ResponseEntity<?> handleGeneralException(Exception ex, HttpServletRequest request) {
+        // 检查是否是视频播放或资源访问相关的请求
+        String requestURI = request.getRequestURI();
+        if (requestURI.contains("/play") || requestURI.contains("/download") || 
+            requestURI.contains("/resources/") && (requestURI.endsWith("/play") || requestURI.endsWith("/download"))) {
+            // 对于视频流等资源接口，直接返回HTTP状态码，不返回JSON
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+        
+        // 对于其他接口，返回JSON格式的错误响应
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse<>(500, "服务器内部错误", null));
     }

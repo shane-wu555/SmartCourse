@@ -357,10 +357,7 @@ public class ResourceController {
             HttpServletRequest request,
             @PathVariable String resourceId) {
 
-        log.info("=== 资源访问请求 ===");
-        log.info("Request URI: {}", request.getRequestURI());
-        log.info("Resource ID: {}", resourceId);
-        log.info("==================");
+        // 资源访问请求
 
         try {
             // TODO: 实现完整的用户认证机制
@@ -371,14 +368,6 @@ public class ResourceController {
                 return ResponseEntity.status(404)
                         .body(errorResponse(404, "资源不存在"));
             }
-
-            // 调试：打印资源信息
-            System.out.println("=== 资源调试信息 ===");
-            System.out.println("Resource ID: " + dbResource.getResourceId());
-            System.out.println("Resource Type: " + dbResource.getType());
-            System.out.println("Resource URL: " + dbResource.getUrl());
-            System.out.println("Resource Name: " + dbResource.getName());
-            System.out.println("==================");
 
             // 如果是视频资源，直接返回文件流用于播放
             if (dbResource.getType() == ResourceType.VIDEO) {
@@ -404,23 +393,15 @@ public class ResourceController {
             Path storageRoot = Paths.get(storageLocation);
             Path filePath = storageRoot.resolve(dbResource.getUrl().replaceFirst("^/", ""));
 
-            // 调试信息
-            log.info("=== 视频流处理 ===");
-            log.info("文件路径: {}", filePath);
-            log.info("文件存在: {}", Files.exists(filePath));
-            log.info("================");
-
             if (!Files.exists(filePath)) {
-                return ResponseEntity.status(410)
-                        .body(errorResponse(410, "视频文件不存在"));
+                return ResponseEntity.status(410).build(); // 文件已不存在
             }
 
             // 使用FileSystemResource代替UrlResource
             FileSystemResource fileResource = new FileSystemResource(filePath);
             
             if (!fileResource.exists()) {
-                return ResponseEntity.status(410)
-                        .body(errorResponse(410, "视频文件不可读"));
+                return ResponseEntity.status(410).build(); // 文件不可读
             }
 
             // 设置响应头
@@ -435,8 +416,6 @@ public class ResourceController {
             
             long contentLength = fileResource.contentLength();
             headers.set(HttpHeaders.CONTENT_LENGTH, String.valueOf(contentLength));
-
-            log.info("返回视频: {}, 类型: {}, 大小: {} bytes", filePath.getFileName(), contentType, contentLength);
             
             return ResponseEntity.ok()
                     .headers(headers)
@@ -444,8 +423,7 @@ public class ResourceController {
                     
         } catch (Exception e) {
             log.error("处理视频流时出错: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError()
-                    .body(errorResponse(500, "视频流处理失败: " + e.getMessage()));
+            return ResponseEntity.internalServerError().build(); // 不返回JSON响应
         }
     }
 
@@ -607,10 +585,6 @@ public class ResourceController {
         
         // 调试MIME类型获取
         String mimeType = getMimeTypeFromUrl(resource.getUrl());
-        log.info("=== MIME类型调试 ===");
-        log.info("资源URL: {}", resource.getUrl());
-        log.info("计算出的MIME类型: {}", mimeType);
-        log.info("================");
         
         data.put("type", mimeType);
         data.put("url", resource.getUrl());
@@ -625,25 +599,18 @@ public class ResourceController {
 
     // 根据文件URL获取MIME类型
     private String getMimeTypeFromUrl(String url) {
-        log.info("=== MIME类型解析调试 ===");
-        log.info("输入URL: {}", url);
-        
         if (url == null || url.isEmpty()) {
-            log.info("URL为空，返回默认类型");
             return "application/octet-stream";
         }
         
         String fileName = url.substring(url.lastIndexOf("/") + 1);
-        log.info("提取的文件名: {}", fileName);
         
         int dotIndex = fileName.lastIndexOf(".");
         if (dotIndex == -1) {
-            log.info("文件名中没有扩展名，返回默认类型");
             return "application/octet-stream";
         }
         
         String ext = fileName.substring(dotIndex + 1).toLowerCase();
-        log.info("提取的扩展名: {}", ext);
         
         String mimeType;
         switch (ext) {
@@ -682,8 +649,6 @@ public class ResourceController {
             default: mimeType = "application/octet-stream"; break;
         }
         
-        log.info("最终MIME类型: {}", mimeType);
-        log.info("=====================");
         return mimeType;
     }
 
