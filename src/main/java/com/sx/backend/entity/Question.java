@@ -48,9 +48,13 @@ public class Question {
 
     // 检查是否包含指定的知识点ID - 静态方法，不会被序列化
     public static boolean containsKnowledgePoint(List<String> knowledgePoints, List<String> targetIds) {
-        if (knowledgePoints == null || targetIds == null) return false;
+        if (knowledgePoints == null || targetIds == null) {
+            return false;
+        }
         for (String kpId : knowledgePoints) {
-            if (targetIds.contains(kpId)) return true;
+            if (targetIds.contains(kpId)) {
+                return true;
+            }
         }
         return false;
     }

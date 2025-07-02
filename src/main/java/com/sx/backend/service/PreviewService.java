@@ -94,7 +94,7 @@ public class PreviewService {
                 return convertToPdf(sourcePath, resource.getResourceId());
             case IMAGE:
                 log.info("处理图片文件");
-                return generateThumbnail(sourcePath, resource.getResourc
+                return generateThumbnail(sourcePath, resource.getResourceId());
             default:
                 log.error("不支持的文件类型: {}", resource.getType());
                 throw new UnsupportedOperationException("预览不支持此文件类型: " + resource.getType());
