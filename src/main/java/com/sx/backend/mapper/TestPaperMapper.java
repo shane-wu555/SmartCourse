@@ -71,4 +71,6 @@ public interface TestPaperMapper {
      * @return 试卷数量
      */
     int countByCondition(@Param("courseId") String courseId);
+    void updateTaskIdByPaperId(@Param("paperId") String paperId, @Param("taskId") String taskId);
+
 }

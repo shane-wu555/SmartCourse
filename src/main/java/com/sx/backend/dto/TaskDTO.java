@@ -18,4 +18,6 @@ public class TaskDTO {
     private Float maxScore;
     private List<String> resourceIds;
     private List<String> pointIds;
+
+    public String paperId;
 }

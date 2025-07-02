@@ -4,8 +4,10 @@ import com.sx.backend.dto.TaskDTO;
 import com.sx.backend.entity.KnowledgePoint;
 import com.sx.backend.entity.Resource;
 import com.sx.backend.entity.Task;
+import com.sx.backend.entity.TaskType;
 import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.TaskMapper;
+import com.sx.backend.mapper.TestPaperMapper;
 import com.sx.backend.service.TaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,9 +24,12 @@ public class TaskServiceImpl implements TaskService {
 
     private final TaskMapper taskMapper;
 
+    private final TestPaperMapper testPaperMapper;
+
     @Autowired
-    public TaskServiceImpl(TaskMapper taskMapper) {
+    public TaskServiceImpl(TaskMapper taskMapper, TestPaperMapper testPaperMapper) {
         this.taskMapper = taskMapper;
+        this.testPaperMapper = testPaperMapper;
     }
 
     @Override
@@ -49,6 +54,12 @@ public class TaskServiceImpl implements TaskService {
         log.info("开始创建任务: {}", task);
         taskMapper.insert(task);
         log.info("任务已插入数据库，taskId={}", taskId);
+
+        // ✅ 新增逻辑：绑定试卷
+        if (TaskType.EXAM_QUIZ.equals(taskDTO.getType()) && taskDTO.getPaperId() != null) {
+            log.info("正在将试卷绑定到任务: paperId={}, taskId={}", taskDTO.getPaperId(), taskId);
+            testPaperMapper.updateTaskIdByPaperId(taskDTO.getPaperId(), taskId);
+        }
 
         // 插入资源关联
         if (taskDTO.getResourceIds() != null && !taskDTO.getResourceIds().isEmpty()) {
