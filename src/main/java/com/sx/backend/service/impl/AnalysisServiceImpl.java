@@ -35,16 +35,16 @@ public class AnalysisServiceImpl implements AnalysisService {
         if (grade == null) return;
 
         // 获取所有任务成绩按时间排序
-        List<TaskGrade> taskGrades = taskGradeMapper.findByGradeId(grade.getGradeId());
+        List<TaskGrade> taskGrades = taskGradeMapper.findByStudentAndCourse(studentId, courseId);
 
         ObjectNode trendData = new ObjectMapper().createObjectNode();
         ArrayNode dates = trendData.putArray("dates");
         ArrayNode scores = trendData.putArray("scores");
 
         taskGrades.stream()
-                .sorted(Comparator.comparing(TaskGrade::getSubmissionTime))
+                .sorted(Comparator.comparing(TaskGrade::getGradedTime))
                 .forEach(tg -> {
-                    dates.add(tg.getSubmissionTime().format(DateTimeFormatter.ISO_DATE));
+                    dates.add(tg.getGradedTime().format(DateTimeFormatter.ISO_DATE));
                     scores.add(tg.getScore());
                 });
 

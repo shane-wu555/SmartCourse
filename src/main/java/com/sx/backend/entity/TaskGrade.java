@@ -5,21 +5,30 @@ import java.time.LocalDateTime;
 public class TaskGrade {
     private String taskGradeId;
     private String studentId;
+    private String courseId;
     private String taskId;
     private Float score;
-    private LocalDateTime submissionTime;
+    private LocalDateTime gradedTime;
     private String feedback;
 
-    public TaskGrade(String taskGradeId, String studentId, String taskId, Float score, LocalDateTime submissionTime, String feedback) {
+    public TaskGrade(String taskGradeId, String studentId, String taskId, Float score, LocalDateTime gradedTime, String feedback) {
         this.taskGradeId = taskGradeId;
         this.studentId = studentId;
         this.taskId = taskId;
         this.score = score;
-        this.submissionTime = submissionTime;
+        this.gradedTime = gradedTime;
         this.feedback = feedback;
     }
 
     public TaskGrade() {
+    }
+
+    public String getCourseId() {
+        return courseId;
+    }
+
+    public void setCourseId(String courseId) {
+        this.courseId = courseId;
     }
 
     public String getStudentId() {
@@ -54,12 +63,12 @@ public class TaskGrade {
         this.score = score;
     }
 
-    public LocalDateTime getSubmissionTime() {
-        return submissionTime;
+    public LocalDateTime getGradedTime() {
+        return gradedTime;
     }
 
-    public void setSubmissionTime(LocalDateTime submissionTime) {
-        this.submissionTime = submissionTime;
+    public void setGradedTime(LocalDateTime gradedTime) {
+        this.gradedTime = gradedTime;
     }
 
     public String getFeedback() {

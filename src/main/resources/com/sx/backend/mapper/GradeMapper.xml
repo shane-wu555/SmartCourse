@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sx.backend.mapper.GradeMapper">
+
+    <resultMap id="GradeMap" type="com.sx.backend.entity.Grade">
+        <id property="gradeId" column="grade_id"/>
+        <result property="studentId" column="student_id"/>
+        <result property="courseId" column="course_id"/>
+        <result property="finalGrade" column="final_grade"/>
+        <result property="feedback" column="feedback"/>
+        <result property="gradeTrend" column="grade_trend"/>
+        <result property="rankInClass" column="rank_in_class"/>
+
+        <collection property="taskGrades" ofType="com.sx.backend.entity.TaskGrade" select="findTaskGradesByStudentIdAndCourseId" column="{studentId=student_id,courseId=course_id}"/>
+    </resultMap>
+
+    <select id="findTaskGradesByStudentIdAndCourseId" resultType="com.sx.backend.entity.TaskGrade">
+        SELECT * FROM task_grade WHERE student_id = #{studentId} AND course_id = #{courseId}
+    </select>
+
+    <select id="findByStudentAndCourse" resultMap="GradeMap">
+        SELECT * FROM grade WHERE student_id = #{studentId} AND course_id = #{courseId}
+    </select>
+
+    <select id="findByCourseId" resultMap="GradeMap">
+        SELECT * FROM grade WHERE course_id = #{courseId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO grade (grade_id, student_id, course_id, final_grade, feedback, grade_trend, rank_in_class)
+        VALUES (#{gradeId}, #{studentId}, #{courseId}, #{finalGrade}, #{feedback}, #{gradeTrend}, #{rankInClass})
+    </insert>
+
+    <update id="update">
+        UPDATE grade
+        SET final_grade = #{finalGrade},
+            feedback = #{feedback},
+            grade_trend = #{gradeTrend},
+            rank_in_class = #{rankInClass}
+        WHERE grade_id = #{gradeId}
+    </update>
+
+    <select id="findById" resultMap="GradeMap">
+        SELECT * FROM grade WHERE grade_id = #{gradeId}
+    </select>
+
+    <select id="selectByStudentId" resultMap="GradeMap">
+        SELECT * FROM grade WHERE student_id = #{studentId}
+    </select>
+
+</mapper>

@@ -9,18 +9,18 @@ import java.util.List;
 public interface TaskGradeMapper {
     /**
      * 根据成绩ID查询所有任务成绩
-     * @param gradeId 成绩ID
      * @return 任务成绩列表
      */
-    @Select("SELECT * FROM task_grade WHERE grade_id = #{gradeId}")
-    List<TaskGrade> findByGradeId(String gradeId);
+    @Select("SELECT * FROM task_grade WHERE student_id = #{studentId} AND course_id = #{courseId}")
+    List<TaskGrade> findByStudentAndCourse(@Param("studentId") String studentId, @Param("courseId") String courseId);
 
     /**
      * 插入新任务成绩
      * @param taskGrade 任务成绩实体
      * @return 受影响的行数
      */
-    @Insert("INSERT INTO task_grade (id, student_id, task_id, score, feedback) VALUES (#{id}, #{studentId}, #{taskId}, #{score}, #{feedback})" )
+    @Insert("INSERT INTO task_grade (task_grade_id, student_id, task_id, score, feedback, graded_time, course_id) " +
+            "VALUES (#{taskGradeId}, #{studentId}, #{taskId}, #{score}, #{feedback}, #{gradedTime}, #{courseId})" )
     int insert(TaskGrade taskGrade);
 
     /**
@@ -28,7 +28,7 @@ public interface TaskGradeMapper {
      * @param taskGrade 任务成绩实体
      * @return 受影响的行数
      */
-    @Update("UPDATE task_grade SET score = #{score}, feedback = #{feedback} WHERE id = #{id}")
+    @Update("UPDATE task_grade SET score = #{score}, feedback = #{feedback}, graded_time = #{gradedTime} WHERE task_id = #{taskId}")
     int update(TaskGrade taskGrade);
 
     /**

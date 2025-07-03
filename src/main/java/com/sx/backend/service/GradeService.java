@@ -1,13 +1,14 @@
 package com.sx.backend.service;
 
+import com.sx.backend.entity.Submission;
 import com.sx.backend.entity.TaskGrade;
 
 public interface GradeService {
     /**
      * 更新任务成绩
-     * @param taskGrade 任务成绩实体
+     * @param submission 提交记录
      */
-    void updateTaskGrade(TaskGrade taskGrade);
+    void updateTaskGrade(Submission submission);
 
     /**
      * 更新总成绩
