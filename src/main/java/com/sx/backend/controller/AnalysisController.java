@@ -22,6 +22,7 @@ public class AnalysisController {
             @PathVariable String studentId,
             @PathVariable String courseId) {
 
+        analysisService.updateGradeTrend(studentId, courseId);
         GradeTrendDTO trend = analysisService.getGradeTrend(studentId, courseId);
         return ResponseEntity.ok(trend);
     }

@@ -52,6 +52,10 @@
             LIMIT #{size} OFFSET #{offset}
     </select>
 
+    <select id="findTotalScoreByCourseId" resultType="float">
+        SELECT SUM(max_score) FROM task WHERE course_id = #{courseId}
+    </select>
+
     <insert id="insert" parameterType="com.sx.backend.entity.Task">
         INSERT INTO task (task_id, course_id, title, description, type, deadline, max_score, created_at)
         VALUES (#{taskId}, #{courseId}, #{title}, #{description}, #{type, typeHandler=com.sx.backend.typehandler.TaskTypeTypeHandler}, #{deadline}, #{maxScore}, NOW())

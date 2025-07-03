@@ -6,6 +6,7 @@ import com.sx.backend.service.FeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -31,10 +32,12 @@ public class FeedbackServiceImpl implements FeedbackService {
         StringBuilder message = new StringBuilder();
         message.append("你的当前成绩为: ").append(grade.getFinalGrade()).append("\n");
         message.append("班级排名: ").append(grade.getRankInClass()).append("\n\n");
+        float totalScore = taskMapper.findTotalScoreByCourseId(courseId);
+        float scoreRate = (grade.getFinalGrade() / totalScore) * 100;
 
-        if (grade.getFinalGrade() >= 90) {
+        if (scoreRate >= 90) {
             message.append("你已经掌握基础内容，可以尝试拓展学习。");
-        } else if (grade.getFinalGrade() >= 75) {
+        } else if (scoreRate >= 75) {
             message.append("部分知识点需要巩固，建议重点复习错题。");
         } else {
             message.append("你的基础知识点掌握不够牢固，建议复习基础内容。");
@@ -42,19 +45,21 @@ public class FeedbackServiceImpl implements FeedbackService {
 
         // 添加具体建议
         List<TaskGrade> taskGrades = taskGradeMapper.findByStudentAndCourse(grade.getStudentId(), grade.getCourseId());
-        double minScore = taskGrades.stream()
-                .mapToDouble(TaskGrade::getScore)
-                .min()
-                .orElse(0);
+        taskGrades.sort(Comparator.comparing(TaskGrade::getScore));
+        TaskGrade minScoreTask = taskGrades.get(0) != null ? taskGrades.get(0): null;
+        if (minScoreTask != null) {
+            float minScore = (minScoreTask.getScore() / taskMapper.getById(minScoreTask.getTaskId()).getMaxScore()) * 100;
 
-        if (minScore < 60) {
-            message.append("\n\n建议重点关注以下任务:");
-            for (TaskGrade taskGrade : taskGrades) {
-                if (taskGrade.getScore() < 60) {
-                    message.append("\n- ").append(taskMapper.getById(taskGrade.getTaskId()).getTitle()).append("\n");
+            if (minScore < 60) {
+                message.append("\n\n建议重点关注以下任务:");
+                for (TaskGrade taskGrade : taskGrades) {
+                    if (((taskGrade.getScore() / taskMapper.getById(minScoreTask.getTaskId()).getMaxScore()) * 100)< 60) {
+                        message.append("\n- ").append(taskMapper.getById(taskGrade.getTaskId()).getTitle()).append("\n");
+                    }
                 }
             }
         }
+
 
         grade.setFeedback(message.toString());
 

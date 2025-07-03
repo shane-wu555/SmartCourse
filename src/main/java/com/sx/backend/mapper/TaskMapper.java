@@ -23,6 +23,8 @@ public interface TaskMapper {
                              @Param("offset") int offset,
                              @Param("size") int size);
 
+    float findTotalScoreByCourseId(String courseId);
+
     int countSubmissions(String taskId);
 
     int insertTaskResources(@Param("taskId") String taskId,

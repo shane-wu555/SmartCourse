@@ -3,6 +3,7 @@ package com.sx.backend.controller;
 import com.sx.backend.dto.AnswerRecordDTO;
 import com.sx.backend.dto.SubmissionDTO;
 import com.sx.backend.entity.Submission;
+import com.sx.backend.entity.SubmissionStatus;
 import com.sx.backend.entity.TaskType;
 import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.SubmissionMapper;
@@ -50,16 +51,43 @@ public class SubmissionController {
     }
 
     @GetMapping("/getSubmissions/{taskId}")
-    public List<Submission> getSubmissions(String taskId) {
+    public List<Submission> getSubmissions(@PathVariable String taskId) {
         // 调用服务层获取指定课程的所有提交记录
         return submissionMapper.findByTaskId(taskId);
     }
 
     // 更改提交记录状态为已完成
-    @PutMapping("/complete/{submissionId}")
-    public int completeSubmission(@PathVariable String submissionId) {
+    @PutMapping("/complete/{taskId}")
+    public ResponseEntity<ApiResponse<Submission>> completeSubmission(@PathVariable String taskId) {
         // 返回受影响的行数
-        return submissionMapper.updateCompletedToTrue(submissionId);
+        String studentId = getCurrentStudentId();
+        String submissionId;
+        if (taskId == null || studentId == null) {
+            throw new IllegalArgumentException("TaskId或StudentID不能为空");
+        }
+        Submission submission = submissionMapper.findByTaskIdAndStudentId(taskId, studentId);
+        if (submission == null) {
+            submission = new Submission();
+            submission.setTaskId(taskId);
+            submission.setStudentId(studentId);
+            submission.setCompleted(true);
+            submission.setSubmitTime(java.time.LocalDateTime.now());
+            submissionId = UUID.randomUUID().toString();
+            submission.setSubmissionId(submissionId);
+            submission.setFinalGrade(taskMapper.getById(taskId).getMaxScore());
+            submission.setStatus(SubmissionStatus.GRADED);
+            submissionMapper.create(submission);
+        }
+        else {
+            submission.setCompleted(true);
+            submission.setFinalGrade(taskMapper.getById(taskId).getMaxScore());
+            submission.setStatus(SubmissionStatus.GRADED);
+            submissionMapper.update(submission);
+        }
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(200, "提交已完成", submission)
+        );
     }
 
     // 提交新的提交记录
