@@ -34,13 +34,6 @@ public class GradeController {
         return ResponseEntity.ok(grades);
     }
 
-    // 更新学生的课程成绩
-    @PostMapping("/taskGrade")
-    public ResponseEntity<Void> updateTaskGrade(@RequestBody TaskGrade taskGrade) {
-        gradeService.updateTaskGrade(taskGrade);
-        return ResponseEntity.ok().build();
-    }
-
     // 获取学生在特定课程的成绩
     @GetMapping("/{studentId}/{courseId}")
     public ResponseEntity<Grade> getGrade(

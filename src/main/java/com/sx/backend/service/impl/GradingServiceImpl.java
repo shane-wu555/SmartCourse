@@ -1,10 +1,9 @@
 package com.sx.backend.service.impl;
 
+import com.sx.backend.dto.request.ManualGradingRequest;
+import com.sx.backend.entity.*;
+import com.sx.backend.service.GradeService;
 import com.sx.backend.util.Pair;
-import com.sx.backend.entity.AnswerRecord;
-import com.sx.backend.entity.Question;
-import com.sx.backend.entity.Submission;
-import com.sx.backend.entity.SubmissionStatus;
 import com.sx.backend.mapper.AnswerRecordMapper;
 import com.sx.backend.mapper.QuestionMapper;
 import com.sx.backend.mapper.SubmissionMapper;
@@ -12,6 +11,7 @@ import com.sx.backend.service.GradingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +27,9 @@ public class GradingServiceImpl implements GradingService {
 
     @Autowired
     private QuestionMapper questionMapper;
+
+    @Autowired
+    private GradeService gradeService;
 
 
     // 自动批改提交
@@ -52,17 +55,22 @@ public class GradingServiceImpl implements GradingService {
                 record.setObtainedScore(0.0f);
                 record.setAutoGraded(false);
             }
+
+            answerRecordMapper.update(record);
         }
 
         submission.setAutoGrade(autoScore);
         submission.setFinalGrade(autoScore);
         submission.setStatus(SubmissionStatus.AUTO_GRADED);
+        submission.setGradeTime(LocalDateTime.now());
+
+        gradeService.updateTaskGrade(submission);
 
         submissionMapper.update(submission);
     }
 
     @Override
-    public void manualGradeSubmission(String submissionId, Map<String, Pair<Float, String>> questionGrades, String feedback) {
+    public Submission manualGradeSubmission(String submissionId, List<ManualGrade> questionGrades, String feedback) {
         Submission submission = submissionMapper.findById(submissionId);
         List<AnswerRecord> answerRecords = new ArrayList<>();
         for (String recordId : submission.getAnswerRecords()) {
@@ -70,16 +78,19 @@ public class GradingServiceImpl implements GradingService {
             answerRecords.add(record);
         }
         List<AnswerRecord> manualRecords = getQuestionForManualGrading(answerRecords);
-        Float grade = submission.getFinalGrade();
+        float grade = submission.getAutoGrade() != null ? submission.getAutoGrade() : 0.0f;
 
         for (AnswerRecord record : manualRecords) {
-            Pair<Float, String> gradePair = questionGrades.get(record.getRecordId());
-            if (gradePair != null) {
+            ManualGrade manualGrade = questionGrades.stream()
+                    .filter(qg -> qg.getRecordId().equals(record.getRecordId()))
+                    .findFirst()
+                    .orElse(null);
+            if (manualGrade != null) {
                 // 正常赋值
-                Float score = gradePair.first;
-                String questionFeedback = gradePair.second;
+                Float score = manualGrade.getScore();
+                String questionFeedback = manualGrade.getFeedback();
                 if (score != null) {
-                    manualGrade(record, score, questionFeedback);
+                    manualGrading(record, score, questionFeedback);
                     grade += score;
                 }
             }
@@ -91,6 +102,11 @@ public class GradingServiceImpl implements GradingService {
         submission.setFinalGrade(grade);
         submission.setStatus(SubmissionStatus.GRADED);
         submission.setFeedback(feedback);
+        submission.setGradeTime(LocalDateTime.now());
+
+        gradeService.updateTaskGrade(submission);
+
+        return submission;
     }
 
     @Override
@@ -102,7 +118,7 @@ public class GradingServiceImpl implements GradingService {
     }
 
     // 手动批改提交
-    public void manualGrade(AnswerRecord answerRecord, Float grade, String feedback) {
+    public void manualGrading(AnswerRecord answerRecord, Float grade, String feedback) {
         // 实现手动批改逻辑
         Question question = questionMapper.selectQuestionById(answerRecord.getQuestionId());
         if (question.isAutoGradable()) {
@@ -110,5 +126,6 @@ public class GradingServiceImpl implements GradingService {
         }
         answerRecord.setObtainedScore(grade);
         answerRecord.setTeacherFeedback(feedback);
+        answerRecordMapper.update(answerRecord);
     }
 }

@@ -14,19 +14,6 @@ public interface GradeMapper {
      * @param courseId 课程ID
      * @return 成绩实体
      */
-    @Select("SELECT * FROM grade WHERE student_id = #{studentId} AND course_id = #{courseId}")
-    @Results({
-            @Result(column = "grade_id", property = "gradeId"),
-            @Result(column = "student_id", property = "studentId"),
-            @Result(column = "course_id", property = "courseId"),
-            @Result(column = "final_grade", property = "finalGrade"),
-            @Result(column = "feedback", property = "feedback"),
-            @Result(column = "grade_trend", property = "gradeTrend"),
-            @Result(column = "rank_in_class", property = "rankInClass"),
-            // 关联查询任务成绩
-            @Result(property = "taskGrades", column = "student_id",
-                    many = @Many(select = "selectTaskGradesByStudentAndCourse"))
-    })
     Grade findByStudentAndCourse(
             @Param("studentId") String studentId,
             @Param("courseId") String courseId);
@@ -36,19 +23,6 @@ public interface GradeMapper {
      * @param courseId 课程ID
      * @return 成绩列表
      */
-    @Select("SELECT * FROM grade WHERE course_id = #{courseId}")
-    @Results({
-        @Result(column = "grade_id", property = "gradeId"),
-        @Result(column = "student_id", property = "studentId"),
-        @Result(column = "course_id", property = "courseId"),
-        @Result(column = "final_grade", property = "finalGrade"),
-        @Result(column = "feedback", property = "feedback"),
-        @Result(column = "grade_trend", property = "gradeTrend"),
-        @Result(column = "rank_in_class", property = "rankInClass"),
-        // 关联查询任务成绩
-        @Result(property = "taskGrades", column = "student_id",
-                many = @Many(select = "selectTaskGradesByStudentAndCourse"))
-    })
     List<Grade> findByCourseId(String courseId);
 
     /**
@@ -56,8 +30,6 @@ public interface GradeMapper {
      * @param grade 成绩实体
      * @return 受影响的行数
      */
-    @Insert("INSERT INTO grade (grade_id, student_id, course_id, final_grade, feedback, grade_trend, rank_in_class) " +
-            "VALUES (#{gradeId}, #{studentId}, #{courseId}, #{finalGrade}, #{feedback}, #{gradeTrend}, #{rankInClass})")
     int insert(Grade grade);
 
     /**
@@ -65,26 +37,13 @@ public interface GradeMapper {
      * @param grade 成绩实体
      * @return 受影响的行数
      */
-    @Update("UPDATE grade SET score = #{score}, grade_trend = #{gradeTrend} WHERE id = #{id}")
     int update(Grade grade);
-
-    /**
-     * 更新成绩趋势数据
-     * @param gradeId 成绩ID
-     * @param trendData 趋势数据
-     * @return 受影响的行数
-     */
-    @Update("UPDATE grade SET grade_trend = #{trendData} WHERE grade_id = #{gradeId}")
-    int updateGradeTrend(
-            @Param("gradeId") String gradeId,
-            @Param("trendData") String trendData);
 
     /**
      * 根据成绩ID查询成绩
      * @param gradeId 成绩ID
      * @return 成绩实体
      */
-    @Select("SELECT * FROM grade WHERE grade_id = #{gradeId}")
     Grade findById(String gradeId);
 
     /**
@@ -92,18 +51,5 @@ public interface GradeMapper {
      * @param studentId 学生ID
      * @return 成绩列表
      */
-    @Select("SELECT * FROM grade WHERE student_id = #{studentId}")
-    @Results({
-        @Result(column = "grade_id", property = "gradeId"),
-        @Result(column = "student_id", property = "studentId"),
-        @Result(column = "course_id", property = "courseId"),
-        @Result(column = "final_grade", property = "finalGrade"),
-        @Result(column = "feedback", property = "feedback"),
-        @Result(column = "grade_trend", property = "gradeTrend"),
-        @Result(column = "rank_in_class", property = "rankInClass"),
-        // 关联查询任务成绩
-        @Result(property = "taskGrades", column = "student_id",
-                many = @Many(select = "selectTaskGradesByStudentAndCourse"))
-    })
     List<Grade> findByStudentId(String studentId);
 }

@@ -1,34 +1,14 @@
 package com.sx.backend.dto.request;
 
+import com.sx.backend.entity.ManualGrade;
 import com.sx.backend.util.Pair;
+import lombok.Data;
 
+import java.util.List;
 import java.util.Map;
 
+@Data
 public class ManualGradingRequest {
-    private Map<String, Pair<Float, String>> questionGrades; // 每个问题的分数和教师反馈
+    private List<ManualGrade> questionGrades; // 每个问题的分数和教师反馈
     private String feedback; // 总的教师反馈
-
-    public ManualGradingRequest(Map<String, Pair<Float, String>> questionGrades, String feedback) {
-        this.questionGrades = questionGrades;
-        this.feedback = feedback;
-    }
-
-    public ManualGradingRequest() {
-    }
-
-    public Map<String, Pair<Float, String>> getQuestionGrades() {
-        return questionGrades;
-    }
-
-    public void setQuestionGrades(Map<String, Pair<Float, String>> questionGrades) {
-        this.questionGrades = questionGrades;
-    }
-
-    public String getFeedback() {
-        return feedback;
-    }
-
-    public void setFeedback(String feedback) {
-        this.feedback = feedback;
-    }
 }
