@@ -97,6 +97,7 @@ public class SubmissionServiceImpl implements SubmissionService {
         submission.setTaskId(submissionDTO.getTaskId());
         submission.setStudentId(submissionDTO.getStudentId());
         submission.setSubmitTime(submissionDTO.getSubmitTime());
+        submission.setCompleted(true);
 
         submission.setFiles(submissionDTO.getFileId()); // 设置文件列表
         int created = submissionMapper.create(submission);

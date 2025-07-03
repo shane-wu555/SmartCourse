@@ -3,14 +3,17 @@ package com.sx.backend.controller;
 import com.sx.backend.dto.request.ManualGradingRequest;
 import com.sx.backend.entity.AnswerRecord;
 import com.sx.backend.entity.Submission;
+import com.sx.backend.entity.SubmissionStatus;
 import com.sx.backend.mapper.AnswerRecordMapper;
 import com.sx.backend.mapper.SubmissionMapper;
+import com.sx.backend.service.GradeService;
 import com.sx.backend.service.GradingService;
 import com.sx.backend.service.SubmissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +29,8 @@ public class GradingController {
 
     @Autowired
     private GradingService gradingService;
+    @Autowired
+    private GradeService gradeService;
 
     // 获取需要手动批改的问题
     @GetMapping("/manual-questions/{submissionId}")
@@ -68,5 +73,47 @@ public class GradingController {
         return ResponseEntity.ok(submission);
     }
 
-    
+    // 获取所有待批改的提交记录
+    @GetMapping("/get-works/{taskId}")
+    public ResponseEntity<List<Submission>> getWorksForGrading(
+            @PathVariable String taskId
+    ) {
+        // 获取所有待批改的提交记录
+        List<Submission> submissions = submissionMapper.findByTaskId(taskId);
+        if (submissions.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        List<Submission> ungradedSubmissions = submissions.stream()
+                .filter(submission -> submission.getStatus() == SubmissionStatus.SUBMITTED)
+                .toList();
+        if (ungradedSubmissions.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(ungradedSubmissions);
+    }
+
+    // 提交批改结果
+    @PutMapping("/grade-works")
+    public ResponseEntity<Submission> submitWorkGrading(
+            @RequestParam("submission_id") String submissionId,
+            @RequestParam("grade") float grade,
+            @RequestParam(value = "feedback", required = false) String feedback ) {
+        Submission submission = submissionMapper.findById(submissionId);
+
+        if (submission == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        // 更新提交的成绩和反馈
+        submission.setFinalGrade(grade);
+        submission.setFeedback(feedback);
+        submission.setGradeTime(LocalDateTime.now());
+        submission.setStatus(SubmissionStatus.GRADED);
+
+        int submitted = submissionMapper.update(submission);
+        gradeService.updateTaskGrade(submission);
+
+        return submitted == 0 ? ResponseEntity.status(500).body(null) : ResponseEntity.ok(submission);
+    }
 }
