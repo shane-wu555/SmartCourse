@@ -71,7 +71,7 @@ public class SubmissionController {
             String safeFilename = generateSafeFilename(originalFilename);
             String uniqueFilename = UUID.randomUUID() + "_" + safeFilename;
 
-            Path courseDir = Paths.get(storageLocation, taskId, studentId);
+            Path courseDir = Paths.get(storageLocation, "submissions", taskId, studentId);
             if (!Files.exists(courseDir)) {
                 try {
                     Files.createDirectories(courseDir);
@@ -89,7 +89,7 @@ public class SubmissionController {
                         .body(new ApiResponse<>(400, "文件保存失败： " + e.getMessage(), null));
             }
 
-            filePaths.add("/" + taskId + "/" + studentId + "/" + uniqueFilename);
+            filePaths.add("/submissions/" + taskId + "/" + studentId + "/" + uniqueFilename);
         }
 
         SubmissionDTO submissionDTO = new SubmissionDTO();

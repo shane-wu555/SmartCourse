@@ -10,7 +10,7 @@ import com.sx.backend.service.KnowledgeGraphService;
 
 @RestController
 @RequestMapping("/api/knowledge-graph")
-@CrossOrigin(origins = "*") // 添加这个注解
+@CrossOrigin(origins = {"http://localhost:8080", "http://localhost:8081", "http://localhost:3000"}, allowCredentials = "true") // 修复CORS配置
 public class KnowledgeGraphController {
     
     @Autowired
@@ -78,7 +78,7 @@ public class KnowledgeGraphController {
      * 测试AI生成功能 - 无需认证
      */
     @GetMapping("/test-ai/{courseId}")
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = {"http://localhost:8080", "http://localhost:8081", "http://localhost:3000"}, allowCredentials = "true")
     public ResponseEntity<String> testAIGeneration(@PathVariable String courseId) {
         try {
             System.out.println("=== 开始测试AI生成 ===");

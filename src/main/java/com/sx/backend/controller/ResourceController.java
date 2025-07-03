@@ -84,12 +84,14 @@ public class ResourceController {
             String safeFilename = generateSafeFilename(originalFilename);
             String uniqueFilename = UUID.randomUUID() + "_" + safeFilename;
 
-            Path courseDir = Paths.get(storageLocation, courseId, resourceType.toString().toLowerCase());
-            if (!Files.exists(courseDir)) {
-                Files.createDirectories(courseDir);
+            // 根据资源类型确定存储目录
+            String typeDir = getStorageDir(resourceType);
+            Path targetDir = Paths.get(storageLocation, typeDir);
+            if (!Files.exists(targetDir)) {
+                Files.createDirectories(targetDir);
             }
 
-            Path filePath = courseDir.resolve(uniqueFilename);
+            Path filePath = targetDir.resolve(uniqueFilename);
             Files.copy(file.getInputStream(), filePath);
 
             Resource resource = new Resource();
@@ -97,8 +99,8 @@ public class ResourceController {
             resource.setCourseId(courseId);
             resource.setName(name);
             resource.setType(resourceType);
-            // 存储相对路径而不是绝对路径
-            String relativePath = "/" + courseId + "/" + resourceType.toString().toLowerCase() + "/" + uniqueFilename;
+            // 存储统一的相对路径：/资源类型目录/文件名
+            String relativePath = "/" + typeDir + "/" + uniqueFilename;
             resource.setUrl(relativePath);
             resource.setSize(file.getSize());
             resource.setDescription(description);
@@ -253,7 +255,17 @@ public class ResourceController {
                 return ResponseEntity.status(409).body(response);
             }
 
-            Path filePath = Paths.get(resource.getUrl());
+            // 统一路径处理
+            String resourceUrl = resource.getUrl();
+            Path filePath;
+            
+            if (resourceUrl.startsWith("/")) {
+                // 新格式路径：/videos/xxx.mp4 -> storageLocation/uploads/videos/xxx.mp4
+                filePath = Paths.get(storageLocation, "uploads" + resourceUrl);
+            } else {
+                // 旧格式路径：直接拼接到storageLocation
+                filePath = Paths.get(storageLocation).resolve(resourceUrl);
+            }
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
             }
@@ -286,9 +298,17 @@ public class ResourceController {
                 return ResponseEntity.status(404).build();
             }
 
-            // 修复：使用配置的存储位置而不是绝对路径
-            Path storageRoot = Paths.get(storageLocation);
-            Path filePath = storageRoot.resolve(dbResource.getUrl().replaceFirst("^/", ""));
+            // 统一路径处理用于下载
+            String resourceUrl = dbResource.getUrl();
+            Path filePath;
+            
+            if (resourceUrl.startsWith("/")) {
+                // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+                filePath = Paths.get(storageLocation + resourceUrl);
+            } else {
+                // 旧格式路径：直接拼接到storageLocation
+                filePath = Paths.get(storageLocation).resolve(resourceUrl);
+            }
 
             if (!Files.exists(filePath)) {
                 return ResponseEntity.status(410).build();
@@ -343,9 +363,17 @@ public class ResourceController {
                 return ResponseEntity.badRequest().build();
             }
 
-            // 构建文件路径
-            Path storageRoot = Paths.get(storageLocation);
-            Path filePath = storageRoot.resolve(dbResource.getUrl().replaceFirst("^/", ""));
+            // 统一路径处理用于视频播放
+            String resourceUrl = dbResource.getUrl();
+            Path filePath;
+            
+            if (resourceUrl.startsWith("/")) {
+                // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+                filePath = Paths.get(storageLocation + resourceUrl);
+            } else {
+                // 旧格式路径：直接拼接到storageLocation
+                filePath = Paths.get(storageLocation).resolve(resourceUrl);
+            }
 
             if (!Files.exists(filePath)) {
                 return ResponseEntity.status(410).build(); // 文件已不存在
@@ -407,8 +435,17 @@ public class ResourceController {
     // 处理视频流请求
     private ResponseEntity<?> handleVideoStream(HttpServletRequest request, Resource dbResource) {
         try {
-            Path storageRoot = Paths.get(storageLocation);
-            Path filePath = storageRoot.resolve(dbResource.getUrl().replaceFirst("^/", ""));
+            // 统一路径处理用于视频流
+            String resourceUrl = dbResource.getUrl();
+            Path filePath;
+            
+            if (resourceUrl.startsWith("/")) {
+                // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+                filePath = Paths.get(storageLocation + resourceUrl);
+            } else {
+                // 旧格式路径：直接拼接到storageLocation
+                filePath = Paths.get(storageLocation).resolve(resourceUrl);
+            }
 
             if (!Files.exists(filePath)) {
                 return ResponseEntity.status(410).build(); // 文件已不存在
@@ -719,6 +756,20 @@ public class ResourceController {
         }
         
         return mimeType;
+    }
+
+    // 根据资源类型获取存储目录名
+    private String getStorageDir(ResourceType type) {
+        switch (type) {
+            case VIDEO: return "videos";
+            case PDF:
+            case DOCUMENT:
+            case PPT: return "documents";
+            case IMAGE: return "images";
+            case AUDIO: return "audios";
+            case LINK: return "links";
+            default: return "others";
+        }
     }
 
     // === 测试接口 ===

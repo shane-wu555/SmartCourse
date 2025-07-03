@@ -24,7 +24,16 @@ public class FileController {
     @GetMapping("/{filePath:.+}")
     public ResponseEntity<Resource> getFile(@PathVariable String filePath) {
         try {
-            Path file = Paths.get(storageLocation).resolve(filePath);
+            // 统一路径处理
+            Path file;
+            if (filePath.startsWith("uploads/")) {
+                // 新格式路径：uploads/videos/xxx.mp4 -> storageLocation + /uploads/videos/xxx.mp4
+                file = Paths.get(storageLocation + "/" + filePath);
+            } else {
+                // 兼容旧格式：直接解析到storageLocation下
+                file = Paths.get(storageLocation).resolve(filePath);
+            }
+            
             Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() && resource.isReadable()) {

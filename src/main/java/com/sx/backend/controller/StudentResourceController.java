@@ -178,7 +178,17 @@ public class StudentResourceController {
                 return ResponseEntity.status(409).body(response);
             }
 
-            Path filePath = Paths.get(resource.getUrl());
+            // 统一路径处理
+            String resourceUrl = resource.getUrl();
+            Path filePath;
+            
+            if (resourceUrl.startsWith("/")) {
+                // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+                filePath = Paths.get(storageLocation + resourceUrl);
+            } else {
+                // 旧格式路径：直接拼接到storageLocation
+                filePath = Paths.get(storageLocation).resolve(resourceUrl);
+            }
             if (Files.exists(filePath)) {
                 Files.delete(filePath);
             }
@@ -211,9 +221,17 @@ public class StudentResourceController {
                 return ResponseEntity.status(404).build();
             }
 
-            // 修复：使用配置的存储位置而不是绝对路径
-            Path storageRoot = Paths.get(storageLocation);
-            Path filePath = storageRoot.resolve(dbResource.getUrl().replaceFirst("^/", ""));
+            // 统一路径处理用于下载
+            String resourceUrl = dbResource.getUrl();
+            Path filePath;
+            
+            if (resourceUrl.startsWith("/")) {
+                // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+                filePath = Paths.get(storageLocation + resourceUrl);
+            } else {
+                // 旧格式路径：直接拼接到storageLocation
+                filePath = Paths.get(storageLocation).resolve(resourceUrl);
+            }
 
             if (!Files.exists(filePath)) {
                 return ResponseEntity.status(410).build();
@@ -262,6 +280,20 @@ public class StudentResourceController {
             case VIDEO: return "video/mp4";
             case DOCUMENT: return "application/msword";
             default: return "application/octet-stream";
+        }
+    }
+
+    // 根据资源类型获取存储目录名
+    private String getStorageDir(ResourceType type) {
+        switch (type) {
+            case VIDEO: return "videos";
+            case PDF:
+            case DOCUMENT:
+            case PPT: return "documents";
+            case IMAGE: return "images";
+            case AUDIO: return "audios";
+            case LINK: return "links";
+            default: return "others";
         }
     }
 

@@ -25,10 +25,23 @@ public class JwtInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        // 放行登录和注册接口
+        // 放行登录和注册接口以及静态资源
         String requestURI = request.getRequestURI();
         if (requestURI.contains("/api/auth/login") ||
-                requestURI.contains("/api/auth/register")) {
+                requestURI.contains("/api/auth/register") ||
+                requestURI.startsWith("/uploads/") ||
+                requestURI.startsWith("/converted/") ||
+                requestURI.startsWith("/thumbnails/") ||
+                requestURI.startsWith("/videos/") ||
+                requestURI.startsWith("/documents/") ||
+                requestURI.startsWith("/images/") ||
+                requestURI.startsWith("/submissions/") ||
+                requestURI.contains("/api/preview/") ||
+                requestURI.contains("/api/video/") ||
+                requestURI.contains("/api/videos/") ||
+                requestURI.contains("/api/resources/") ||
+                requestURI.contains("/api/teacher/resources/") ||
+                requestURI.contains("/api/student/resources/")) {
             return true;
         }
 

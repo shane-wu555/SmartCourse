@@ -35,10 +35,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // 允许所有来源
+        // 修复：当allowCredentials为true时，不能使用通配符
+        configuration.setAllowedOrigins(Arrays.asList("*")); 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true); // 支持携带 cookie
+        configuration.setAllowCredentials(false); // 支持携带 cookie
         configuration.setMaxAge(3600L); // 预检请求缓存时间
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

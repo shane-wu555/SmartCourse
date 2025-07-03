@@ -71,8 +71,15 @@ public class ResourceAccessController {
      * 提供文件服务
      */
     private ResponseEntity<?> serveFile(String relativePath) throws IOException {
-        // 确保路径以 /uploads/ 开头用于静态资源访问
-        String webPath = relativePath.startsWith("/uploads/") ? relativePath : "/uploads/" + relativePath;
+        // 统一处理资源路径
+        String webPath;
+        if (relativePath.startsWith("/")) {
+            // 新格式路径：/videos/xxx.mp4 -> /uploads/videos/xxx.mp4
+            webPath = "/uploads" + relativePath;
+        } else {
+            // 旧格式路径：直接添加 /uploads/ 前缀
+            webPath = "/uploads/" + relativePath;
+        }
         
         // 重定向到静态资源路径
         return ResponseEntity.status(302)

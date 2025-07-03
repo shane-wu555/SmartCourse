@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service
 public class PreviewService {
@@ -49,13 +50,29 @@ public class PreviewService {
         log.info("最终确定的资源类型: {}", finalType);
         resource.setType(finalType);
         
-        Path sourcePath = pathHandler.getWindowsPath(storageLocation, resource.getUrl());
+        // 统一路径处理逻辑
+        String resourceUrl = resource.getUrl();
+        Path sourcePath;
+        
+        if (resourceUrl.startsWith("/")) {
+            // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+            sourcePath = Paths.get(storageLocation + resourceUrl);
+        } else {
+            // 旧格式路径：直接拼接到storageLocation
+            sourcePath = Paths.get(storageLocation).resolve(resourceUrl);
+        }
         log.info("源文件路径: {}", sourcePath);
 
         switch (resource.getType()) {
             case PDF:
                 log.info("处理PDF文件");
-                return "/uploads/" + pathHandler.toWebPath(resource.getUrl()); // PDF加上前缀后返回
+                // 统一PDF路径返回格式
+                String pdfUrl = resource.getUrl();
+                if (pdfUrl.startsWith("/")) {
+                    return "/uploads" + pdfUrl; // 新格式：/videos/xxx.pdf -> /uploads/videos/xxx.pdf
+                } else {
+                    return "/uploads/" + pdfUrl; // 旧格式：xxx.pdf -> /uploads/xxx.pdf
+                }
 
             case IMAGE:
                 log.info("处理图片文件");
@@ -81,14 +98,29 @@ public class PreviewService {
         log.info("最终确定的资源类型: {}", finalType);
         resource.setType(finalType);
         
-        Path sourcePath = pathHandler.getWindowsPath(storageLocation, resource.getUrl());
+        // 统一路径处理逻辑
+        String resourceUrl = resource.getUrl();
+        Path sourcePath;
+        
+        if (resourceUrl.startsWith("/")) {
+            // 新格式路径：/videos/xxx.mp4 -> storageLocation + /videos/xxx.mp4
+            sourcePath = Paths.get(storageLocation + resourceUrl);
+        } else {
+            // 旧格式路径：直接拼接到storageLocation
+            sourcePath = Paths.get(storageLocation).resolve(resourceUrl);
+        }
         log.info("源文件路径: {}", sourcePath);
 
         switch (resource.getType()) {
             case PDF:
-
                 log.info("处理PDF文件");
-                return "/uploads/" + pathHandler.toWebPath(resource.getUrl()); // PDF加上前缀后返回
+                // 统一PDF路径返回格式
+                String pdfUrl = resource.getUrl();
+                if (pdfUrl.startsWith("/")) {
+                    return "/uploads" + pdfUrl; // 新格式：/documents/xxx.pdf -> /uploads/documents/xxx.pdf
+                } else {
+                    return "/uploads/" + pdfUrl; // 旧格式：xxx.pdf -> /uploads/xxx.pdf
+                }
             case DOCUMENT:
             case PPT:
                 return convertToPdf(sourcePath, resource.getResourceId());
@@ -306,7 +338,7 @@ public class PreviewService {
     }
 
     private String generateThumbnail(Path source, String resourceId) throws IOException {
-        Path thumbnailDir = pathHandler.getWindowsPath(storageLocation, "thumbnails");
+        Path thumbnailDir = Paths.get(storageLocation, "thumbnails");
         Files.createDirectories(thumbnailDir);
 
         Path target = thumbnailDir.resolve(resourceId + ".jpg");
@@ -322,7 +354,7 @@ public class PreviewService {
     }
 
     private String convertToPdf(Path source, String resourceId) throws IOException, OfficeException {
-        Path convertedDir = pathHandler.getWindowsPath(storageLocation, "converted");
+        Path convertedDir = Paths.get(storageLocation, "converted");
         Files.createDirectories(convertedDir);
 
         Path target = convertedDir.resolve(resourceId + ".pdf");
