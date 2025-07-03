@@ -1,6 +1,7 @@
 package com.sx.backend.controller;
 
-import com.sx.backend.dto.FeedbackDTO;
+import com.sx.backend.entity.Grade;
+import com.sx.backend.mapper.GradeMapper;
 import com.sx.backend.service.FeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,9 @@ public class FeedbackController {
     @Autowired
     private FeedbackService feedbackService;
 
+    @Autowired
+    private GradeMapper gradeMapper;
+
     /**
      * 获取学生的课程反馈
      *
@@ -24,11 +28,20 @@ public class FeedbackController {
      * @return 学生的课程反馈
      */
     @GetMapping("/{studentId}/{courseId}")
-    public ResponseEntity<FeedbackDTO> getFeedback(
+    public ResponseEntity<String> getFeedback(
             @PathVariable String studentId,
             @PathVariable String courseId) {
 
-        FeedbackDTO feedback = feedbackService.generateFeedback(studentId, courseId);
+        feedbackService.generateFeedback(studentId, courseId);
+
+        Grade grade = gradeMapper.findByStudentAndCourse(studentId, courseId);
+        if (grade == null) {
+            return ResponseEntity.notFound().build();
+        }
+        String feedback = grade.getFeedback();
+        if (feedback == null || feedback.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
         return ResponseEntity.ok(feedback);
     }
 }

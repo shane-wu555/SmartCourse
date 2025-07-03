@@ -1,15 +1,13 @@
 package com.sx.backend.service.impl;
 
-import com.sx.backend.entity.Course;
 import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.Submission;
 import com.sx.backend.entity.TaskGrade;
-import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.GradeMapper;
 import com.sx.backend.mapper.TaskGradeMapper;
 import com.sx.backend.mapper.TaskMapper;
 import com.sx.backend.service.AnalysisService;
-import com.sx.backend.service.CourseService;
+import com.sx.backend.service.FeedbackService;
 import com.sx.backend.service.GradeService;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +31,9 @@ public class GradeServiceImpl implements GradeService {
 
     @Autowired
     private AnalysisService analysisService;
+
+    @Autowired
+    private FeedbackService feedbackService;
 
     @Override
     @Transactional
@@ -102,6 +103,7 @@ public class GradeServiceImpl implements GradeService {
             gradeMapper.update(g);
         }
 
+        feedbackService.generateFeedback(grade.getStudentId(), grade.getCourseId());
         analysisService.updateGradeTrend(grade.getStudentId(), grade.getCourseId());
     }
 }
