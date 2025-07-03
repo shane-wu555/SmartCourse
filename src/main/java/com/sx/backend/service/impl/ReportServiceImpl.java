@@ -3,10 +3,7 @@ package com.sx.backend.service.impl;
 import com.sx.backend.dto.AnalysisReportDTO;
 import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.TaskGrade;
-import com.sx.backend.mapper.CourseMapper;
-import com.sx.backend.mapper.GradeMapper;
-import com.sx.backend.mapper.StudentMapper;
-import com.sx.backend.mapper.TaskGradeMapper;
+import com.sx.backend.mapper.*;
 import com.sx.backend.service.ReportService;
 import com.sx.backend.util.ExcelExporter;
 import jakarta.servlet.http.HttpServletResponse;
@@ -33,6 +30,9 @@ public class ReportServiceImpl implements ReportService {
     private ExcelExporter excelExporter;
 
     @Autowired
+    private TaskMapper taskMapper;
+
+    @Autowired
     private TaskGradeMapper taskGradeMapper;
 
     // 生成课程分析报告
@@ -43,7 +43,7 @@ public class ReportServiceImpl implements ReportService {
 
         AnalysisReportDTO report = new AnalysisReportDTO();
         report.setCourseId(courseId);
-        report.setCourseName(courseMapper.findById(grades.get(0).getCourseId()).getName());
+        report.setCourseName(courseMapper.findById(courseId).getName());
 
         // 计算班级平均分
         double total = 0;
@@ -51,6 +51,8 @@ public class ReportServiceImpl implements ReportService {
             total += grade.getFinalGrade();
         }
         report.setClassAverage(total / grades.size());
+
+        report.setClassAverageRate(total / grades.size() / taskMapper.findTotalScoreByCourseId(courseId) * 100);
 
         // 按成绩排序
         grades.sort(Comparator.comparing(Grade::getFinalGrade).reversed());
@@ -74,9 +76,11 @@ public class ReportServiceImpl implements ReportService {
     // 将Grade转换为StudentPerformance DTO
     private AnalysisReportDTO.StudentPerformance convertToStudentPerformance(Grade grade) {
         AnalysisReportDTO.StudentPerformance sp = new AnalysisReportDTO.StudentPerformance();
-        sp.setStudentId(grade.getStudentId());
+        sp.setStudentNumber(studentMapper.selectById(grade.getStudentId()).getStudentNumber());
         sp.setStudentName(studentMapper.selectById(grade.getStudentId()).getRealName());
-        sp.setAverageGrade(grade.getFinalGrade());
+        float totalScore = taskMapper.findTotalScoreByCourseId(grade.getCourseId());
+        sp.setGradeRate(grade.getFinalGrade() / totalScore * 100);
+        sp.setRank(grade.getRankInClass());
         return sp;
     }
 }

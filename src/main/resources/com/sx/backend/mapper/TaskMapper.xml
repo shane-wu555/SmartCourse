@@ -52,8 +52,8 @@
             LIMIT #{size} OFFSET #{offset}
     </select>
 
-    <select id="findTotalScoreByCourseId" resultType="float">
-        SELECT SUM(max_score) FROM task WHERE course_id = #{courseId}
+    <select id="findTotalScoreByCourseId" resultType="java.lang.Float">
+        SELECT COALESCE(SUM(max_score), 0.0) FROM task WHERE course_id = #{courseId}
     </select>
 
     <insert id="insert" parameterType="com.sx.backend.entity.Task">
