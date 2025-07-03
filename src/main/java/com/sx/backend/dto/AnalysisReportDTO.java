@@ -7,30 +7,31 @@ public class AnalysisReportDTO {
     private String courseName;
     private int totalStudents;
     private double classAverage;
+    private double classAverageRate;
     private List<StudentPerformance> performers;
 
     public static class StudentPerformance {
-        private String studentId;
+        private String studentNumber;
         private String studentName;
-        private double averageGrade;
+        private double gradeRate;
         private int rank;
 
-        public StudentPerformance(String studentId, String studentName, double averageGrade, int rank) {
-            this.studentId = studentId;
-            this.studentName = studentName;
-            this.averageGrade = averageGrade;
+        public StudentPerformance(String studentId, String studentNumber, double gradeRate, int rank) {
+            this.studentNumber = studentId;
+            this.studentName = studentNumber;
+            this.gradeRate = gradeRate;
             this.rank = rank;
         }
 
         public StudentPerformance() {
         }
 
-        public String getStudentId() {
-            return studentId;
+        public String getStudentNumber() {
+            return studentNumber;
         }
 
-        public void setStudentId(String studentId) {
-            this.studentId = studentId;
+        public void setStudentNumber(String studentNumber) {
+            this.studentNumber = studentNumber;
         }
 
         public String getStudentName() {
@@ -41,12 +42,12 @@ public class AnalysisReportDTO {
             this.studentName = studentName;
         }
 
-        public double getAverageGrade() {
-            return averageGrade;
+        public double getGradeRate() {
+            return gradeRate;
         }
 
-        public void setAverageGrade(double averageGrade) {
-            this.averageGrade = averageGrade;
+        public void setGradeRate(double gradeRate) {
+            this.gradeRate = gradeRate;
         }
 
         public int getRank() {
@@ -67,6 +68,14 @@ public class AnalysisReportDTO {
     }
 
     public AnalysisReportDTO() {
+    }
+
+    public double getClassAverageRate() {
+        return classAverageRate;
+    }
+
+    public void setClassAverageRate(double classAverageRate) {
+        this.classAverageRate = classAverageRate;
     }
 
     public String getCourseId() {
