@@ -118,11 +118,11 @@ public class SubmissionController {
 
     @PostMapping("/submit/answers")
     public ResponseEntity<ApiResponse<Submission>> submitAnswers(
-            @RequestParam("task_id") String taskId,
-            @RequestParam("answer_records") List<AnswerRecordDTO> answerRecords
+            @RequestBody SubmissionDTO submissionDTO
     ) {
         String studentId = getCurrentStudentId();
-
+        String taskId = submissionDTO.getTaskId();
+        List<AnswerRecordDTO> answerRecords = submissionDTO.getAnswerRecordDTO();
         if (taskId == null || studentId == null) {
             return ResponseEntity.status(500)
                     .body(new ApiResponse<>(401, "TaskId或StudentID为空 ", null));
@@ -140,8 +140,6 @@ public class SubmissionController {
                     .body(new ApiResponse<>(403, "AnswerRecords不能为空 ", null));
         }
 
-        SubmissionDTO submissionDTO = new SubmissionDTO();
-        submissionDTO.setTaskId(taskId);
         submissionDTO.setStudentId(studentId);
         submissionDTO.setSubmitTime(java.time.LocalDateTime.now());
         submissionDTO.setAnswerRecordDTO(answerRecords);

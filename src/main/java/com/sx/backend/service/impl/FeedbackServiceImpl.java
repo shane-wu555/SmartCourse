@@ -1,15 +1,12 @@
 package com.sx.backend.service.impl;
 
-import com.sx.backend.dto.FeedbackDTO;
 import com.sx.backend.entity.*;
 import com.sx.backend.mapper.*;
 import com.sx.backend.service.FeedbackService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class FeedbackServiceImpl implements FeedbackService {
@@ -24,15 +21,11 @@ public class FeedbackServiceImpl implements FeedbackService {
     private TaskMapper taskMapper;
 
     @Override
-    public FeedbackDTO generateFeedback(String studentId, String courseId) {
+    public void generateFeedback(String studentId, String courseId) {
         Grade grade = gradeMapper.findByStudentAndCourse(studentId, courseId);
-        if (grade == null) return null;
-
-        FeedbackDTO feedback = new FeedbackDTO();
-        feedback.setStudentId(studentId);
-        feedback.setCourseId(courseId);
-        feedback.setFinalGrade(grade.getFinalGrade());
-        feedback.setRankInClass(grade.getRankInClass());
+        if (grade == null) {
+            throw new IllegalArgumentException("Grade not found for student: " + studentId + " in course: " + courseId);
+        }
 
         // 生成反馈消息
         StringBuilder message = new StringBuilder();
@@ -63,7 +56,8 @@ public class FeedbackServiceImpl implements FeedbackService {
             }
         }
 
-        feedback.setMessage(message.toString());
-        return feedback;
+        grade.setFeedback(message.toString());
+
+        gradeMapper.update(grade);
     }
 }
