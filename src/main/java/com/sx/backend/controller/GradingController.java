@@ -46,7 +46,7 @@ public class GradingController {
     }
 
     // 提交批改结果
-    @PostMapping("/grade-manual/{submissionId}")
+    @PutMapping("/grade-manual/{submissionId}")
     public ResponseEntity<Submission> submitManualGrading(
             @PathVariable String submissionId,
             @RequestBody ManualGradingRequest request) {
@@ -57,7 +57,7 @@ public class GradingController {
         }
 
         // 批改简答题
-        gradingService.manualGradeSubmission(submissionId, request.getQuestionGrades(), request.getFeedback());
+        submission = gradingService.manualGradeSubmission(submissionId, request.getQuestionGrades(), request.getFeedback());
 
         // 更新提交状态和批改时间
         int updated = submissionMapper.update(submission);

@@ -48,7 +48,7 @@ public class FeedbackServiceImpl implements FeedbackService {
         }
 
         // 添加具体建议
-        List<TaskGrade> taskGrades = taskGradeMapper.findByGradeId(grade.getGradeId());
+        List<TaskGrade> taskGrades = taskGradeMapper.findByStudentAndCourse(grade.getStudentId(), grade.getCourseId());
         double minScore = taskGrades.stream()
                 .mapToDouble(TaskGrade::getScore)
                 .min()

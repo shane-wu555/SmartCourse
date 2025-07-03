@@ -1,5 +1,6 @@
 package com.sx.backend.controller;
 
+import com.sx.backend.dto.AnswerRecordDTO;
 import com.sx.backend.dto.SubmissionDTO;
 import com.sx.backend.entity.Submission;
 import com.sx.backend.entity.TaskType;
@@ -7,6 +8,9 @@ import com.sx.backend.mapper.CourseMapper;
 import com.sx.backend.mapper.SubmissionMapper;
 import com.sx.backend.mapper.TaskMapper;
 import com.sx.backend.service.SubmissionService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.Parameter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
@@ -23,10 +27,13 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/submissions")
+@RequiredArgsConstructor
 public class SubmissionController {
 
     @Value("${file.storage.location}")
     private String storageLocation;
+
+    private final HttpServletRequest request;
 
     @Autowired
     private SubmissionMapper submissionMapper;
@@ -36,6 +43,11 @@ public class SubmissionController {
 
     @Autowired
     private TaskMapper taskMapper;
+
+    private String getCurrentStudentId() {
+        // 从请求属性中获取拦截器设置的userId
+        return (String) request.getAttribute("userId");
+    }
 
     @GetMapping("/getSubmissions/{taskId}")
     public List<Submission> getSubmissions(String taskId) {
@@ -54,8 +66,9 @@ public class SubmissionController {
     @PostMapping("/submit/files")
     public ResponseEntity<ApiResponse<Submission>> submitFiles(
             @RequestParam("task_id") String taskId,
-            @RequestParam("student_id") String studentId,
             @RequestParam("files") List<MultipartFile> files){
+        String studentId = getCurrentStudentId();
+
         if (taskId == null || studentId == null) {
             throw new IllegalArgumentException("Submission data cannot be null");
         }
@@ -104,16 +117,16 @@ public class SubmissionController {
     }
 
     @PostMapping("/submit/answers")
-    public ResponseEntity<ApiResponse<Submission>> submitAnswers(@RequestBody SubmissionDTO submissionDTO) {
-        if (submissionDTO == null) {
-            return ResponseEntity.status(500)
-                    .body(new ApiResponse<>(400, "传入信息为空 ", null));
-        }
-        if (submissionDTO.getTaskId() == null || submissionDTO.getStudentId() == null) {
+    public ResponseEntity<ApiResponse<Submission>> submitAnswers(
+            @RequestParam("task_id") String taskId,
+            @RequestParam("answer_records") List<AnswerRecordDTO> answerRecords
+    ) {
+        String studentId = getCurrentStudentId();
+
+        if (taskId == null || studentId == null) {
             return ResponseEntity.status(500)
                     .body(new ApiResponse<>(401, "TaskId或StudentID为空 ", null));
         }
-        String taskId = submissionDTO.getTaskId();
         if (taskMapper.getById(taskId) == null) {
             return ResponseEntity.status(500)
                     .body(new ApiResponse<>(402, "Task中不存在该任务 " + taskId, null));
@@ -122,6 +135,16 @@ public class SubmissionController {
             return ResponseEntity.status(500)
                     .body(new ApiResponse<>(400, "任务类型不是试卷答题 ", null));
         }
+        if (answerRecords == null || answerRecords.isEmpty()) {
+            return ResponseEntity.status(500)
+                    .body(new ApiResponse<>(403, "AnswerRecords不能为空 ", null));
+        }
+
+        SubmissionDTO submissionDTO = new SubmissionDTO();
+        submissionDTO.setTaskId(taskId);
+        submissionDTO.setStudentId(studentId);
+        submissionDTO.setSubmitTime(java.time.LocalDateTime.now());
+        submissionDTO.setAnswerRecordDTO(answerRecords);
 
         Submission submission = submitService.submitAnswerRecords(submissionDTO);
         if (submission == null) {

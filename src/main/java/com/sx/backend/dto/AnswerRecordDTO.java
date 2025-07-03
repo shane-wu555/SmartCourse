@@ -8,5 +8,4 @@ import java.util.List;
 public class AnswerRecordDTO {
     private String questionId;
     private List<String> answers;
-    private Float obtainedScore;
 }

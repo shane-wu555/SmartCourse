@@ -9,7 +9,7 @@
         <result property="submissionId" column="submission_id"/>
         <result property="obtainedScore" column="obtained_score"/>
         <result property="autoGraded" column="auto_graded"/>
-        <result property="feedback" column="teacher_feedback"/>
+        <result property="teacherFeedback" column="teacher_feedback"/>
         <result property="answers" column="answers" typeHandler="com.sx.backend.typehandler.JsonStringListTypeHandler"/>
     </resultMap>
 
