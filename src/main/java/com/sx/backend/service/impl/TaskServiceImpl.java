@@ -6,6 +6,7 @@ import com.sx.backend.entity.Resource;
 import com.sx.backend.entity.Task;
 import com.sx.backend.entity.TaskType;
 import com.sx.backend.exception.BusinessException;
+import com.sx.backend.mapper.SubmissionMapper;
 import com.sx.backend.mapper.TaskMapper;
 import com.sx.backend.mapper.TestPaperMapper;
 import com.sx.backend.service.TaskService;
@@ -147,11 +148,21 @@ public class TaskServiceImpl implements TaskService {
         taskMapper.delete(taskId);
     }
 
+    @Autowired
+    private SubmissionMapper submissionMapper;
+
     @Override
     public List<Task> getCourseTasks(String courseId, int page, int size) {
         int offset = (page - 1) * size;
-        return taskMapper.getByCourseId(courseId, offset, size);
+        List<Task> tasks = taskMapper.getByCourseId(courseId, offset, size);
+
+        for (Task task : tasks) {
+            task.setSubmissions(submissionMapper.findByTaskId(task.getTaskId()));
+        }
+
+        return tasks;
     }
+
 
     @Override
     public Task getTaskDetails(String taskId) {
