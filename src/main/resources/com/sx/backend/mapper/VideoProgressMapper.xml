@@ -18,17 +18,13 @@
             <result property="name" column="resource_name"/>
             <result property="duration" column="duration"/>
         </association>
-        <association property="student" javaType="com.sx.backend.entity.Student">
-            <id property="studentId" column="student_id"/>
-            <result property="name" column="student_name"/>
-        </association>
     </resultMap>
 
     <insert id="insert" parameterType="com.sx.backend.entity.VideoProgress">
         INSERT INTO video_progress (
             progress_id,
             resource_id,
-            student_id,
+            user_id,
             last_position,
             total_watched,
             completion_rate,
@@ -39,7 +35,7 @@
         ) VALUES (
                      #{progressId},
                      #{video.resourceId},
-                     #{student.studentId},
+                     #{userId},
                      #{lastPosition},
                      #{totalWatched},
                      #{completionRate},
@@ -68,13 +64,12 @@
             r.resource_id,
             r.name as resource_name,
             r.duration,
-            s.student_id,
-            s.name as student_name
+            u.user_id
         FROM video_progress vp
                  JOIN resource r ON vp.resource_id = r.resource_id
-                 JOIN student s ON vp.student_id = s.student_id
+                 JOIN user u ON vp.user_id = u.user_id
         WHERE vp.resource_id = #{resourceId}
-          AND vp.student_id = #{studentId}
+          AND vp.user_id = #{studentId}
     </select>
 
     <select id="selectByCourseAndStudent" resultMap="videoProgressMap">
@@ -83,19 +78,18 @@
             r.resource_id,
             r.name as resource_name,
             r.duration,
-            s.student_id,
-            s.name as student_name
+            u.user_id
         FROM video_progress vp
                  JOIN resource r ON vp.resource_id = r.resource_id
-                 JOIN student s ON vp.student_id = s.student_id
+                 JOIN user u ON vp.user_id = u.user_id
         WHERE r.course_id = #{courseId}
-          AND vp.student_id = #{studentId}
+          AND vp.user_id = #{studentId}
     </select>
 
     <select id="exists" resultType="boolean">
         SELECT COUNT(1) > 0
         FROM video_progress
         WHERE resource_id = #{resourceId}
-          AND student_id = #{studentId}
+          AND user_id = #{studentId}
     </select>
 </mapper>

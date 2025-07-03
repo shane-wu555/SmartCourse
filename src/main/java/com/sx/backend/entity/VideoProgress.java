@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class VideoProgress {
     private String progressId;
     private Resource video;
-    private Student student;
+    private String userId;
     private Float lastPosition;
     private Float totalWatched;
     private Float completionRate;
@@ -23,10 +23,10 @@ public class VideoProgress {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
-    public VideoProgress(String progressId, Resource video, Student student, Float lastPosition, Float totalWatched, Float completionRate, String heatmapData, LocalDateTime lastWatchTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
+    public VideoProgress(String progressId, Resource video, String userId, Float lastPosition, Float totalWatched, Float completionRate, String heatmapData, LocalDateTime lastWatchTime, LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.progressId = progressId;
         this.video = video;
-        this.student = student;
+        this.userId = userId;
         this.lastPosition = lastPosition;
         this.totalWatched = totalWatched;
         this.completionRate = completionRate;

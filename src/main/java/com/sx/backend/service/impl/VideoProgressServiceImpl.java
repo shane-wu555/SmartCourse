@@ -7,12 +7,9 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sx.backend.dto.VideoSegment;
 import com.sx.backend.entity.Resource;
-import com.sx.backend.entity.Student;
 import com.sx.backend.entity.VideoProgress;
 import com.sx.backend.exception.ResourceNotFoundException;
-import com.sx.backend.exception.StudentNotFoundException;
 import com.sx.backend.mapper.ResourceMapper;
-import com.sx.backend.mapper.StudentMapper;
 import com.sx.backend.mapper.VideoProgressMapper;
 import com.sx.backend.service.VideoProgressService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +25,6 @@ import java.util.*;
 public class VideoProgressServiceImpl implements VideoProgressService {
     private final VideoProgressMapper videoProgressMapper;
     private final ResourceMapper resourceMapper;
-    private final StudentMapper studentMapper;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -46,23 +42,18 @@ public class VideoProgressServiceImpl implements VideoProgressService {
             throw new ResourceNotFoundException("视频资源不存在");
         }
 
-        Student student = studentMapper.selectById(studentId);
-        if (student == null) {
-            throw new StudentNotFoundException("学生不存在");
-        }
-
+        // 不再查找student表，兼容所有用户
         VideoProgress progress = new VideoProgress();
         progress.setProgressId(UUID.randomUUID().toString());
         progress.setVideo(video);
-        progress.setStudent(student);
         progress.setLastPosition(0.0f);
-        progress.setTotalWatched(0.0f);
+        progress.setTotalWatched  (0.0f);
         progress.setCompletionRate(0.0f);
         progress.setHeatmapData(initializeHeatmapData(video.getDuration()));
         progress.setLastWatchTime(LocalDateTime.now());
         progress.setCreatedAt(LocalDateTime.now());
         progress.setUpdatedAt(LocalDateTime.now());
-
+        progress.setUserId(studentId);
         videoProgressMapper.insert(progress);
         return progress;
     }
@@ -91,7 +82,11 @@ public class VideoProgressServiceImpl implements VideoProgressService {
         // 更新基础进度信息
         progress.setLastPosition(lastPosition);
         progress.setTotalWatched(totalWatched);
-        progress.setCompletionRate(calculateCompletionRate(lastPosition, video.getDuration()));
+        float newCompletionRate = calculateCompletionRate(lastPosition, video.getDuration());
+        // 只在新完成率更高时才更新
+        if (newCompletionRate > progress.getCompletionRate()) {
+            progress.setCompletionRate(newCompletionRate);
+        }
         progress.setLastWatchTime(LocalDateTime.now());
         progress.setUpdatedAt(LocalDateTime.now());
 
