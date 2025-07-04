@@ -31,7 +31,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SubmissionController {
 
-    @Value("${file.storage.location}")
+    @Value("${file.storage.submit}")
     private String storageLocation;
 
     private final HttpServletRequest request;
@@ -50,10 +50,21 @@ public class SubmissionController {
         return (String) request.getAttribute("userId");
     }
 
-    @GetMapping("/getSubmissions/{taskId}")
+    @GetMapping("/get_submissions_of_task/{taskId}")
     public List<Submission> getSubmissions(@PathVariable String taskId) {
         // 调用服务层获取指定课程的所有提交记录
         return submissionMapper.findByTaskId(taskId);
+    }
+
+    @GetMapping("/get_submissions_of_course/{courseId}")
+    public List<Submission> getSubmissionsByCourse(@PathVariable String courseId) {
+        // 获取当前学生ID
+        String studentId = getCurrentStudentId();
+        if (studentId == null) {
+            throw new IllegalArgumentException("Student ID cannot be null");
+        }
+        // 调用服务层获取指定课程的所有提交记录
+        return submissionMapper.findByCourseIdAndStudentId(courseId, studentId);
     }
 
     // 更改提交记录状态为已完成

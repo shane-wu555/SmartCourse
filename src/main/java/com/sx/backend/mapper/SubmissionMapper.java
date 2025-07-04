@@ -28,4 +28,7 @@ public interface SubmissionMapper {
     int insertFile(@Param("fileId") String fileId, @Param("submissionId") String submissionId, @Param("fileUrl") String fileUrl);
 
     int updateCompletedToTrue(@Param("submissionId") String submissionId);
+
+    // 根据课程ID和学生ID查询提交记录
+    List<Submission> findByCourseIdAndStudentId(String courseId, String studentId);
 }
