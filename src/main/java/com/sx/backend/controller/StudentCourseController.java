@@ -18,7 +18,7 @@ public class StudentCourseController {
     private final CourseService courseService;
 
     @Autowired
-    public StudentCourseController(StudentService studentService,CourseService courseService) {
+    public StudentCourseController(StudentService studentService, CourseService courseService) {
         this.studentService = studentService;
         this.courseService = courseService;
     }
@@ -73,17 +73,13 @@ public class StudentCourseController {
 
     // 获取课程详情（验证学生权限）
     @GetMapping("/{courseId}")
-    public ResponseEntity<Course> getCourseDetail(
+    public ResponseEntity<ApiResponse<CourseDTO>> getCourseDetail(
             HttpServletRequest request,
             @PathVariable String courseId) {
         String studentId = getCurrentStudentId(request);
-        Course course = studentService.getCourseDetail(studentId, courseId);
-        return ResponseEntity.ok(course);
-    }
-
-    @GetMapping("/detail/{courseId}")
-    public ResponseEntity<ApiResponse<CourseDTO>> getStudentCourseDetail(@PathVariable String courseId){
-
+        // 验证学生是否选修了该课程
+        studentService.getCourseDetail(studentId, courseId);
+        // 返回完整的课程详情
         CourseDTO courseDTO = courseService.getStudentCourseDetail(courseId);
         ApiResponse<CourseDTO> response = ApiResponse.success("成功获取课程详情", courseDTO);
         return ResponseEntity.ok(response);
