@@ -70,8 +70,16 @@ public class SubmissionController {
     // 更改提交记录状态为已完成
     @PutMapping("/complete/{taskId}")
     public ResponseEntity<ApiResponse<Submission>> completeSubmission(@PathVariable String taskId) {
-        // 返回受影响的行数
         String studentId = getCurrentStudentId();
+
+        // 检查是否已存在提交记录
+        Submission existing = submissionMapper.findByTaskIdAndStudentId(taskId, studentId);
+        if (existing != null && existing.isCompleted()) {
+            return ResponseEntity.ok(
+                    new ApiResponse<>(200, "任务已完成", existing)
+            );
+        }
+        // 返回受影响的行数
         String submissionId;
         if (taskId == null || studentId == null) {
             throw new IllegalArgumentException("TaskId或StudentID不能为空");
