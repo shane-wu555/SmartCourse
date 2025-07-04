@@ -15,8 +15,12 @@ public interface ResourceMapper {
             "FROM resource WHERE resource_id = #{resourceId}")
     Resource getResourceById(String resourceId);
 
-    @Select("SELECT * FROM resource WHERE course_id = #{courseId} " +
+    @Select("SELECT * FROM resource " +
+            "WHERE course_id = #{courseId} " +
             "AND (#{type} IS NULL OR type = #{type}) " +
+            "AND NOT EXISTS ( " +
+            "    SELECT 1 FROM task_resource WHERE task_resource.resource_id = resource.resource_id " +
+            ") " +
             "LIMIT #{size} OFFSET #{offset}")
     List<Resource> getResourcesByCourseId(String courseId, String type, int offset, int size);
 
