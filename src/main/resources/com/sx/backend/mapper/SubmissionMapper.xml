@@ -42,6 +42,12 @@
         SELECT * FROM submission WHERE task_id = #{taskId}
     </select>
 
+    <select id="findByCourseIdAndStudentId" resultMap="SubmissionMap">
+        SELECT s.* FROM submission s
+        JOIN task t ON s.task_id = t.task_id
+        WHERE t.course_id = #{courseId} AND s.student_id = #{studentId}
+    </select>
+
     <update id="update">
         UPDATE submission
         SET task_id = #{taskId},
