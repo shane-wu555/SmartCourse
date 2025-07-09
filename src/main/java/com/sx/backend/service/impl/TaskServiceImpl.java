@@ -5,6 +5,7 @@ import com.sx.backend.entity.KnowledgePoint;
 import com.sx.backend.entity.Resource;
 import com.sx.backend.entity.Task;
 import com.sx.backend.entity.TaskType;
+import com.sx.backend.entity.TestPaper;
 import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.SubmissionMapper;
 import com.sx.backend.mapper.TaskMapper;
@@ -56,9 +57,21 @@ public class TaskServiceImpl implements TaskService {
         taskMapper.insert(task);
         log.info("任务已插入数据库，taskId={}", taskId);
 
-        // ✅ 新增逻辑：绑定试卷
+        // ✅ 新增逻辑：绑定试卷并设置总分
         if (TaskType.EXAM_QUIZ.equals(taskDTO.getType()) && taskDTO.getPaperId() != null) {
             log.info("正在将试卷绑定到任务: paperId={}, taskId={}", taskDTO.getPaperId(), taskId);
+            
+            // 获取试卷信息
+            TestPaper testPaper = testPaperMapper.selectById(taskDTO.getPaperId());
+            if (testPaper != null && testPaper.getTotalScore() != null) {
+                // 更新任务的总分为试卷的总分
+                task.setMaxScore(testPaper.getTotalScore());
+                taskMapper.update(task);
+                log.info("已将任务总分设置为试卷总分: taskId={}, maxScore={}", taskId, testPaper.getTotalScore());
+            } else {
+                log.warn("试卷不存在或试卷总分为空: paperId={}", taskDTO.getPaperId());
+            }
+            
             testPaperMapper.updateTaskIdByPaperId(taskDTO.getPaperId(), taskId);
         }
 

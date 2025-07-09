@@ -187,6 +187,80 @@ public class OllamaService {
         return "{}";
     }
     
+    /**
+     * 公共方法：调用Ollama API生成推荐建议
+     * @param prompt 提示词
+     * @return AI生成的回复（纯文本）
+     */
+    public String generateRecommendationSuggestion(String prompt) throws Exception {
+        return callOllamaAPIForText(prompt);
+    }
+    
+    /**
+     * 调用Ollama API获取纯文本响应
+     */
+    private String callOllamaAPIForText(String prompt) throws Exception {
+        // 对 prompt 做 JSON 转义
+        String escapedPrompt = prompt.replace("\"", "\\\"")
+                                   .replace("\n", "\\n")
+                                   .replace("\r", "")
+                                   .replace("\t", "\\t");
+        
+        String requestJson = "{\"model\": \"deepseek-r1\", \"stream\": false, \"messages\": [{\"role\": \"user\", \"content\": \"" + escapedPrompt + "\"}]}";
+        
+        try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
+            HttpPost post = new HttpPost("http://localhost:11434/api/chat");
+            post.setEntity(new StringEntity(requestJson, "UTF-8"));
+            post.setHeader("Content-Type", "application/json");
+            
+            HttpResponse response = client.execute(post);
+            String responseStr = EntityUtils.toString(response.getEntity(), "UTF-8");
+            
+            System.out.println("Ollama原始响应: " + responseStr);
+            
+            // 解析Ollama API的响应格式
+            try {
+                JsonNode responseNode = objectMapper.readTree(responseStr);
+                if (responseNode.has("message") && responseNode.get("message").has("content")) {
+                    String content = responseNode.get("message").get("content").asText();
+                    System.out.println("提取的AI内容: " + content);
+                    
+                    // 去除 <think> 标签内容，只返回实际的建议内容
+                    String cleanedContent = removeThinkTags(content);
+                    System.out.println("清理后的内容: " + cleanedContent);
+                    
+                    return cleanedContent;
+                } else {
+                    System.err.println("Ollama响应格式异常，缺少message.content字段");
+                    return "抱歉，无法生成建议。";
+                }
+            } catch (Exception e) {
+                System.err.println("解析Ollama响应JSON失败: " + e.getMessage());
+                e.printStackTrace();
+                return "抱歉，无法生成建议。";
+            }
+        }
+    }
+    
+    /**
+     * 移除 <think> 标签内容，只保留实际的建议内容
+     */
+    private String removeThinkTags(String content) {
+        if (content == null || content.trim().isEmpty()) {
+            return content;
+        }
+        
+        // 移除 <think>...</think> 标签及其内容
+        String result = content.replaceAll("(?s)<think>.*?</think>", "").trim();
+        
+        // 如果结果为空，返回原始内容
+        if (result.isEmpty()) {
+            return content;
+        }
+        
+        return result;
+    }
+    
     public static void main(String[] args) throws Exception {
         OllamaService service = new OllamaService();
         String testContent = "第一章 绪论：介绍人工智能的基本概念和发展历史。";

@@ -73,6 +73,24 @@ public class GradingController {
         return ResponseEntity.ok(submission);
     }
 
+    // 自动评分接口
+    @PostMapping("/auto/{submissionId}")
+    public ResponseEntity<Submission> autoGradeSubmission(
+            @PathVariable String submissionId) {
+        try {
+            gradingService.autoGradeSubmission(submissionId);
+            Submission submission = submissionMapper.findById(submissionId);
+            
+            if (submission == null) {
+                return ResponseEntity.notFound().build();
+            }
+            
+            return ResponseEntity.ok(submission);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).build();
+        }
+    }
+
     // 获取所有待批改的提交记录
     @GetMapping("/get-works/{taskId}")
     public ResponseEntity<List<Submission>> getWorksForGrading(

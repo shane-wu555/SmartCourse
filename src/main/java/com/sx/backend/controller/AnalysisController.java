@@ -24,6 +24,14 @@ public class AnalysisController {
 
         analysisService.updateGradeTrend(studentId, courseId);
         GradeTrendDTO trend = analysisService.getGradeTrend(studentId, courseId);
+        
+        // 调试信息：检查返回的DTO
+        System.out.println("Controller returning trend: " + 
+                         (trend != null ? "dates=" + trend.getDates() + 
+                          ", scores=" + trend.getScores() + 
+                          ", totalScores=" + trend.getTotalScores() + 
+                          ", taskNames=" + trend.getTaskNames() : "null"));
+        
         return ResponseEntity.ok(trend);
     }
 }

@@ -4,6 +4,7 @@ import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.TaskGrade;
 import com.sx.backend.mapper.GradeMapper;
 import com.sx.backend.service.GradeService;
+import com.sx.backend.service.AnalysisService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class GradeController {
 
     @Autowired
     private GradeMapper gradeMapper;
+
+    @Autowired
+    private AnalysisService analysisService;
 
     private final HttpServletRequest request;
 
@@ -51,6 +55,10 @@ public class GradeController {
     public ResponseEntity<Grade> getGrade(
             @PathVariable String courseId) {
         String studentId = getCurrentStudentId();
+        
+        // 先更新趋势数据，确保包含最新的taskNames
+        analysisService.updateGradeTrend(studentId, courseId);
+        
         Grade grade = gradeMapper.findByStudentAndCourse(studentId, courseId);
 
         // 处理没有成绩的情况

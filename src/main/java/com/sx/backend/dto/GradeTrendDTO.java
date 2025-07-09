@@ -10,16 +10,20 @@ public class GradeTrendDTO {
     private String courseName;
     private List<String> dates;
     private List<Float> scores;
+    private List<Float> totalScores; // 新增：每次任务的总分
+    private List<String> taskNames; // 新增：任务名称数组
     private String chartImage;
     private Map<String, Double> taskCompletion;
 
-    public GradeTrendDTO(String studentId, String studentName, String courseId, String courseName, List<String> dates, List<Float> scores, String chartImage, Map<String, Double> taskCompletion) {
+    public GradeTrendDTO(String studentId, String studentName, String courseId, String courseName, List<String> dates, List<Float> scores, List<Float> totalScores, List<String> taskNames, String chartImage, Map<String, Double> taskCompletion) {
         this.studentId = studentId;
         this.studentName = studentName;
         this.courseId = courseId;
         this.courseName = courseName;
         this.dates = dates;
         this.scores = scores;
+        this.totalScores = totalScores;
+        this.taskNames = taskNames;
         this.chartImage = chartImage;
         this.taskCompletion = taskCompletion;
     }
@@ -75,6 +79,14 @@ public class GradeTrendDTO {
         this.scores = scores;
     }
 
+    public List<Float> getTotalScores() {
+        return totalScores;
+    }
+
+    public void setTotalScores(List<Float> totalScores) {
+        this.totalScores = totalScores;
+    }
+
     public String getChartImage() {
         return chartImage;
     }
@@ -89,5 +101,13 @@ public class GradeTrendDTO {
 
     public void setTaskCompletion(Map<String, Double> taskCompletion) {
         this.taskCompletion = taskCompletion;
+    }
+
+    public List<String> getTaskNames() {
+        return taskNames;
+    }
+
+    public void setTaskNames(List<String> taskNames) {
+        this.taskNames = taskNames;
     }
 }
