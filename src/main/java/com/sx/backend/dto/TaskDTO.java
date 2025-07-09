@@ -1,7 +1,6 @@
 package com.sx.backend.dto;
 
 import com.sx.backend.entity.TaskType;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.LocalDateTime;

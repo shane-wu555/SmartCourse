@@ -2,6 +2,7 @@ package com.sx.backend.controller;
 
 import com.sx.backend.dto.VideoProgressDTO;
 import com.sx.backend.dto.VideoProgressReportDTO;
+import com.sx.backend.dto.HeatmapDataDTO;
 import com.sx.backend.dto.request.UpdateProgressRequest;
 import com.sx.backend.entity.VideoProgress;
 import com.sx.backend.service.VideoProgressService;
@@ -29,9 +30,9 @@ public class VideoProgressController {
             @PathVariable String resourceId,
             HttpServletRequest request) {
 
-        String studentId = getCurrentUserId(request);
+        String userId = getCurrentUserId(request);
 
-        VideoProgress progress = videoProgressService.getOrCreateProgress(resourceId, studentId);
+        VideoProgress progress = videoProgressService.getOrCreateProgress(resourceId, userId);
 
         VideoProgressDTO dto = mapToVideoProgressDTO(progress);
         return ResponseEntity.ok(dto);
@@ -43,11 +44,11 @@ public class VideoProgressController {
             @RequestBody UpdateProgressRequest request,
             HttpServletRequest httpRequest) {
 
-        String studentId = getCurrentUserId(httpRequest);
+        String userId = getCurrentUserId(httpRequest);
 
         VideoProgress progress = videoProgressService.updateProgress(
                 resourceId,
-                studentId,
+                userId,
                 request.getLastPosition(),
                 request.getTotalWatched(),
                 request.getSegments());
@@ -61,12 +62,42 @@ public class VideoProgressController {
             @PathVariable String resourceId,
             HttpServletRequest request) {
 
-        String studentId = getCurrentUserId(request);
+        String userId = getCurrentUserId(request);
 
-        VideoProgress progress = videoProgressService.getOrCreateProgress(resourceId, studentId);
+        VideoProgress progress = videoProgressService.getOrCreateProgress(resourceId, userId);
         VideoProgressReportDTO report = generateProgressReport(progress);
 
         return ResponseEntity.ok(report);
+    }
+    
+    /**
+     * 获取格式化的热力图数据
+     */
+    @GetMapping("/{resourceId}/heatmap")
+    public ResponseEntity<HeatmapDataDTO> getHeatmapData(
+            @PathVariable String resourceId,
+            HttpServletRequest request) {
+        
+        String userId = getCurrentUserId(request);
+        HeatmapDataDTO heatmapData = videoProgressService.getFormattedHeatmapData(resourceId, userId);
+        
+        return ResponseEntity.ok(heatmapData);
+    }
+
+    /**
+     * 获取时间轴热力图数据
+     */
+    @GetMapping("/{resourceId}/heatmap/timeline")
+    public ResponseEntity<Map<String, Object>> getTimelineHeatmapData(
+            @PathVariable String resourceId,
+            @RequestParam(defaultValue = "10") int intervalSeconds,
+            HttpServletRequest request) {
+        
+        String userId = getCurrentUserId(request);
+        Map<String, Object> timelineData = videoProgressService.getTimelineHeatmapData(
+                resourceId, userId, intervalSeconds);
+        
+        return ResponseEntity.ok(timelineData);
     }
 
     private VideoProgressDTO mapToVideoProgressDTO(VideoProgress progress) {

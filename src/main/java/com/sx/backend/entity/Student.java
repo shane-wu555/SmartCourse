@@ -1,7 +1,5 @@
 package com.sx.backend.entity;
 
-import java.util.List;
-
 public class Student extends User{
     private String studentId;
     private String studentNumber; // 学号
