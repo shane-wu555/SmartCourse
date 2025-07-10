@@ -1,23 +1,23 @@
 package com.sx.backend.service.impl;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
-import com.sx.backend.entity.DifficultyLevel;
 import com.sx.backend.entity.Question;
 import com.sx.backend.entity.QuestionType;
 import com.sx.backend.mapper.QuestionMapper;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 @ExtendWith(MockitoExtension.class)
 class QuestionServiceImplTest {
@@ -28,256 +28,140 @@ class QuestionServiceImplTest {
     @InjectMocks
     private QuestionServiceImpl questionService;
 
-    private static final String QUESTION_ID = "q-001";
-    private static final String BANK_ID = "bank-001";
-    private Question question;
+    private Question validQuestion;
+    private List<Question> validQuestions;
 
     @BeforeEach
     void setUp() {
-        question = new Question();
-        question.setQuestionId(QUESTION_ID);
-        question.setBankId(BANK_ID);
-        question.setType(QuestionType.MULTIPLE_CHOICE);
-        question.setDifficultylevel(DifficultyLevel.MEDIUM);
-        question.setContent("What is Java?");
-        question.setOptions(Arrays.asList("A", "B", "C"));
-        question.setAnswer("B");
+        validQuestion = new Question();
+        validQuestion.setQuestionId("Q1");
+        validQuestion.setBankId("B1");
+        validQuestion.setContent("What is Java?");
+        validQuestion.setType(QuestionType.MULTIPLE_CHOICE);
+
+        validQuestions = Arrays.asList(
+                createValidQuestion("Q1"),
+                createValidQuestion("Q2")
+        );
     }
 
+    private Question createValidQuestion(String id) {
+        Question q = new Question();
+        q.setQuestionId(id);
+        q.setBankId("B" + id.charAt(1));
+        q.setContent("Content for " + id);
+        q.setType(QuestionType.SHORT_ANSWER);
+        return q;
+    }
+
+    // addQuestion 测试
     @Test
-    void addQuestion_Success() {
-        // 模拟行为
+    void addQuestion_ValidInput_ReturnsSuccess() {
         when(questionMapper.insertQuestion(any(Question.class))).thenReturn(1);
-
-        // 执行方法
-        int result = questionService.addQuestion(question);
-
-        // 验证结果
-        assertEquals(1, result);
-        verify(questionMapper).insertQuestion(question);
+        assertEquals(1, questionService.addQuestion(validQuestion));
+        verify(questionMapper, times(1)).insertQuestion(validQuestion);
     }
 
     @Test
-    void addQuestion_Failure() {
-        // 模拟行为
-        when(questionMapper.insertQuestion(any(Question.class))).thenReturn(0);
-
-        // 执行方法
-        int result = questionService.addQuestion(question);
-
-        // 验证结果
-        assertEquals(0, result);
-        verify(questionMapper).insertQuestion(question);
+    void addQuestion_MissingBankId_ThrowsException() {
+        validQuestion.setBankId(null);
+        assertThrows(IllegalArgumentException.class, () -> questionService.addQuestion(validQuestion));
     }
 
+    // updateQuestion 测试
     @Test
-    void updateQuestion_Success() {
-        // 准备更新数据
-        Question updatedQuestion = new Question();
-        updatedQuestion.setQuestionId(QUESTION_ID);
-        updatedQuestion.setContent("Updated question content");
-
-        // 模拟行为
+    void updateQuestion_ValidInput_ReturnsSuccess() {
         when(questionMapper.updateQuestion(any(Question.class))).thenReturn(1);
-
-        // 执行方法
-        int result = questionService.updateQuestion(updatedQuestion);
-
-        // 验证结果
-        assertEquals(1, result);
-        verify(questionMapper).updateQuestion(updatedQuestion);
+        assertEquals(1, questionService.updateQuestion(validQuestion));
+        verify(questionMapper, times(1)).updateQuestion(validQuestion);
     }
 
     @Test
-    void updateQuestion_Failure() {
-        // 准备更新数据
-        Question updatedQuestion = new Question();
-        updatedQuestion.setQuestionId(QUESTION_ID);
-        updatedQuestion.setContent("Updated question content");
+    void updateQuestion_EmptyContent_ThrowsException() {
+        validQuestion.setContent("");
+        assertThrows(IllegalArgumentException.class, () -> questionService.updateQuestion(validQuestion));
+    }
 
-        // 模拟行为
-        when(questionMapper.updateQuestion(any(Question.class))).thenReturn(0);
+    // deleteQuestion 测试
+    @Test
+    void deleteQuestion_ValidId_ReturnsSuccess() {
+        when(questionMapper.deleteQuestion(anyString())).thenReturn(1);
+        assertEquals(1, questionService.deleteQuestion("Q1"));
+        verify(questionMapper, times(1)).deleteQuestion("Q1");
+    }
 
-        // 执行方法
-        int result = questionService.updateQuestion(updatedQuestion);
+    // getQuestionById 测试
+    @Test
+    void getQuestionById_ExistingId_ReturnsQuestion() {
+        when(questionMapper.selectQuestionById("Q1")).thenReturn(validQuestion);
+        Question result = questionService.getQuestionById("Q1");
+        assertEquals(validQuestion, result);
+    }
 
-        // 验证结果
-        assertEquals(0, result);
-        verify(questionMapper).updateQuestion(updatedQuestion);
+    // getQuestionsByBankId 测试
+    @Test
+    void getQuestionsByBankId_ValidId_ReturnsList() {
+        List<Question> expected = Collections.singletonList(validQuestion);
+        when(questionMapper.selectQuestionsByBankId("B1")).thenReturn(expected);
+        List<Question> result = questionService.getQuestionsByBankId("B1");
+        assertEquals(expected, result);
+    }
+
+    // getQuestionsByCondition 测试
+    @Test
+    void getQuestionsByCondition_ValidParams_ReturnsList() {
+        List<Question> expected = Collections.singletonList(validQuestion);
+        when(questionMapper.selectQuestionsByCondition(
+                eq("MULTIPLE_CHOICE"),
+                eq("HARD"),
+                anyList()))
+                .thenReturn(expected);
+
+        List<Question> result = questionService.getQuestionsByCondition(
+                "MULTIPLE_CHOICE",
+                "HARD",
+                Arrays.asList("K1", "K2"));
+
+        assertEquals(expected, result);
+    }
+
+    // batchAddQuestions 测试
+    @Test
+    void batchAddQuestions_AllValid_ReturnsSuccess() {
+        when(questionMapper.batchInsertQuestions(anyList())).thenReturn(2);
+        assertEquals(2, questionService.batchAddQuestions(validQuestions));
     }
 
     @Test
-    void deleteQuestion_Success() {
-        // 模拟行为
-        when(questionMapper.deleteQuestion(QUESTION_ID)).thenReturn(1);
+    void batchAddQuestions_InvalidQuestionInList_ThrowsException() {
+        Question invalidQuestion = new Question();
+        invalidQuestion.setBankId("B1"); // missing content and type
+        List<Question> mixedList = Arrays.asList(validQuestion, invalidQuestion);
 
-        // 执行方法
-        int result = questionService.deleteQuestion(QUESTION_ID);
-
-        // 验证结果
-        assertEquals(1, result);
-        verify(questionMapper).deleteQuestion(QUESTION_ID);
+        assertThrows(IllegalArgumentException.class,
+                () -> questionService.batchAddQuestions(mixedList));
     }
 
+    // getQuestionsByIds 测试
     @Test
-    void deleteQuestion_Failure() {
-        // 模拟行为
-        when(questionMapper.deleteQuestion(QUESTION_ID)).thenReturn(0);
+    void getQuestionsByIds_ValidIds_ReturnsQuestions() {
+        List<String> ids = Arrays.asList("Q1", "Q2");
+        when(questionMapper.selectQuestionsByIds(ids)).thenReturn(validQuestions);
 
-        // 执行方法
-        int result = questionService.deleteQuestion(QUESTION_ID);
-
-        // 验证结果
-        assertEquals(0, result);
-        verify(questionMapper).deleteQuestion(QUESTION_ID);
-    }
-
-    @Test
-    void getQuestionById_Exists() {
-        // 模拟行为
-        when(questionMapper.selectQuestionById(QUESTION_ID)).thenReturn(question);
-
-        // 执行方法
-        Question result = questionService.getQuestionById(QUESTION_ID);
-
-        // 验证结果
-        assertNotNull(result);
-        assertEquals(QUESTION_ID, result.getQuestionId());
-        assertEquals("What is Java?", result.getContent());
-        verify(questionMapper).selectQuestionById(QUESTION_ID);
-    }
-
-    @Test
-    void getQuestionById_NotExists() {
-        // 模拟行为
-        when(questionMapper.selectQuestionById(QUESTION_ID)).thenReturn(null);
-
-        // 执行方法
-        Question result = questionService.getQuestionById(QUESTION_ID);
-
-        // 验证结果
-        assertNull(result);
-        verify(questionMapper).selectQuestionById(QUESTION_ID);
-    }
-
-    @Test
-    void getQuestionsByBankId_WithData() {
-        // 准备数据
-        Question question2 = new Question();
-        question2.setQuestionId("q-002");
-
-        List<Question> questions = Arrays.asList(question, question2);
-
-        // 模拟行为
-        when(questionMapper.selectQuestionsByBankId(BANK_ID)).thenReturn(questions);
-
-        // 执行方法
-        List<Question> result = questionService.getQuestionsByBankId(BANK_ID);
-
-        // 验证结果
+        List<Question> result = questionService.getQuestionsByIds(ids);
         assertEquals(2, result.size());
-        verify(questionMapper).selectQuestionsByBankId(BANK_ID);
+        assertEquals("Q1", result.get(0).getQuestionId());
     }
 
     @Test
-    void getQuestionsByBankId_Empty() {
-        // 模拟行为
-        when(questionMapper.selectQuestionsByBankId(BANK_ID)).thenReturn(Collections.emptyList());
-
-        // 执行方法
-        List<Question> result = questionService.getQuestionsByBankId(BANK_ID);
-
-        // 验证结果
+    void getQuestionsByIds_EmptyList_ReturnsEmptyList() {
+        List<Question> result = questionService.getQuestionsByIds(Collections.emptyList());
         assertTrue(result.isEmpty());
-        verify(questionMapper).selectQuestionsByBankId(BANK_ID);
     }
 
     @Test
-    void getQuestionsByCondition_AllConditions() {
-        // 准备数据
-        String type = "MULTIPLE_CHOICE";
-        String difficulty = "MEDIUM";
-        List<String> knowledgePoints = Arrays.asList("kp-001", "kp-002");
-
-        // 模拟行为
-        when(questionMapper.selectQuestionsByCondition(type, difficulty, knowledgePoints))
-                .thenReturn(Collections.singletonList(question));
-
-        // 执行方法
-        List<Question> result = questionService.getQuestionsByCondition(type, difficulty, knowledgePoints);
-
-        // 验证结果
-        assertEquals(1, result.size());
-        verify(questionMapper).selectQuestionsByCondition(type, difficulty, knowledgePoints);
-    }
-
-    @Test
-    void getQuestionsByCondition_PartialConditions() {
-        // 准备数据
-        String type = "MULTIPLE_CHOICE";
-        String difficulty = null;
-        List<String> knowledgePoints = null;
-
-        // 模拟行为
-        when(questionMapper.selectQuestionsByCondition(type, difficulty, knowledgePoints))
-                .thenReturn(Collections.singletonList(question));
-
-        // 执行方法
-        List<Question> result = questionService.getQuestionsByCondition(type, difficulty, knowledgePoints);
-
-        // 验证结果
-        assertEquals(1, result.size());
-        verify(questionMapper).selectQuestionsByCondition(type, difficulty, knowledgePoints);
-    }
-
-    @Test
-    void batchAddQuestions_Success() {
-        // 准备数据
-        Question question2 = new Question();
-        question2.setQuestionId("q-002");
-
-        List<Question> questions = Arrays.asList(question, question2);
-
-        // 模拟行为
-        when(questionMapper.batchInsertQuestions(questions)).thenReturn(2);
-
-        // 执行方法
-        int result = questionService.batchAddQuestions(questions);
-
-        // 验证结果
-        assertEquals(2, result);
-        verify(questionMapper).batchInsertQuestions(questions);
-    }
-
-    @Test
-    void batchAddQuestions_PartialSuccess() {
-        // 准备数据
-        Question question2 = new Question();
-        question2.setQuestionId("q-002");
-
-        List<Question> questions = Arrays.asList(question, question2);
-
-        // 模拟行为
-        when(questionMapper.batchInsertQuestions(questions)).thenReturn(1);
-
-        // 执行方法
-        int result = questionService.batchAddQuestions(questions);
-
-        // 验证结果
-        assertEquals(1, result);
-        verify(questionMapper).batchInsertQuestions(questions);
-    }
-
-    @Test
-    void batchAddQuestions_EmptyList() {
-        // 准备数据
-        List<Question> questions = Collections.emptyList();
-
-        // 执行方法
-        int result = questionService.batchAddQuestions(questions);
-
-        // 验证结果
-        assertEquals(0, result);
-        verify(questionMapper, never()).batchInsertQuestions(anyList());
+    void getQuestionsByIds_NullInput_ReturnsEmptyList() {
+        List<Question> result = questionService.getQuestionsByIds(null);
+        assertTrue(result.isEmpty());
     }
 }

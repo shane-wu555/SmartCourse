@@ -1,195 +1,201 @@
-/*package com.sx.backend.service.impl;
+package com.sx.backend.service.impl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 import com.sx.backend.dto.AnalysisReportDTO;
 import com.sx.backend.dto.CourseDTO;
 import com.sx.backend.entity.Course;
 import com.sx.backend.entity.Grade;
-import com.sx.backend.entity.TaskGrade;
-import com.sx.backend.mapper.CourseMapper;
-import com.sx.backend.mapper.GradeMapper;
-import com.sx.backend.mapper.StudentMapper;
-import com.sx.backend.mapper.TaskGradeMapper;
+import com.sx.backend.entity.Student;
+import com.sx.backend.mapper.*;
 import com.sx.backend.util.ExcelExporter;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
 
     @Mock
     private StudentMapper studentMapper;
+
     @Mock
     private CourseMapper courseMapper;
+
     @Mock
     private GradeMapper gradeMapper;
-    @Mock
-    private TaskGradeMapper taskGradeMapper;
+
     @Mock
     private ExcelExporter excelExporter;
+
+    @Mock
+    private TaskMapper taskMapper;
+
+    @Mock
+    private TaskGradeMapper taskGradeMapper;
+
+    @Mock
+    private HttpServletResponse httpServletResponse;
 
     @InjectMocks
     private ReportServiceImpl reportService;
 
     @Test
-    void generateCourseReport_shouldReturnNullWhenNoGrades() {
-        // Arrange
-        String courseId = "C101";
-        when(gradeMapper.findByCourseId(courseId)).thenReturn(Collections.emptyList());
+    void generateCourseReport_NoGrades_ReturnsNull() {
+        when(gradeMapper.findByCourseId("C001")).thenReturn(Collections.emptyList());
 
-        // Act
-        AnalysisReportDTO result = reportService.generateCourseReport(courseId);
+        AnalysisReportDTO result = reportService.generateCourseReport("C001");
 
-        // Assert
         assertNull(result);
+        verify(gradeMapper).findByCourseId("C001");
     }
 
     @Test
-    void generateCourseReport_shouldCalculateCorrectAverage() {
-        // Arrange
-        String courseId = "C101";
-        String courseName = "Mathematics";
+    void generateCourseReport_WithGrades_ReturnsReport() {
+        // 准备测试数据
+        String courseId = "CS101";
+        CourseDTO course = new CourseDTO();
+        course.setCourseId(courseId);
+        course.setName("Computer Science");
+
         List<Grade> grades = Arrays.asList(
-                createGrade("G1", "S1", 80.0),
-                createGrade("G2", "S2", 90.0)
+                createGrade("S1", 85.0f, courseId, 2),
+                createGrade("S2", 92.0f, courseId, 1),
+                createGrade("S3", 78.0f, courseId, 3)
         );
 
+        // 设置Mock行为
         when(gradeMapper.findByCourseId(courseId)).thenReturn(grades);
-        when(courseMapper.findById(courseId)).thenReturn(new CourseDTO());
+        when(courseMapper.findById(courseId)).thenReturn(course);
+        when(taskMapper.findTotalScoreByCourseId(courseId)).thenReturn(100.0f);
+        when(studentMapper.selectById("S1")).thenReturn(createStudent("S1", "1001", "Alice"));
+        when(studentMapper.selectById("S2")).thenReturn(createStudent("S2", "1002", "Bob"));
+        when(studentMapper.selectById("S3")).thenReturn(createStudent("S3", "1003", "Charlie"));
 
-        // Act
-        AnalysisReportDTO result = reportService.generateCourseReport(courseId);
+        // 执行测试
+        AnalysisReportDTO report = reportService.generateCourseReport(courseId);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals(courseId, result.getCourseId());
-        assertEquals(courseName, result.getCourseName());
-        assertEquals(85.0, result.getClassAverage(), 0.001);
+        // 验证结果
+        assertNotNull(report);
+        assertEquals(courseId, report.getCourseId());
+        assertEquals("Computer Science", report.getCourseName());
+        assertEquals(85.0f, report.getClassAverage(), 0.01); // (85+92+78)/3 = 85
+        assertEquals(85.0f, report.getClassAverageRate(), 0.01); // 85/100 * 100 = 85
+
+        // 验证学生表现数据
+        List<AnalysisReportDTO.StudentPerformance> performers = report.getPerformers();
+        assertEquals(3, performers.size());
+
+        // 验证排序（降序）
+        assertEquals("Bob", performers.get(0).getStudentName());
+        assertEquals("Alice", performers.get(1).getStudentName());
+        assertEquals("Charlie", performers.get(2).getStudentName());
+
+        // 验证成绩率计算
+        assertEquals(92.0f, performers.get(0).getGradeRate(), 0.01);
+
+        // 验证排名
+        assertEquals(1, performers.get(0).getRank());
+        assertEquals(2, performers.get(1).getRank());
+        assertEquals(3, performers.get(2).getRank());
     }
 
     @Test
-    void generateCourseReport_shouldIdentifyTopAndBottomStudents() {
-        // Arrange
-        String courseId = "C101";
-        List<Grade> grades = Arrays.asList(
-                createGrade("G1", "S1", 60.0),
-                createGrade("G2", "S2", 70.0),
-                createGrade("G3", "S3", 80.0),
-                createGrade("G4", "S4", 90.0),
-                createGrade("G5", "S5", 100.0),
-                createGrade("G6", "S6", 50.0)
-        );
+    void exportGradeReport_ValidData_CallsExporter() {
+        // 准备测试数据
+        String courseId = "CS101";
+        CourseDTO course = new CourseDTO();
+        course.setCourseId(courseId);
+        course.setName("Test Course");
 
-        when(gradeMapper.findByCourseId(courseId)).thenReturn(grades);
-        when(courseMapper.findById(courseId)).thenReturn;
-        mockStudentNames();
-        mockTaskGrades();
+        Grade grade = createGrade("S1", 80.0f, courseId, 1);
 
-        // Act
-        AnalysisReportDTO result = reportService.generateCourseReport(courseId);
+        // 设置Mock行为
+        when(gradeMapper.findByCourseId(courseId)).thenReturn(Collections.singletonList(grade));
+        when(courseMapper.findById(courseId)).thenReturn(course);
+        when(taskMapper.findTotalScoreByCourseId(courseId)).thenReturn(100.0f);
+        when(studentMapper.selectById("S1")).thenReturn(createStudent("S1", "1001", "Test"));
 
-        // Assert
-        assertEquals(5, result.getTopPerformers().size());
-        assertEquals("S5", result.getTopPerformers().get(0).getStudentId());
-        assertEquals(100.0, result.getTopPerformers().get(0).getAverageGrade(), 0.001);
+        // 执行测试
+        reportService.exportGradeReport(courseId, httpServletResponse);
 
-        assertEquals(5, result.getNeedImprovement().size());
-        assertEquals("S6", result.getNeedImprovement().get(0).getStudentId());
-        assertEquals(50.0, result.getNeedImprovement().get(0).getAverageGrade(), 0.001);
+        // 验证Excel导出器被调用
+        verify(excelExporter).exportCourseReport(any(AnalysisReportDTO.class), eq(httpServletResponse));
     }
 
     @Test
-    void exportGradeReport_shouldExportWhenReportExists() throws Exception {
-        // Arrange
-        String courseId = "C101";
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        when(gradeMapper.findByCourseId(courseId)).thenReturn(
-                Collections.singletonList(createGrade("G1", "S1", 85.0))
-        );
-        when(courseMapper.findById(courseId)).thenReturn(new Course(courseId, "Math"));
+    void exportGradeReport_NoData_CallsExporterWithNull() {
+        when(gradeMapper.findByCourseId("C002")).thenReturn(Collections.emptyList());
 
-        // Act
-        reportService.exportGradeReport(courseId, response);
+        reportService.exportGradeReport("C002", httpServletResponse);
 
-        // Assert
-        verify(excelExporter, times(1)).exportCourseReport(any(AnalysisReportDTO.class), eq(response));
+        // 验证即使没有数据也调用了导出器
+        verify(excelExporter).exportCourseReport(isNull(), eq(httpServletResponse));
     }
 
-    @Test
-    void exportGradeReport_shouldHandleNullReport() throws Exception {
-        // Arrange
-        String courseId = "C101";
-        HttpServletResponse response = mock(HttpServletResponse.class);
-        when(gradeMapper.findByCourseId(courseId)).thenReturn(Collections.emptyList());
-
-        // Act
-        reportService.exportGradeReport(courseId, response);
-
-        // Assert
-        verify(excelExporter, times(1)).exportCourseReport(isNull(), eq(response));
-    }
-
-    @Test
-    void convertToStudentPerformance_shouldCalculateCompletionRate() {
-        // Arrange
-        Grade grade = createGrade("G1", "S1", 85.0);
-        when(studentMapper.selectById("S1")).thenReturn(new Student("S1", "John Doe"));
-        when(taskGradeMapper.findByGradeId("G1")).thenReturn(Arrays.asList(
-                createTaskGrade(0.8),
-                createTaskGrade(0.9)
-        ));
-
-        // Act
-        AnalysisReportDTO.StudentPerformance sp = reportService.convertToStudentPerformance(grade);
-
-        // Assert
-        assertEquals("S1", sp.getStudentId());
-        assertEquals("John Doe", sp.getStudentName());
-        assertEquals(85.0, sp.getAverageGrade(), 0.001);
-        assertEquals(0.85, sp.getCompletionRate(), 0.001); // (0.8 + 0.9) / 2
-    }
-
-    // Helper methods
-    private Grade createGrade(String gradeId, String studentId, double finalGrade) {
+    // 修复：添加排名参数
+    private Grade createGrade(String studentId, float finalGrade, String courseId, int rank) {
         Grade grade = new Grade();
-        grade.setGradeId(gradeId);
         grade.setStudentId(studentId);
-        grade.setCourseId("C101");
+        grade.setCourseId(courseId);
         grade.setFinalGrade(finalGrade);
+        grade.setRankInClass(rank); // 关键修复：设置排名
         return grade;
     }
 
-    private TaskGrade createTaskGrade(double completionRate) {
-        TaskGrade tg = new TaskGrade();
-        tg.setCompletionRate(completionRate);
-        return tg;
+    private Student createStudent(String id, String number, String name) {
+        Student student = new Student();
+        student.setStudentId(id);
+        student.setStudentNumber(number);
+        student.setRealName(name);
+        return student;
     }
 
-    private void mockStudentNames() {
-        when(studentMapper.selectById("S1")).thenReturn(new Student("S1", "Alice"));
-        when(studentMapper.selectById("S2")).thenReturn(new Student("S2", "Bob"));
-        when(studentMapper.selectById("S3")).thenReturn(new Student("S3", "Charlie"));
-        when(studentMapper.selectById("S4")).thenReturn(new Student("S4", "David"));
-        when(studentMapper.selectById("S5")).thenReturn(new Student("S5", "Eva"));
-        when(studentMapper.selectById("S6")).thenReturn(new Student("S6", "Frank"));
+    @Test
+    void generateCourseReport_ZeroTotalScore_HandlesGracefully() {
+        String courseId = "MATH101";
+        CourseDTO course = new CourseDTO();
+        course.setCourseId(courseId);
+        course.setName("Mathematics");
+
+        Grade grade = createGrade("S1", 80.0f, courseId, 1);
+
+        when(gradeMapper.findByCourseId(courseId)).thenReturn(Collections.singletonList(grade));
+        when(courseMapper.findById(courseId)).thenReturn(course);
+        when(taskMapper.findTotalScoreByCourseId(courseId)).thenReturn(0.0f);
+        when(studentMapper.selectById("S1")).thenReturn(createStudent("S1", "1001", "Test"));
+
+        AnalysisReportDTO report = reportService.generateCourseReport(courseId);
+
+        // 验证除以零的处理
+        assertTrue(Float.isInfinite((float) report.getClassAverageRate()) || Float.isNaN((float) report.getClassAverageRate()));
     }
 
-    private void mockTaskGrades() {
-        when(taskGradeMapper.findByGradeId(any())).thenReturn(Arrays.asList(
-                createTaskGrade(0.7),
-                createTaskGrade(0.8)
-        ));
+    @Test
+    void generateCourseReport_MissingStudentInfo_HandlesGracefully() {
+        String courseId = "PHY101";
+        CourseDTO course = new CourseDTO();
+        course.setCourseId(courseId);
+        course.setName("Physics");
+
+        Grade grade = createGrade("S1", 90.0f, courseId, 1);
+
+        when(gradeMapper.findByCourseId(courseId)).thenReturn(Collections.singletonList(grade));
+        when(courseMapper.findById(courseId)).thenReturn(course);
+        when(taskMapper.findTotalScoreByCourseId(courseId)).thenReturn(100.0f);
+        when(studentMapper.selectById("S1")).thenReturn(null); // 学生信息缺失
+
+        AnalysisReportDTO report = reportService.generateCourseReport(courseId);
+
+        // 验证学生姓名为空或默认值
+        assertEquals("未知学生", report.getPerformers().get(0).getStudentName());
     }
-}*/
+}

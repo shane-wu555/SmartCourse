@@ -26,6 +26,14 @@ public class Grade {
     public Grade() {
     }
 
+    public Grade(String id, String studentId, String courseId, float finalGrade, int rankInClass) {
+        this.gradeId = id;
+        this.studentId = studentId;
+        this.courseId = courseId;
+        this.finalGrade = finalGrade;
+        this.rankInClass = rankInClass;
+    }
+
     public String getGradeId() {
         return gradeId;
     }

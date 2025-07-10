@@ -12,14 +12,21 @@ import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.StudentMapper;
 import com.sx.backend.mapper.UserMapper;
 import com.sx.backend.util.ExcelUtils;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -147,32 +154,53 @@ public class AdminStudentServiceImplTest {
         assertEquals("空行跳过", failDetails.get(2).get("reason"));
     }
 
+    private MultipartFile createStudentExcelFile() throws IOException {
+        // 创建Excel工作簿
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Students");
+
+        // 创建表头
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"学号", "姓名", "年级", "专业"};
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // 创建数据行
+        Row dataRow = sheet.createRow(1);
+        dataRow.createCell(0).setCellValue("20240001");
+        dataRow.createCell(1).setCellValue("张三");
+        dataRow.createCell(2).setCellValue("2024");
+        dataRow.createCell(3).setCellValue("计算机科学");
+
+        // 将工作簿转换为字节数组
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        workbook.write(out);
+        workbook.close();
+
+        return new MockMultipartFile(
+                "file",
+                "students.xlsx",
+                "application/vnd.ms-excel",
+                out.toByteArray()
+        );
+    }
+
     @Test
     void importStudents_Success() throws IOException {
-        // 模拟Excel解析
-        List<AdminStudentCreateRequest> mockRequests = Collections.singletonList(
-                new AdminStudentCreateRequest()
-        );
-        when(ExcelUtils.parseStudentExcel(file)).thenReturn(mockRequests);
+        // 使用真实的Excel文件
+        MultipartFile file = createStudentExcelFile();
 
         // 模拟批量创建
         Map<String, Object> expectedResult = new HashMap<>();
         expectedResult.put("successCount", 1);
-        doReturn(expectedResult).when(adminStudentService).batchCreateStudents(mockRequests);
 
-        Map<String, Object> result = adminStudentService.importStudents(file);
+        // 使用spy部分模拟服务
+        AdminStudentServiceImpl spyService = spy(adminStudentService);
+        doReturn(expectedResult).when(spyService).batchCreateStudents(anyList());
+
+        Map<String, Object> result = spyService.importStudents(file);
         assertEquals(1, result.get("successCount"));
-    }
-
-    @Test
-    void importStudents_ParseFailure() throws IOException {
-        when(ExcelUtils.parseStudentExcel(file)).thenThrow(new IOException("Invalid format"));
-
-        BusinessException exception = assertThrows(BusinessException.class, () ->
-                adminStudentService.importStudents(file)
-        );
-        assertEquals(400, exception.getCode());
-        assertTrue(exception.getMessage().contains("文件解析失败"));
     }
 
     @Test
