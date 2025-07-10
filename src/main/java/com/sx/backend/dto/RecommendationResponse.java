@@ -50,6 +50,11 @@ public class RecommendationResponse {
     private Float currentGrade;
     
     /**
+     * 任务总分（用于计算得分率）
+     */
+    private Float maxScore;
+    
+    /**
      * 学生在班级中的排名
      */
     private Integer classRank;

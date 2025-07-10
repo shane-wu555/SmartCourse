@@ -78,7 +78,7 @@ public class OllamaService {
         String requestJson = "{\"model\": \"deepseek-r1\", \"stream\": false, \"messages\": [{\"role\": \"user\", \"content\": \"" + escapedPrompt + "\"}]}";
         
         try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-            HttpPost post = new HttpPost("http://localhost:11434/api/chat");
+           HttpPost post = new HttpPost("http://219.216.65.31:11434/api/chat");
             post.setEntity(new StringEntity(requestJson, "UTF-8"));
             post.setHeader("Content-Type", "application/json");
             
@@ -209,7 +209,7 @@ public class OllamaService {
         String requestJson = "{\"model\": \"deepseek-r1\", \"stream\": false, \"messages\": [{\"role\": \"user\", \"content\": \"" + escapedPrompt + "\"}]}";
         
         try (CloseableHttpClient client = HttpClientBuilder.create().build()) {
-            HttpPost post = new HttpPost("http://localhost:11434/api/chat");
+            HttpPost post = new HttpPost("http://219.216.65.31:11434/api/chat");
             post.setEntity(new StringEntity(requestJson, "UTF-8"));
             post.setHeader("Content-Type", "application/json");
             
