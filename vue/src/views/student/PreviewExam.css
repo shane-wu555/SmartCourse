@@ -1,0 +1,87 @@
+.preview-exam {
+  padding: 30px;
+  max-width: 900px;
+  margin: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.question-section {
+  margin-bottom: 30px;
+}
+
+.question-item {
+  display: flex;
+  margin-bottom: 20px;
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.question-number {
+  font-weight: bold;
+  color: #007bff;
+  margin-right: 10px;
+  font-size: 16px;
+  min-width: 30px;
+}
+
+.question-text {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #333;
+}
+
+.option {
+  margin: 5px 0;
+  padding: 5px 10px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  display: block;
+}
+
+.essay-answer {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.actions {
+  text-align: center;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid #eee;
+
+  /* 添加按钮间距 */
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* ✅ 关键：按钮之间的空隙 */
+  flex-wrap: wrap; /* 防止太窄时重叠 */
+}
+
+.primary-btn {
+  background-color: #4a90e2; /* ✅ 修改颜色为指定蓝色 */
+  color: white;
+}
+
+.secondary-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+

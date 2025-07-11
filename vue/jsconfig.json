@@ -1,0 +1,17 @@
+{
+  /* 让 VSCode / WebStorm 智能识别路径别名、自动补全 */
+  "compilerOptions": {
+    /* 项目根目录 */
+    "baseUrl": ".",
+    /* 路径别名：@ → src */
+    "paths": {
+      "@/*": ["src/*"]
+    },
+    /* 可选：如果用到 JSX / TS，按需打开 */
+    "allowJs": true,
+    "checkJs": false
+  },
+
+  /* 包含哪些文件纳入分析 */
+  "include": ["src/**/*", "src/views/student/TaskDetail.vue"]
+}
