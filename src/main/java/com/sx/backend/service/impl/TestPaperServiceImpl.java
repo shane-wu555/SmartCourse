@@ -241,37 +241,22 @@ public class TestPaperServiceImpl implements TestPaperService {
 
     @Override
     public Map<String, Object> getPaperWithQuestions(String paperId) {
-        System.out.println("DEBUG: Getting paper with questions for paperId: " + paperId);
-        
+
         TestPaper testPaper = testPaperMapper.selectById(paperId);
         if (testPaper == null) {
             throw new IllegalArgumentException("试卷不存在");
         }
-        
-        System.out.println("DEBUG: Found testPaper: " + testPaper.getPaperId());
-        System.out.println("DEBUG: testPaper.getQuestions(): " + testPaper.getQuestions());
-        System.out.println("DEBUG: Questions list size: " + (testPaper.getQuestions() != null ? testPaper.getQuestions().size() : "null"));
-        
+
         // 现在题目已经完整存储在试卷中，直接获取即可
         List<Question> questions = testPaper.getQuestions();
         if (questions == null || questions.isEmpty()) {
-            System.out.println("WARN: No questions found in test paper");
             throw new IllegalArgumentException("试卷中没有题目");
         }
-        
-        System.out.println("DEBUG: Retrieved questions count: " + questions.size());
-        if (!questions.isEmpty()) {
-            System.out.println("DEBUG: First question details: " + questions.get(0));
-        }
-        
         // 组装返回结果
         Map<String, Object> result = new HashMap<>();
         result.put("paper", testPaper);
         result.put("questions", questions);
-        
-        System.out.println("DEBUG: Final result - paper: " + (testPaper != null));
-        System.out.println("DEBUG: Final result - questions count: " + questions.size());
-        
+
         return result;
     }
 }
