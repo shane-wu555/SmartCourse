@@ -16,9 +16,9 @@ public class AnalysisReportDTO {
         private double gradeRate;
         private int rank;
 
-        public StudentPerformance(String studentId, String studentNumber, double gradeRate, int rank) {
-            this.studentNumber = studentId;
-            this.studentName = studentNumber;
+        public StudentPerformance(String studentNumber, String studentName, double gradeRate, int rank) {
+            this.studentNumber = studentNumber;
+            this.studentName = studentName;
             this.gradeRate = gradeRate;
             this.rank = rank;
         }
