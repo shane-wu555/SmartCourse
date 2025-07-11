@@ -28,10 +28,13 @@ public class TaskServiceImpl implements TaskService {
 
     private final TestPaperMapper testPaperMapper;
 
+    private final SubmissionMapper submissionMapper;
+
     @Autowired
-    public TaskServiceImpl(TaskMapper taskMapper, TestPaperMapper testPaperMapper) {
+    public TaskServiceImpl(TaskMapper taskMapper, TestPaperMapper testPaperMapper, SubmissionMapper submissionMapper) {
         this.taskMapper = taskMapper;
         this.testPaperMapper = testPaperMapper;
+        this.submissionMapper = submissionMapper;
     }
 
     @Override
@@ -160,9 +163,6 @@ public class TaskServiceImpl implements TaskService {
         taskMapper.deleteTaskPoints(taskId);
         taskMapper.delete(taskId);
     }
-
-    @Autowired
-    private SubmissionMapper submissionMapper;
 
     @Override
     public List<Task> getCourseTasks(String courseId, int page, int size) {

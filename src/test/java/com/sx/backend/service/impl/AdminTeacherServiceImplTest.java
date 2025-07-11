@@ -12,6 +12,10 @@ import com.sx.backend.exception.BusinessException;
 import com.sx.backend.mapper.TeacherMapper;
 import com.sx.backend.mapper.UserMapper;
 import com.sx.backend.util.ExcelUtils;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +25,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
 
@@ -118,24 +124,55 @@ public class AdminTeacherServiceImplTest {
 
     @Test
     void importTeachers_Success() throws IOException {
-        // 模拟Excel解析
-        List<AdminTeacherCreateRequest> mockRequests = Collections.singletonList(
-                new AdminTeacherCreateRequest()
-        );
-        when(ExcelUtils.parseTeacherExcel(file)).thenReturn(mockRequests);
+        // 创建有效的 Excel 文件内容
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Teachers");
+
+        // 创建标题行
+        Row headerRow = sheet.createRow(0);
+        String[] headers = {"工号", "姓名", "职称", "院系", "简介"};
+        for (int i = 0; i < headers.length; i++) {
+            headerRow.createCell(i).setCellValue(headers[i]);
+        }
+
+        // 创建数据行
+        Row dataRow = sheet.createRow(1);
+        dataRow.createCell(0).setCellValue(EMPLOYEE_NUMBER);
+        dataRow.createCell(1).setCellValue(REAL_NAME);
+        dataRow.createCell(2).setCellValue(TITLE);
+        dataRow.createCell(3).setCellValue(DEPARTMENT);
+        dataRow.createCell(4).setCellValue(BIO);
+
+        // 将工作簿转换为字节流
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        workbook.write(bos);
+        workbook.close();
+        byte[] bytes = bos.toByteArray();
+
+        // 模拟文件输入流 - 这是关键修改点
+        when(file.getInputStream()).thenReturn(new ByteArrayInputStream(bytes));
+
+        // 不再模拟 parseTeacherExcel() 方法
+        // 让服务方法自然调用 ExcelUtils 解析真实流
 
         // 模拟批量创建
         Map<String, Object> expectedResult = new HashMap<>();
         expectedResult.put("successCount", 1);
-        doReturn(expectedResult).when(adminTeacherService).batchCreateTeachers(mockRequests);
+        expectedResult.put("failCount", 0);
 
-        Map<String, Object> result = adminTeacherService.importTeachers(file);
+        // 使用 spy 部分模拟服务实例
+        AdminTeacherServiceImpl serviceSpy = spy(adminTeacherService);
+        doReturn(expectedResult).when(serviceSpy).batchCreateTeachers(anyList());
+
+        // 执行测试
+        Map<String, Object> result = serviceSpy.importTeachers(file);
         assertEquals(1, result.get("successCount"));
     }
 
     @Test
     void importTeachers_ParseFailure() throws IOException {
-        when(ExcelUtils.parseTeacherExcel(file)).thenThrow(new IOException("Invalid format"));
+        // 模拟文件获取输入流时抛出 IOException
+        when(file.getInputStream()).thenThrow(new IOException("Invalid format"));
 
         BusinessException exception = assertThrows(BusinessException.class, () ->
                 adminTeacherService.importTeachers(file)

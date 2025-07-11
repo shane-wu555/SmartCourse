@@ -2,6 +2,7 @@ package com.sx.backend.service.impl;
 
 import com.sx.backend.dto.AnalysisReportDTO;
 import com.sx.backend.entity.Grade;
+import com.sx.backend.entity.Student;
 import com.sx.backend.entity.TaskGrade;
 import com.sx.backend.mapper.*;
 import com.sx.backend.service.ReportService;
@@ -86,7 +87,16 @@ public class ReportServiceImpl implements ReportService {
     // 将Grade转换为StudentPerformance DTO
     private AnalysisReportDTO.StudentPerformance convertToStudentPerformance(Grade grade) {
         AnalysisReportDTO.StudentPerformance sp = new AnalysisReportDTO.StudentPerformance();
-        
+        Student student = studentMapper.selectById(grade.getStudentId());
+        if (student != null) {
+            sp.setStudentNumber(student.getStudentNumber());
+            sp.setStudentName(student.getRealName());
+        } else {
+            // 设置默认值或空值
+            sp.setStudentNumber("N/A");
+            sp.setStudentName("未知学生");
+        }
+ 
         String studentNumber = studentMapper.selectById(grade.getStudentId()).getStudentNumber();
         String studentName = studentMapper.selectById(grade.getStudentId()).getRealName();
         

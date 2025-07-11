@@ -56,7 +56,7 @@ public class FeedbackServiceImpl implements FeedbackService {
             if (minScore < 60) {
                 message.append("\n\n建议重点关注以下任务:");
                 for (TaskGrade taskGrade : taskGrades) {
-                    if (((taskGrade.getScore() / taskMapper.getById(taskGrade.getTaskId()).getMaxScore()) * 100)< 60) {
+                    if (((taskGrade.getScore() / taskMapper.getById(taskGrade.getTaskId()).getMaxScore()) * 100) < 60) {
                         message.append("\n- ").append(taskMapper.getById(taskGrade.getTaskId()).getTitle()).append("\n");
                     }
                 }
