@@ -10,6 +10,8 @@ import com.sx.backend.entity.Grade;
 import com.sx.backend.entity.TaskGrade;
 import com.sx.backend.mapper.GradeMapper;
 import com.sx.backend.mapper.TaskGradeMapper;
+import com.sx.backend.mapper.TaskMapper;
+import com.sx.backend.mapper.TestPaperMapper;
 import com.sx.backend.util.ChartGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +37,12 @@ class AnalysisServiceImplTest {
 
     @Mock
     private TaskGradeMapper taskGradeMapper;
+
+    @Mock
+    private TaskMapper taskMapper;
+
+    @Mock
+    private TestPaperMapper testPaperMapper;
 
     @Mock
     private ChartGenerator chartGenerator;

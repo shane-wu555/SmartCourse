@@ -31,7 +31,7 @@ import java.util.*;
 public class ResourceController {
 
     @Value("${file.storage.location}")
-    private String storageLocation;
+    String storageLocation;
 
     @Value("${python.executable:python}")
     private String pythonExecutable;

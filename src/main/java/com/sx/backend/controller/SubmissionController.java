@@ -32,7 +32,7 @@ import java.util.UUID;
 public class SubmissionController {
 
     @Value("${file.storage.submit}")
-    private String storageLocation;
+    String storageLocation;
 
     private final HttpServletRequest request;
 
@@ -45,7 +45,7 @@ public class SubmissionController {
     @Autowired
     private TaskMapper taskMapper;
 
-    private String getCurrentStudentId() {
+    String getCurrentStudentId() {
         // 从请求属性中获取拦截器设置的userId
         return (String) request.getAttribute("userId");
     }
@@ -209,7 +209,7 @@ public class SubmissionController {
         return submissionMapper.update(submission);
     }
 
-    private void validateFileSize(MultipartFile file) {
+    void validateFileSize(MultipartFile file) {
         long maxSize = 100 * 1024 * 1024;
         if (file.getSize() > maxSize) {
             throw new IllegalArgumentException("文件大小超过100MB限制");
