@@ -120,6 +120,11 @@ public class GradingServiceImplTest {
         submission.setAutoGrade(3.0f); // 已有自动评分
         submission.setStatus(SubmissionStatus.AUTO_GRADED);
 
+        Question autoGradedQuestion = new Question();
+        autoGradedQuestion.setQuestionId("q1");
+        autoGradedQuestion.setType(QuestionType.SINGLE_CHOICE); // 自动评分类型
+
+        when(questionMapper.selectQuestionById("q1")).thenReturn(autoGradedQuestion);
         when(submissionMapper.findById("sub1")).thenReturn(submission);
         when(answerRecordMapper.findById("record1")).thenReturn(answerRecords.get(0));
         when(answerRecordMapper.findById("record2")).thenReturn(answerRecords.get(1));
@@ -159,10 +164,10 @@ public class GradingServiceImplTest {
 
         when(questionMapper.selectQuestionById("invalid_q")).thenReturn(null);
 
-        Exception exception = assertThrows(NullPointerException.class, () ->
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
                 gradingService.manualGrading(record, 5.0f, "Feedback")
         );
-        assertTrue(exception.getMessage().contains("question"));
+        assertTrue(exception.getMessage().contains("invalid_q"));
     }
 
     // 测试缺少手动评分记录时的异常
@@ -170,6 +175,19 @@ public class GradingServiceImplTest {
     void manualGradeSubmission_missingManualGrade_shouldThrowException() {
         submission.setAutoGrade(3.0f);
         when(submissionMapper.findById("sub1")).thenReturn(submission);
+
+        // 设置 questionMapper 返回的题型
+        Question q1 = new Question();
+        q1.setQuestionId("q1");
+        q1.setType(QuestionType.SINGLE_CHOICE); // 自动评分题型
+        when(questionMapper.selectQuestionById("q1")).thenReturn(q1);
+
+        Question q2 = new Question();
+        q2.setQuestionId("q2");
+        q2.setType(QuestionType.SHORT_ANSWER); // 手动评分题型
+        when(questionMapper.selectQuestionById("q2")).thenReturn(q2);
+
+        // 设置 AnswerRecord mock 返回
         when(answerRecordMapper.findById(anyString())).thenAnswer(inv ->
                 answerRecords.stream()
                         .filter(r -> r.getRecordId().equals(inv.getArgument(0)))
@@ -177,26 +195,34 @@ public class GradingServiceImplTest {
                         .orElse(null)
         );
 
-        // 配置需要手动批改的记录
-        answerRecords.get(0).setAutoGraded(true);
-        answerRecords.get(1).setAutoGraded(false);
+        // 设置 autoGraded 标志
+        answerRecords.get(0).setAutoGraded(true);  // q1 自动批改
+        answerRecords.get(1).setAutoGraded(false); // q2 需要手动批改
 
-        // 缺少record2的评分
+        // 模拟没有提供手动评分
         List<ManualGrade> manualGrades = Collections.emptyList();
 
-        // 验证异常
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
                 gradingService.manualGradeSubmission("sub1", manualGrades, "Feedback")
         );
-        assertTrue(exception.getMessage().contains("提交中缺少问题 record2 的评分信息"));
+
+        assertTrue(exception.getMessage().contains("record2"));
     }
 
     // 测试获取手动批改题目
     @Test
     void getQuestionForManualGrading_shouldFilterAutoGraded() {
         // 设置批改状态
-        answerRecords.get(0).setAutoGraded(true);
-        answerRecords.get(1).setAutoGraded(false);
+        Question q1 = new Question();
+        q1.setQuestionId("q1");
+        q1.setType(QuestionType.SINGLE_CHOICE);
+        q1.setScore(5.0f); // 假设满分5分
+        when(questionMapper.selectQuestionById("q1")).thenReturn(q1);
+
+        Question q2 = new Question();
+        q2.setQuestionId("q2");
+        q2.setType(QuestionType.PROGRAMMING);
+        when(questionMapper.selectQuestionById("q2")).thenReturn(q2);
 
         List<AnswerRecord> result = gradingService.getQuestionForManualGrading(answerRecords);
 
@@ -217,6 +243,6 @@ public class GradingServiceImplTest {
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
                 gradingService.manualGrading(record, 5.0f, "Feedback")
         );
-        assertTrue(exception.getMessage().contains("此题型应该自动评分"));
+        assertTrue(exception.getMessage().contains("题目类型为 MULTIPLE_CHOICE 的题目应该自动评分，不能手动评分"));
     }
 }

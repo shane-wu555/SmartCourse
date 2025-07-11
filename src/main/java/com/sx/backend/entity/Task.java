@@ -42,6 +42,13 @@ public class Task {
         this.submissions = submissions;
     }
 
+    public Task(String taskId, String title, TaskType type, int maxScore) {
+        this.taskId = taskId;
+        this.title = title;
+        this.type = type;
+        this.maxScore = (float) maxScore;
+    }
+
     // Getters and Setters
     public String getTaskId() { return taskId; }
     public void setTaskId(String taskId) { this.taskId = taskId; }
