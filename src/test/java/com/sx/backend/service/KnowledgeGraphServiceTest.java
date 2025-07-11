@@ -5,6 +5,7 @@ import com.sx.backend.entity.DifficultyLevel;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -18,6 +19,9 @@ import java.util.List;
 @ActiveProfiles("test")
 public class KnowledgeGraphServiceTest {
 
+    @Autowired
+    private OllamaService ollamaService;
+
     @Test
     public void testOllamaServiceGenerateRelations() throws Exception {
         // 创建测试知识点
@@ -30,7 +34,6 @@ public class KnowledgeGraphServiceTest {
         );
         
         // 测试OllamaService生成关系
-        OllamaService ollamaService = new OllamaService();
         try {
             String result = ollamaService.generateKnowledgeRelations(knowledgePoints);
             System.out.println("生成的知识图谱关系：");
