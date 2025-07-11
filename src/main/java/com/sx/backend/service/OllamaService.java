@@ -42,8 +42,7 @@ public class OllamaService {
             }
             knowledgeInfo.append("\n");
         }
-        
-        // 更加明确和严格的提示词
+
         String prompt = "基于以下知识点生成JSON关系图，严格按照格式要求：\n" +
                        "输出格式（必须完全遵循）：\n" +
                        "{\"nodes\":[{\"id\":\"使用提供的UUID\",\"name\":\"知识点名称\"}],\"edges\":[{\"source\":\"源知识点的UUID\",\"target\":\"目标知识点的UUID\",\"relationType\":\"PREREQUISITE\",\"type\":\"先修\"}]}\n" +
@@ -58,13 +57,11 @@ public class OllamaService {
                        "4. 不要添加任何额外字段如type、labels、properties等\n" +
                        "5. 只输出JSON，不要任何解释\n\n" +
                        knowledgeInfo.toString();
-                       
         try {
             String aiResult = callOllamaAPI(prompt);
             // 验证和修复AI返回的JSON格式
             return validateAndFixJsonFormat(aiResult, knowledgePoints);
         } catch (Exception e) {
-            logger.warn("AI调用失败，使用简单默认关系: {}", e.getMessage());
             return generateDefaultKnowledgeRelationsSimple(knowledgePoints);
         }
     }

@@ -17,6 +17,23 @@ public class ExcelExporter {
     private static final int MAX_COLUMN_WIDTH = 10000;
 
     public void exportCourseReport(AnalysisReportDTO report, HttpServletResponse response) {
+        if (report == null) {
+            // 创建一个空报表而不是抛出异常
+            try (Workbook workbook = new XSSFWorkbook()) {
+                Sheet sheet = workbook.createSheet("无数据");
+                Row headerRow = sheet.createRow(0);
+                Cell cell = headerRow.createCell(0);
+                cell.setCellValue("暂无数据");
+                
+                response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                response.setHeader("Content-Disposition", "attachment; filename=empty_report.xlsx");
+                workbook.write(response.getOutputStream());
+            } catch (Exception e) {
+                throw new RuntimeException("导出Excel失败", e);
+            }
+            return;
+        }
+        
         try (Workbook workbook = new XSSFWorkbook()) {
             String sheetName = report.getCourseName() + "成绩分析";
             Sheet sheet = workbook.createSheet(truncateSheetName(sheetName, 31));
@@ -37,9 +54,11 @@ public class ExcelExporter {
 
             // 填充学生数据
             int rowNum = 1;
-            for (AnalysisReportDTO.StudentPerformance sp : report.getPerformers()) {
-                Row row = sheet.createRow(rowNum++);
-                fillStudentRow(row, sp, dataStyle);
+            if (report.getPerformers() != null) {
+                for (AnalysisReportDTO.StudentPerformance sp : report.getPerformers()) {
+                    Row row = sheet.createRow(rowNum++);
+                    fillStudentRow(row, sp, dataStyle);
+                }
             }
 
             // 添加统计信息
@@ -64,22 +83,26 @@ public class ExcelExporter {
 
             autoSizeColumns(sheet, headers.length);
 
-            // 设置响应
+            // 设置响应头
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setCharacterEncoding("UTF-8");
             String encodedFileName = URLEncoder.encode(report.getCourseName() + "_成绩报表.xlsx", "UTF-8");
             response.setHeader("Content-Disposition", "attachment; filename*=UTF-8''" + encodedFileName);
-
+            response.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+            
+            // 写入工作簿到输出流
             workbook.write(response.getOutputStream());
+            response.getOutputStream().flush();
         } catch (Exception e) {
             throw new RuntimeException("导出Excel失败", e);
         }
     }
 
     private void fillStudentRow(Row row, AnalysisReportDTO.StudentPerformance sp, CellStyle style) {
-        createCell(row, 0, sp.getStudentNumber(), style);
-        createCell(row, 1, sp.getStudentName(), style);
-        createCell(row, 2, sp.getGradeRate() + "%", style);
-        createCell(row, 3, sp.getRank(), style);
+        createCell(row, 0, sp.getStudentNumber() != null ? sp.getStudentNumber() : "未知学号", style);
+        createCell(row, 1, sp.getStudentName() != null ? sp.getStudentName() : "未知姓名", style);
+        createCell(row, 2, String.format("%.2f%%", sp.getGradeRate()), style);
+        createCell(row, 3, String.valueOf(sp.getRank()), style);
     }
 
     private void autoSizeColumns(Sheet sheet, int columnCount) {
@@ -123,7 +146,12 @@ public class ExcelExporter {
         } else if (value instanceof Number) {
             cell.setCellValue(((Number) value).doubleValue());
         } else if (value instanceof String) {
-            cell.setCellValue((String) value);
+            String strValue = (String) value;
+            if ("undefined".equals(strValue) || "null".equals(strValue)) {
+                cell.setCellValue("");
+            } else {
+                cell.setCellValue(strValue);
+            }
         } else {
             cell.setCellValue(value.toString());
         }

@@ -39,7 +39,9 @@ public class ReportServiceImpl implements ReportService {
     @Override
     public AnalysisReportDTO generateCourseReport(String courseId) {
         List<Grade> grades = gradeMapper.findByCourseId(courseId);
-        if (grades.isEmpty()) return null;
+        if (grades.isEmpty()) {
+            return null;
+        }
 
         AnalysisReportDTO report = new AnalysisReportDTO();
         report.setCourseId(courseId);
@@ -52,16 +54,24 @@ public class ReportServiceImpl implements ReportService {
         }
         report.setClassAverage(total / grades.size());
 
-        report.setClassAverageRate(total / grades.size() / taskMapper.findTotalScoreByCourseId(courseId) * 100);
+        float totalScore = taskMapper.findTotalScoreByCourseId(courseId);
+        
+        if (totalScore > 0) {
+            report.setClassAverageRate(total / grades.size() / totalScore * 100);
+        } else {
+            report.setClassAverageRate(0);
+        }
 
         // 按成绩排序
         grades.sort(Comparator.comparing(Grade::getFinalGrade).reversed());
 
         // 设置班级完成情况
-        report.setPerformers(grades.stream()
+        List<AnalysisReportDTO.StudentPerformance> performers = grades.stream()
                 .limit(grades.size())
                 .map(this::convertToStudentPerformance)
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList());
+        
+        report.setPerformers(performers);
 
         return report;
     }
@@ -76,8 +86,12 @@ public class ReportServiceImpl implements ReportService {
     // 将Grade转换为StudentPerformance DTO
     private AnalysisReportDTO.StudentPerformance convertToStudentPerformance(Grade grade) {
         AnalysisReportDTO.StudentPerformance sp = new AnalysisReportDTO.StudentPerformance();
-        sp.setStudentNumber(studentMapper.selectById(grade.getStudentId()).getStudentNumber());
-        sp.setStudentName(studentMapper.selectById(grade.getStudentId()).getRealName());
+        
+        String studentNumber = studentMapper.selectById(grade.getStudentId()).getStudentNumber();
+        String studentName = studentMapper.selectById(grade.getStudentId()).getRealName();
+        
+        sp.setStudentNumber(studentNumber);
+        sp.setStudentName(studentName);
         float totalScore = taskMapper.findTotalScoreByCourseId(grade.getCourseId());
         sp.setGradeRate(grade.getFinalGrade() / totalScore * 100);
         sp.setRank(grade.getRankInClass());

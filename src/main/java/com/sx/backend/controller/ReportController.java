@@ -31,7 +31,24 @@ public class ReportController {
     public void exportReport(
             @PathVariable String courseId,
             HttpServletResponse response) {
-
-        reportService.exportGradeReport(courseId, response);
+        
+        // 设置CORS头
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        response.setHeader("Access-Control-Allow-Headers", "*");
+        response.setHeader("Access-Control-Expose-Headers", "Content-Disposition, Content-Length");
+        
+        try {
+            reportService.exportGradeReport(courseId, response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            try {
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\":\"导出失败: " + e.getMessage() + "\"}");
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }

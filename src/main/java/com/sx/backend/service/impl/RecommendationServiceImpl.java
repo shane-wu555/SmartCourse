@@ -100,8 +100,6 @@ public class RecommendationServiceImpl implements RecommendationService {
     
     @Override
     public RecommendationResponse getResourceRecommendations(String studentId, String courseId, int limit) {
-        log.info("获取资源推荐，学生ID: {}, 课程ID: {}, 限制: {}", studentId, courseId, limit);
-        
         // 1. 获取学生成绩信息
         Grade grade = gradeMapper.findByStudentAndCourse(studentId, courseId);
         if (grade == null) {
